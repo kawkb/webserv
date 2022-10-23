@@ -1,0 +1,16 @@
+server
+{
+	listen          8080
+	server_name		server1
+}
+server
+{
+	listen          8081
+	server_name		server2
+}
+server
+{
+	listen          8082
+	server_name		server3
+}
+

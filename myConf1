@@ -1,0 +1,89 @@
+server
+{
+    listen         	8081
+    server_name     localhost
+
+	allow_methods   GET
+
+    root            ./var/www/static_websites/
+    index           index.html
+    autoindex       off 
+
+	location /PATH00
+	{
+		allow_methods       GET
+		root                ./var/www/static_websites/hangover-master/
+
+		autoindex           on 
+		index               invalid_index
+	}
+
+	location /PATH01/
+	{
+		root                ./var/www/static_websites/roxy/ 
+		autoindex           off
+		index               index.html
+		allow_methods       GET
+	}
+
+	location /PATH02
+	{
+		root                ./var/www/static_websites/the7/
+		autoindex           off
+		index               invalid_index
+		allow_methods       GET
+	}
+}
+
+server
+{
+    listen          8088
+    server_name     localhost
+
+	allow_methods   GET 
+
+	error_page				404 ./var/www/errorsPages/404.html
+	error_page				403 ./var/www/errorsPages/403.html
+
+	max_body_size	20
+
+	root					./var/www/static_websites/roxy/
+    autoindex       		on
+
+	location /PATH00
+	{
+		allow_methods       GET
+		root                ./var/www/static_websites/hangover-master/
+		autoindex           on
+		upload_path				/goinfre/moerradi
+		index               invalid_index
+	}
+
+	location /PATH01/ 
+	{
+		root                ./var/www/static_websites/roxy/
+		autoindex           off
+		index               index.html
+		allow_methods       GET
+	}
+
+	location /PATH02
+	{
+		root                ./var/www/static_websites/the7/
+		autoindex           off
+		index               invalid_index
+		allow_methods       GET
+	}
+}
+
+server
+{
+	listen 			8000
+
+	root 			./var/www/php_tests
+	allow_methods 	 GET POST DELETE
+
+	index welcome.html
+
+	autoindex on
+}
