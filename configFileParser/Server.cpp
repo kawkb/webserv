@@ -6,20 +6,11 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/09/25 13:44:21 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/10/28 16:02:13 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
-
-std::vector<std::string>    tokenize(std::string line)
-{
-    std::vector<std::string> tokens;
-    std::istringstream iss(line);
-    for(std::string line; iss >> line;)
-        tokens.push_back(line);
-    return(tokens);
-}
 
 int     Server::parse(std::ifstream &myfile)
 {

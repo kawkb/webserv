@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/25 17:52:09 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/10/22 18:07:12 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/10/29 16:07:15 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,15 +77,16 @@ void	set_clients_sockets(std::vector<Request> &requests, fd_set &read_set, int &
 	}
 }
 
-void		handle_connections(std::vector<TcpListener> &tcpListeners, fd_set &read_set, std::vector<Request> requests, int &max_sd)
+void		handle_connections(std::vector<TcpListener> &tcpListeners, fd_set &read_set, std::vector<Request> &requests)
 {
 	char buf[1024]; 
+	(void)tcpListeners;
 	for (std::vector<Request>::iterator i = requests.begin(); i != requests.end(); ++i)
 	{
 		if (FD_ISSET(i->getSd(), &read_set))
 		{
-			recv(i->getSd(), &buf, 1024, 0);
-			buf[1024] = '\0';
+			int rec = recv(i->getSd(), &buf, 1024, 0);
+			buf[rec] = '\0';
 			i->parse(buf);
 		}
 	}
@@ -105,12 +106,12 @@ int     run_server(std::vector<TcpListener> &tcpListeners)
 	{
 		read_set = read_set_backup;
 		write_set = write_set_backup;
-		std::cout << "max_sd = "<< max_sd << std::endl;
+		// std::cout << "max_sd = "<< max_sd << std::endl;
 		set_clients_sockets(requests, read_set, max_sd);
 		if ((select(max_sd + 1, &read_set, &write_set, NULL, NULL) < 0))
 			exit_failure("select error");
 		accept_connections(tcpListeners, read_set, requests, max_sd);
-		handle_connections(tcpListeners, read_set, requests, max_sd);
+		handle_connections(tcpListeners, read_set, requests);
 	}
 	return (0);
 }
