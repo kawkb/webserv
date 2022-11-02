@@ -1,0 +1,40 @@
+/*
+    socket: communication fd
+
+    int socket(int domain, int type, int protocol);
+
+    int domain: which protocol to use
+        AF_UNIX, AF_LOCAL - Local communication
+        AF_INET - IPv4 Internet protocols
+        AF_INET6 - IPv6 Internet protocols
+        AF_IPX - IPX Novell protocols
+
+    int type:
+        SOCK_STREAM: TCP (Two way communication)
+        SOCK_DGRAM: UDP (Connexion less)
+
+    protocol:
+        Since normally there's one protocol per type calue is 0
+
+    returns socket fd or -1 in case it fails
+*/
+
+/*
+    bind: assign a port and an ip to the socket
+
+    int bind(int sockfd, const sockaddr *addr, socklen_t addrlen);
+
+    int sockfd: socket() return 
+        
+    const sockaddr *addr: the adress we assign the socket to.
+        Format: (sockaddr_in since we're using IP)
+            struct sockaddr_in {
+                sa_family_t    sin_family;  address family: AF_INET 
+                in_port_t      sin_port;    port in network byte order 
+                struct in_addr sin_addr;    internet address 
+            };
+
+    socklen_t addrlen: sizeof(addr)
+
+    returns -1 on error && 0 on success
+*/

@@ -1,20 +1,18 @@
-NAME = webserv
-SRCS = TcpListener/TcpListener.cpp \
-		TcpListener/Sockets.cpp \
-		configFileParser/Location.cpp \
-		configFileParser/Server.cpp \
-		configFileParser/configParser.cpp \
-		Request/Request.cpp \
-		main.cpp \
-
-FLAGS = -Wall -Wextra -Werror  -std=c++98
+NAME = Webserv.out
+SRC = Webserv/Webserv.cpp Location/Location.cpp Server/Server.cpp Multiplexing/Multiplexing.cpp Request/Request.cpp Response/Response.cpp cgi/cgi.cpp
+HEADER = 
+CC = c++ 
+OBJ = $(SRC:.cpp=.o)
+FLAGS = -Wall -Wextra -Werror -std=c++98
+DEP = $(SRC) $(header)
+SANITIZER = -g -fsanitize=address
 
 all: $(NAME)
 
-$(NAME): $(SRCS)
-	c++ -g $(FLAGS) $(SRCS) -o $(NAME)
+$(NAME): $(DEP) 
+		$(CC) $(SRC) -o $(NAME)
 clean:
-	rm -rf $(NAME)
+		/bin/rm -f $(OBJ)
 fclean: clean
-	rm -rf $(NAME)
+		/bin/rm -f $(NAME)
 re: fclean all

@@ -1,0 +1,29 @@
+[web]
+listen:9001;
+server_name:127.0.0.1;
+max_size:124k;
+404:404.html;
+{/ll}
+default:index.html;
+cgi:.php,/elpatho;
+directory_listing:true;
+accepted:GET,POST;
+path:/Users/ziyad/Desktop/Webo-Servo/static_html;
+redirection:WTF IS THIS;
+upload_store:/tmp/uploads;
+{/}
+default:index.html;
+cgi:.php,/elpatho;
+directory_listing:true;
+accepted:GET,POST;
+path:/Users/ziyad/Desktop/Webo-Servo/static_html;
+redirection:WTF IS THIS;
+upload_store:/tmp/uploads;
+{route}
+redirection:301, https://www.google.com;
+[static]
+listen:9002;
+server_name:127.0.0.1;
+[Meow]
+listen:9003;
+server_name:127.0.0.1;

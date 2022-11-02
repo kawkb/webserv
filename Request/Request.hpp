@@ -1,33 +1,27 @@
-#pragma once
-#include <string>
+#ifndef REQUEST_HPP
+# define REQUEST_HPP
+
+
 #include <iostream>
+#include <sstream>
 #include <vector>
-std::vector<std::string>    tokenize(std::string line);
+#include <string>
 
-class Request
-{
-private:
-    int         m_sd;
-    std::string m_request;
-    std::string m_requestLine;
-    int         m_firstLine;
-    std::string m_method;
-    std::string m_uri;
-    std::string m_version;
-    std::string m_headears;
-        //std::vector<string> m_headers;
-        //std::string m_host;
-        //std::string m_type;
-        //std::string m_length;
-    std::string m_body;
-    int         m_bodyStart;
+#include "../Location/Location.hpp"
 
-public:
-    int     getSd(void) const;
-    void    parse(const char *buf);
-    Request();
-    Request(int sd);
-    ~Request();
+// Create Request class with all nginx configuration parameters
+
+class Request {
+    public:
+        Request();
+        Request(std::string line);
+        void debug();
+        std::string htmlHeaders();
+        std::string getKey(std::string key);
+        //~Request();
+    private:
+        std::unordered_map<std::string, std::string> keys;
+
 };
 
-
+#endif
