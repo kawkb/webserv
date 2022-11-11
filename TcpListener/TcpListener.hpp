@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/22 15:27:06 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/09/25 19:39:49 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/04 01:09:03 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,14 +32,12 @@ class TcpListener
 	private:
 		int 					m_master;
 		sockaddr_in				m_sockAddr;
-		std::vector<Server> 	m_server;
+		int						m_port;
 	public:
 								TcpListener();
 								~TcpListener();
-								TcpListener(Server &server);
-		void					addServer(Server server);
+								TcpListener(int port);
 		int						getPort(void) const;
-		std::vector<Server>		getServer(void)const;
 		int						getMaster(void) const;
 		sockaddr_in				&getAddress(void);
 }; 

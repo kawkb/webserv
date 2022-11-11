@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/20 22:02:44 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/10/28 16:02:25 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/06 17:59:15 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,8 @@
 std::vector<std::string>    tokenize(std::string line)
 {
     std::vector<std::string> tokens;
-    std::istringstream iss(line);
-    for(std::string line; iss >> line;)
+    std::stringstream ss(line);
+    for(std::string line; ss >> line;)
         tokens.push_back(line);
     return(tokens);
 }
@@ -77,7 +77,7 @@ int     parse_config_file(char *av, std::vector<Server> &server)
 			}
 			else
 			{
-				std::cout << "\033[1;31mConfigfile Error: \033[0m" << line << "."<< std::endl;
+				std::cout << "\033[1;31mConfigfile Error: \033[0m" << line << "." << std::endl;
 				myfile.close();
 				return(1);
 			}

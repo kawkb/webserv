@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/09 19:04:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/09/24 17:08:32 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/10 13:50:59 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,6 +125,8 @@ Location::Location()
 	m_path			= "";
 	m_uploadPath 	= "";
 	m_autoIndex 	= 1;
+	m_redirection.first = "";
+	m_redirection.second = "";
 }
 
 Location::Location(const Location &cp)

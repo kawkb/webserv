@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/10/28 16:02:13 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/09 16:31:07 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ int     Server::parse(std::ifstream &myfile)
         int size = token.size();
         if (line.empty() || line.find_first_not_of(" \t") == std::string::npos || token[0] == "{")
             continue;
-        else if (token[0] == "allow_methods" && size <= 4)
+        if (token[0] == "allow_methods" && size <= 4)
         {
             for( int i = 1; i < size; i++)
             {  
@@ -39,15 +39,7 @@ int     Server::parse(std::ifstream &myfile)
         else if (token[0] == "error_page" && size == 3)
             m_errorPage.insert(std::pair<std::string, std::string>(token[1], token[2]));
         else if (token[0] == "listen" && size == 2 )
-        {
-            if (token[1].find_first_not_of("0123456789") == std::string::npos)
-                m_port = atoi(token[1].c_str());
-            if (m_port == 0)
-            {
-                std::cout << "\033[1;31mConfigfile error: \033[0m" << line << std::endl;
-                return(1);
-            }   
-        }
+            m_port =  atoi(token[1].c_str());
         else if (token[0] == "server_name" && size == 2 )
             m_serverName = token[1];
         else if (token[0] == "root" && size == 2 )
@@ -126,6 +118,7 @@ int     Server::getPort(void) const
 {
     return(m_port);
 }
+
 std::string     Server::getName(void) const
 {
     return(m_serverName);
@@ -161,7 +154,7 @@ Server::Server()
 {
     m_port = -1;
     m_autoIndex = 1;
-    m_serverName = "";
+    m_serverName = "localhost";
     m_root = "";
     m_index = "";
     m_cgi = "";

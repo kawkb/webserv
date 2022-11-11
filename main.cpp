@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/16 15:14:24 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/10/18 19:41:23 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/06 21:33:06 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,9 +25,9 @@ int     main(int ac, char **av)
 		return(1);
 	//fix last } in configfile.
 	//add cgi
-	if (initiate_master_sockets(servers, tcpListeners))
-		return(1);
-	if (run_server(tcpListeners))
+	// for(std::vector<Server>::iterator i = servers.begin(); i != servers.end(); i++)
+	// 	std::cout << *i << std::endl;
+	if (run_server(servers, tcpListeners))
 		return(1);
 	return(0);
 }

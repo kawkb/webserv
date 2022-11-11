@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/25 17:52:09 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/10/29 16:07:15 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/08 20:14:32 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,20 +22,17 @@ int		initiate_master_sockets(std::vector<Server> &server, std::vector<TcpListene
 {
 	for(std::vector<Server>::iterator i = server.begin(); i != server.end();i++)
 	{
-		TcpListener holder(*i);
+		TcpListener holder(i->getPort());
 		for(std::vector<Server>::iterator j = i + 1; j != server.end(); ++j)
 		{
 			if (j->getPort() == holder.getPort())
-			{
-				holder.addServer(*j);
 				i++;
-			}
 			else
 				break;
 		}
 		tcpListener.push_back(holder);
 	}
-	return(0);
+	return(0); 
 }
 
 void	accept_connections(std::vector<TcpListener> &tcpListeners, fd_set &read_set, std::vector<Request> &requests, int &max_sd)
@@ -77,7 +74,7 @@ void	set_clients_sockets(std::vector<Request> &requests, fd_set &read_set, int &
 	}
 }
 
-void		handle_connections(std::vector<TcpListener> &tcpListeners, fd_set &read_set, std::vector<Request> &requests)
+void		handle_requests(std::vector<TcpListener> &tcpListeners, fd_set &read_set, std::vector<Request> &requests)
 {
 	char buf[1024]; 
 	(void)tcpListeners;
@@ -92,13 +89,24 @@ void		handle_connections(std::vector<TcpListener> &tcpListeners, fd_set &read_se
 	}
 }
 
-int     run_server(std::vector<TcpListener> &tcpListeners)
+void	handle_responses(std::vector<Server> &servers, fd_set &write_set, std::vector<Request> &requests, std::vector<Response> &responses)
+{
+	for (std::vector<Request>::iterator i = requests.begin(); i != requests.end(); ++i)
+	{	
+		if (FD_ISSET(i->getSd(), &write_set))
+		{
+			responses.push_back(Response(*i));
+		}
+	}
+}
+
+int     run_server(std::vector<Server> &servers, std::vector<TcpListener> &tcpListeners)
 {
 	std::vector<Request>	requests;
 	// std::vector<Response>	responses;
 	fd_set					read_set, write_set, read_set_backup, write_set_backup;
 	int						max_sd;
-
+	initiate_master_sockets(servers, tcpListeners);
 	FD_ZERO(&write_set);
 	FD_ZERO(&read_set);
 	set_master_sockets(tcpListeners, read_set_backup, max_sd);
@@ -111,7 +119,8 @@ int     run_server(std::vector<TcpListener> &tcpListeners)
 		if ((select(max_sd + 1, &read_set, &write_set, NULL, NULL) < 0))
 			exit_failure("select error");
 		accept_connections(tcpListeners, read_set, requests, max_sd);
-		handle_connections(tcpListeners, read_set, requests);
+		handle_requests(tcpListeners, read_set, requests);
+		// handle_responses(servers, write_set, requests);
 	}
 	return (0);
 }
