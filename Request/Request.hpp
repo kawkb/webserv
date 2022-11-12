@@ -26,7 +26,7 @@ class Request
 		void                                fillReqLine(std::string line);
 		void                                addHeader(std::string line);
 
-		std::vector<char>                   getBody(void) const;
+		std::vector<char>                   &getBody(void) ;
 		int                                 getSd(void) const;
 		std::map<std::string, std::string>  &getHeaders(void);
 		std::string                         getMethod(void) const;

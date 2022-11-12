@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/16 15:14:24 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/12 21:14:26 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/12 21:59:43 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,6 @@ int     main(int ac, char **av)
 	// 	return(1);
 	Request req(4);
 	req.parse(av[1], strlen(av[1]));
-	// std::cout << req.getHeaders().size() << std::endl;
 	std::cout << req;
 	return(0);
 }
