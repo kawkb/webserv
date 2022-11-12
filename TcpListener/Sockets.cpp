@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/25 17:52:09 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/08 20:14:32 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/11 14:09:05 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,7 +84,7 @@ void		handle_requests(std::vector<TcpListener> &tcpListeners, fd_set &read_set, 
 		{
 			int rec = recv(i->getSd(), &buf, 1024, 0);
 			buf[rec] = '\0';
-			i->parse(buf);
+			i->parse(buf, rec);
 		}
 	}
 }

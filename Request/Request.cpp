@@ -6,26 +6,20 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/10 14:47:21 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/11 19:25:01 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Request.hpp"
 
-
-Request::Request()
-{
-}
-
-Request::~Request()
-{
-}
+Request::Request(){}
+    
+Request::~Request(){}
 
 Request::Request(int sd)
 {
+    m_method = "";
     m_sd = sd;
-    m_serverName = "";
-    m_request = "";
     m_bodyStart = 0;
     m_firstLine = 1;
     m_headerStart = 0;
@@ -33,62 +27,20 @@ Request::Request(int sd)
 
 int     Request::getSd(void) const{return(m_sd);}
 std::string Request::getMethod(void)const{return(m_method);}
+std::string Request::getHeaders(void)const{return(m_headers);}
 
-Server      Request::matchServer(std::vector<Server> servers)
+void    Request::parse(const char *buf, int bufSize)
 {
-    size_t pos = m_headers.find("Host: ");
-    std::string host;
-    if (pos != std::string::npos)
+    std::vector<char> vectorHugo;
+    vectorHugo.assign(buf,buf+bufSize);
+    m_requestBuffer.insert(m_requestBuffer.begin() + m_requestBuffer.size(), vectorHugo.begin(),vectorHugo.end());
+    for(std::vector<char>::iterator pos = find(m_requestBuffer.begin(), m_requestBuffer.end(), '\n'); pos != m_requestBuffer.end();// delete till c)
     {
-        host = m_headers.substr(pos);
-        host = host.substr(host.find(" ") + 1, host.find('\n') - host.find(" ") - 1);
-        m_serverName = host.substr(0, host.find(':'));
-        m_port = host.substr(host.find(':') + 1);
-    }
-    for(std::vector<Server>::iterator i = servers.begin(); i != servers.end(); i++)
-    {
-        if (i->getPort() == atoi(m_port.c_str()))
-        {
-            for(std::vector<Server>::iterator j = i + 1; j != servers.end(); j++)
-            {
-                if (j->getName() == m_serverName)
-                {
-                    m_server = *j;
-                    return(*j);
-                }
-            }
-                m_server = *i;
-                return(m_server);
-        }
-    }
-}
-
-int     Request::matchLocation()
-{
-    std::vector<Location> locations = m_server.getLocation();
-    for(std::vector<Location>::iterator i = locations.begin(); i != locations.end(); i++)
-    {
-        if (i->getPath() == m_uri)
-        {
-            m_location = *i;
-            return(0);
-        }
-    }
-    return(1);
-}
-
-void    Request::parse(const char *buf)
-{
-    std::string line;
-    m_request.append(std::string(buf));
-    while(m_request.find("\n") != std::string::npos)
-    {
-        std::size_t pos = m_request.find("\n");
-        line = m_request.substr(0, pos + 1);
+        std::string line =  std::string(m_requestBuffer.begin(), pos);
         if (m_firstLine == 1)
         {
-            std::vector<std::string> tokens = tokenize(line);
             m_firstLine = 0;
+            std::vector<std::string> tokens = tokenize(line);
             for(std::vector<std::string>::iterator i = tokens.begin(); i != tokens.end(); ++i)
             {
                 if(*i == "GET" || *i == "POST" || *i == "DELETE")
@@ -102,33 +54,32 @@ void    Request::parse(const char *buf)
         else if (line.size() == 1)
             m_bodyStart = 1;
         else if (m_bodyStart == 1)
-            m_body += line;
+            m_body += line; 
         else
         {
             m_headerStart = 1;
-            m_headers += line; 
+            size_t found = line.find(':');
+            while(found != std::string::npos)
+            {
+                
+            }
+            m_headersBuffer += line;
+            
         }
-        m_request.erase(0, pos + 1);
     }
     if (m_bodyStart == 1)
     {
-        m_body += m_request;
-        m_request = "";
+        m_body += m_requestBuffer;
+        m_requestBuffer = "";
     }
     else if (m_headerStart == 1)
     {
-        m_headers += m_request; 
-        m_request = "";
+        
+        m_headers += m_requestBuffer; 
+        m_requestBuffer = "";
     }
 }
 
-int        Request::methodAllowed()
-{
-    for(std::vector<std::string>::iterator i = m_location.getMethod().begin();i != m_location.getMethod().end(); i++)
-        if (*i == m_method)
-            return (0);
-    return(1);
-}
 std::string        Request::isWellFormed(void)
 {
     if ((m_method != "GET" && m_method != "POST" && m_method != "DELETE") || m_version != "HTTP/1.1")
@@ -141,14 +92,19 @@ std::string        Request::isWellFormed(void)
         return("400 Bad Request\n");
     if (m_uri.length() > 2048)
         return("414 Request-URI Too Long\n");
-    if (m_body.length() > m_server.getMaxBodySize())
-        return("413 Request Entity Too Large\n");
-    if(this->matchLocation())
-        return("404 Not Found\n");
-    if (m_location.getRedirection().first != "")
-        return("301 Moved Permanently\n");
-    if (this->methodAllowed())
-        return("405 Method Not Allowed\n");
     else
         return("200 OK\n");
+}
+
+std::ostream& operator<<(std::ostream& out, Request request)
+{
+    out << "=============Request==============" << std::endl;
+    std::string method = request.getMethod();
+	out << "request port: " << request.getPort() << std::endl;
+    out << "request name: " << request.getName() << std::endl;
+    out << "request method: ";
+	for (long unsigned int i = 0; i < method.size(); i++)
+	    out << method[i] << " ";
+    out << std::endl;
+	return out;
 }

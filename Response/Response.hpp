@@ -9,14 +9,15 @@ class Response
         std::string m_statusCode;
         std::string m_body;
         Server      m_server;
-        std::string m_type;
+        std::string m_serverName;
         std::string m_response;
     public:
-        void    fill(Request request);
         void    handleGet();
         void    handlePost();
         void    handleDelete();
         void    setErrorPage();
+        int     methodAllowed();
+        int     matchLocation();
                 Response(Request request, std::vector<Server> servers);
                 Response();
                 ~Response();
