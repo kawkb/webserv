@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/11 12:28:45 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/12 20:58:52 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ int     Server::parse(std::ifstream &myfile)
                     m_method.push_back(token[i]);
                 else
                 {
-                    std::cout << "\033[1;31mConfigfile error: \033[0m" << line << std::endl;
+                   std::cout << "\033[1;31mConfigfile error: \033[0m" << line  << std::endl;
                     return(1);
                 }
             }

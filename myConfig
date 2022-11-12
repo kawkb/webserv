@@ -1,16 +1,16 @@
 server
 {
-	listen          localhost:8080
+	listen          8080
 	server_name		server1
 }
 server
 {
-	listen          server:8081
+	listen          8081
 	server_name		server2
 }
 server
 {
-	listen          again:8080
+	listen         8080
 	server_name		server3
 }
 
