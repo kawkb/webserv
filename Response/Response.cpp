@@ -6,7 +6,7 @@
 /*   By: zmeribaa <zmeribaa@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/17 14:30:41 by zmeribaa          #+#    #+#             */
-/*   Updated: 2022/09/27 04:26:09 by zmeribaa         ###   ########.fr       */
+/*   Updated: 2022/11/13 14:56:00 by zmeribaa         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -250,17 +250,38 @@ void    Response::serveCgi(Request request)
 	int status = 0;
 	if (pid == 0)
 	{
+		if (request.getKey("reqtype") == "POST")
+			dup2(fbody, 0);
+		else
+			dup2(fd, 0);
 		dup2(fd, 1);
-		char *args[3];
-		args[0] = (char *)keys["cgi_path"].c_str();
-		args[1] = (char *)keys["full_file_path"].c_str();
-		args[2] = NULL;
-		execve(args[0], args, environ); // environ is a variable declared in unistd.h, and it keeps track of the environment variables during this running process.
+		if (keys["extension"] == ".php")
+		{
+			char *args[3];
+			args[0] = (char *)keys["cgi_path"].c_str();
+			args[1] = (char *)keys["full_file_path"].c_str();
+			args[2] = NULL;
+			execve(args[0], args, environ);
+		}
+		else if (keys["extension"] == ".py")
+		{
+			char *args[3];
+			std::string python = "/usr/bin/python";
+			args[0] = (char *)python.c_str();
+			args[1] = (char *)keys["full_file_path"].c_str();
+			args[2] = NULL;
+			execve(args[0], args, environ);
+		}
+ // environ is a variable declared in unistd.h, and it keeps track of the environment variables during this running process.
 	}
 	else
 	{
-		while (waitpid(-1, &status, WUNTRACED) > 0)
-			;
+		time_t t = time(NULL);
+		while (time(NULL) - t < 5)
+		{
+			if (waitpid(pid, &status, WNOHANG) != 0)
+				break;
+		}
 	}
 	char buffer[1024] = {0};
 	lseek(fd, 0, SEEK_SET);
@@ -275,6 +296,8 @@ void    Response::serveCgi(Request request)
 
     keys["body"] = res;
 
+	std::remove("/tmp/hello");
+	std::remove("/cgi/body");
     appendHeader("Content-Length: " + std::to_string(keys["body"].length()));
     appendHeader("Content-Type: text/html");
 	std::cout << "Received shit: " << res << std::endl;
