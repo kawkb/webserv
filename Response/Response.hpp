@@ -21,7 +21,7 @@ class Response
         void    	setErrorPage();
         int     	methodAllowed(Request request);
         int			matchLocation(Request request);
-        bool		matchServer(std::vector<Server> servers, std::string host);
+        bool		matchServer(std::vector<Server> servers, const Request &request);
 		bool		isWellFormed(Request request);
                 	Response(Request request, std::vector<Server> servers);
                 	Response();

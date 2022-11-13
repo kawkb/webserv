@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/13 18:33:37 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/13 22:24:27 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ int        Response::methodAllowed(Request request)
     return(1);
 }
 
-int     Response::matchLocation(Request request)
+bool     Response::matchLocation(const Request &request)
 {
     std::vector<Location> locations = m_server.getLocation();
     for(std::vector<Location>::iterator i = locations.begin(); i != locations.end(); i++)
@@ -33,38 +33,46 @@ int     Response::matchLocation(Request request)
         }
     }
     return(1);
+    
+    if (m_location.getRedirection().first != "")
+        return("301 Moved Permanently\n");
 }
 
-bool      Response::matchServer(std::vector<Server> servers, std::string host)
+bool      Response::matchServer(std::vector<Server> servers, const Request &request)
 {
-    std::string serverName, port;
-    size_t pos = host.find("Host: ");
+    std::string serverName, port, host;
+    host = request.getHeader("Host");
+    size_t pos = host.find(":");
     if (pos != std::string::npos)
     {
-        host = host.substr(pos);
-        host = host.substr(host.find(" ") + 1, host.find('\n') - host.find(" ") - 1);
-        serverName = host.substr(0, host.find(':'));
-        port = host.substr(host.find(':') + 1);
+        serverName = host.substr(0, pos);
+        port = host.substr(pos + 1);
     }
+    bool first = false;
     for(std::vector<Server>::iterator i = servers.begin(); i != servers.end(); i++)
     {
         if (i->getPort() == atoi(port.c_str()))
         {
-            for(std::vector<Server>::iterator j = i + 1; j != servers.end(); j++)
+            if (first == false)
             {
-                if (j->getName() == serverName)
-                {
-                    m_server = *j;
-                    return(*j);
-                }
-            }
                 m_server = *i;
-                return(m_server);
+                first = true;
+            }
+            if (i->getName() == serverName)
+            {
+                m_server = *i;
+                break;
+            }
         }
     }
-		if (request.getHeader("Content_length") > m_server.getMaxBodySize())
-        return("413 Request Entity Too Large\n");
+	if (request.getHeader("Content_length") > m_server.getMaxBodySize())
+    {
+        m_statusCode = "413 Request Entity Too Large\n";
+        return(false);
+    }
+    return(true);
 }
+
 
 Response::~Response(){}
 Response::Response(){}
@@ -111,10 +119,7 @@ bool        Response::isWellFormed(Request request)
 		return (false);
 	}
 
-    // if(this->matchLocation(request))
-    //     return("404 Not Found\n");
-    // if (m_location.getRedirection().first != "")
-    //     return("301 Moved Permanently\n");
+
     // if (this->methodAllowed(request))
     //     return("405 Method Not Allowed\n");
     else
@@ -124,10 +129,11 @@ bool        Response::isWellFormed(Request request)
 Response::Response(Request request, std::vector<Server> servers)
 {
     m_response = "HTTP/1.1 ";
-    matchServer(servers, request.getHeader("host"));
     if (!isWellFormed(request))
         setErrorPage();
-	else if (!matchServer(servers, request.getHeader("host")))
+	else if (!matchServer(servers, request))
+        setErrorPage();
+    else if(!matchLocation(request))
         setErrorPage();
     else if (request.getMethod() == "GET")
         handleGet();
