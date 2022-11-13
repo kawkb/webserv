@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/13 22:40:44 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/13 22:50:20 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,13 +29,15 @@ bool     Response::matchLocation(const Request &request)
         if (i->getPath() == sub)
         {
             m_location = *i;
-            return(0);
+            break;
         }
     }
-    return(1);
-    
     if (m_location.getRedirection().first != "")
-        return("301 Moved Permanently\n");
+    {
+        m_statusCode = "301 Moved Permanently\n";
+        return(0);
+    }
+    return(1);
 }
 
 bool      Response::matchServer(const std::vector<Server> &servers, const Request &request)
