@@ -36,7 +36,7 @@ class Request
 		int                                 getFirstLine(void) const;
 		int                                 getHeaderStart(void) const;
 		int                                 getBodyStart(void) const;
-
+	    std::string            getHeader(std::string key)const;
 		Request&                            operator= (const Request &req);
 
 											Request(void);

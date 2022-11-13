@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/25 17:52:09 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/12 12:51:11 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/13 17:49:53 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,16 +76,15 @@ void	set_clients_sockets(std::vector<Request> &requests, fd_set &read_set, int &
 
 void		handle_requests(std::vector<TcpListener> &tcpListeners, fd_set &read_set, std::vector<Request> &requests)
 {
-	char buf[1024]; 
+	char buf[3]; 
 	(void)tcpListeners;
 	for (std::vector<Request>::iterator i = requests.begin(); i != requests.end(); ++i)
 	{
 		if (FD_ISSET(i->getSd(), &read_set))
 		{
-			int rec = recv(i->getSd(), &buf, 1024, 0);
-			buf[rec] = '\0';
+			int rec = recv(i->getSd(), &buf, 3, 0);
 			i->parse(buf, rec);
-			std::cout << *i;
+			// std::cout << *i;
 		}
 	}
 }
