@@ -35,7 +35,7 @@ int     Response::matchLocation(Request request)
     return(1);
 }
 
-Server      Response::matchServer(std::vector<Server> servers, std::string host)
+bool      Response::matchServer(std::vector<Server> servers, std::string host)
 {
     std::string serverName, port;
     size_t pos = host.find("Host: ");
@@ -62,6 +62,8 @@ Server      Response::matchServer(std::vector<Server> servers, std::string host)
                 return(m_server);
         }
     }
+		if (request.getHeader("Content_length") > m_server.getMaxBodySize())
+        return("413 Request Entity Too Large\n");
 }
 
 Response::~Response(){}
@@ -81,22 +83,52 @@ void      Response::setErrorPage()
     //fill error pages
     // switch over status code;
 }
+bool        Response::isWellFormed(Request request)
+{
+    if ((request.getMethod() != "GET" && request.getMethod() != "POST" && request.getMethod() != "DELETE") || request.getVersion() != "HTTP/1.1")
+    {
+		m_statusCode = "501 Not Implemented\n";
+		return (false);
+	}
+    if (request.getHeader("Transfer-Encoding") != "chunked")
+    {
+		m_statusCode = "501 Not Implemented\n";
+		return (false);
+	}
+    if (request.getMethod() == "POST" && request.getHeader("Transfer-Encoding").empty() && request.getHeader("Content-Length").empty())
+    {
+		m_statusCode = "400 Bad Request\n";
+		return (false);
+	}
+    if (request.getUri().find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ._~:/?#[]@!$&'()*+,;=%") != std::string::npos)
+    {
+		m_statusCode = "400 Bad Request\n";
+		return (false);
+	}
+    if (request.getUri().length() > 2048)
+    {
+		m_statusCode = "414 Request-URI Too Long\n";
+		return (false);
+	}
+
+    // if(this->matchLocation(request))
+    //     return("404 Not Found\n");
+    // if (m_location.getRedirection().first != "")
+    //     return("301 Moved Permanently\n");
+    // if (this->methodAllowed(request))
+    //     return("405 Method Not Allowed\n");
+    else
+        return (true);
+}
 
 Response::Response(Request request, std::vector<Server> servers)
 {
     m_response = "HTTP/1.1 ";
-    m_server = matchServer(servers, request.getHeader("host"));
-    m_statusCode = request.isWellFormed();
-    if (m_statusCode != "200 OK\n")
+    matchServer(servers, request.getHeader("host"));
+    if (!isWellFormed(request))
         setErrorPage();
-    if (request.getHeader("Content_length") > m_server.getMaxBodySize())
-        return("413 Request Entity Too Large\n");
-    if(this->matchLocation(request))
-        return("404 Not Found\n");
-    if (m_location.getRedirection().first != "")
-        return("301 Moved Permanently\n");
-    if (this->methodAllowed(request))
-        return("405 Method Not Allowed\n");
+	else if (!matchServer(servers, request.getHeader("host")))
+        setErrorPage();
     else if (request.getMethod() == "GET")
         handleGet();
     else if (request.getMethod() == "POST")

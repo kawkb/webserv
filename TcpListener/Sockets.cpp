@@ -14,7 +14,7 @@
 
 void	exit_failure(std::string str)
 {
-	std::cout << str << " "<< errno << std::endl;
+	std::cout << str << std::endl;
 	exit(EXIT_FAILURE);
 }
 
@@ -76,15 +76,15 @@ void	set_clients_sockets(std::vector<Request> &requests, fd_set &read_set, int &
 
 void		handle_requests(std::vector<TcpListener> &tcpListeners, fd_set &read_set, std::vector<Request> &requests)
 {
-	char buf[3]; 
+	char buf[1024]; 
 	(void)tcpListeners;
 	for (std::vector<Request>::iterator i = requests.begin(); i != requests.end(); ++i)
 	{
 		if (FD_ISSET(i->getSd(), &read_set))
 		{
-			int rec = recv(i->getSd(), &buf, 3, 0);
+			int rec = recv(i->getSd(), &buf, 1024, 0);
 			i->parse(buf, rec);
-			// std::cout << *i;
+			std::cout << *i;
 		}
 	}
 }

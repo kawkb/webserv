@@ -15,14 +15,15 @@ class Response
         std::string m_response;
         
     public:
-        void    handleGet();
-        void    handlePost();
-        void    handleDelete();
-        void    setErrorPage();
-        int     methodAllowed(Request request);
-        int     matchLocation(Request request);
-        Server  matchServer(std::vector<Server> servers, std::string host);
-                Response(Request request, std::vector<Server> servers);
-                Response();
-                ~Response();
+        void    	handleGet();
+        void    	handlePost();
+        void    	handleDelete();
+        void    	setErrorPage();
+        int     	methodAllowed(Request request);
+        int			matchLocation(Request request);
+        bool		matchServer(std::vector<Server> servers, std::string host);
+		bool		isWellFormed(Request request);
+                	Response(Request request, std::vector<Server> servers);
+                	Response();
+                	~Response();
 };

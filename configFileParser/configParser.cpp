@@ -9,7 +9,7 @@
 /*   Updated: 2022/11/06 17:59:15 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
+#include "../webserv.hpp"
 #include "Server.hpp"
 
 std::vector<std::string>    tokenize(std::string line)
@@ -83,6 +83,10 @@ int     parse_config_file(char *av, std::vector<Server> &server)
 			}
 		}
 		myfile.close();
+	}
+	else
+	{
+		exit_failure("Error: open config file");
 	}
 	if (check_server(server))
 		return(1);
