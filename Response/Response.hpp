@@ -19,11 +19,11 @@ class Response
         void    	handlePost();
         void    	handleDelete();
         void    	setErrorPage();
-        int     	methodAllowed(Request request);
-        int			matchLocation(Request request);
-        bool		matchServer(std::vector<Server> servers, const Request &request);
-		bool		isWellFormed(Request request);
-                	Response(Request request, std::vector<Server> servers);
+        int     	methodAllowed(const Request &request);
+        bool			matchLocation(const Request &request);
+        bool		matchServer(const std::vector<Server> &servers, const Request &request);
+		bool		isWellFormed(const Request &request);
+                	Response(const Request &request, const std::vector<Server> &servers);
                 	Response();
                 	~Response();
 };

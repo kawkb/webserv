@@ -6,13 +6,13 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/13 22:24:27 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/13 22:40:44 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Response.hpp"
 
-int        Response::methodAllowed(Request request)
+int        Response::methodAllowed(const Request &request)
 {
     for(std::vector<std::string>::iterator i = m_location.getMethod().begin();i != m_location.getMethod().end(); i++)
         if (*i == request.getMethod())
@@ -38,7 +38,7 @@ bool     Response::matchLocation(const Request &request)
         return("301 Moved Permanently\n");
 }
 
-bool      Response::matchServer(std::vector<Server> servers, const Request &request)
+bool      Response::matchServer(const std::vector<Server> &servers, const Request &request)
 {
     std::string serverName, port, host;
     host = request.getHeader("Host");
@@ -49,7 +49,7 @@ bool      Response::matchServer(std::vector<Server> servers, const Request &requ
         port = host.substr(pos + 1);
     }
     bool first = false;
-    for(std::vector<Server>::iterator i = servers.begin(); i != servers.end(); i++)
+    for(std::vector<Server>::const_iterator i = servers.begin(); i != servers.end(); i++)
     {
         if (i->getPort() == atoi(port.c_str()))
         {
@@ -91,7 +91,7 @@ void      Response::setErrorPage()
     //fill error pages
     // switch over status code;
 }
-bool        Response::isWellFormed(Request request)
+bool        Response::isWellFormed(const Request &request)
 {
     if ((request.getMethod() != "GET" && request.getMethod() != "POST" && request.getMethod() != "DELETE") || request.getVersion() != "HTTP/1.1")
     {
@@ -126,7 +126,7 @@ bool        Response::isWellFormed(Request request)
         return (true);
 }
 
-Response::Response(Request request, std::vector<Server> servers)
+Response::Response(const Request& request, const std::vector<Server> &servers)
 {
     m_response = "HTTP/1.1 ";
     if (!isWellFormed(request))
