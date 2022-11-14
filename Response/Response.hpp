@@ -6,19 +6,17 @@
 #include <dirent.h>
 #include <sys/stat.h>
 
-// #include <sys/stat.h>
-
-
 class Response
 {
 private:
 	int 		m_sd;
 	std::string	m_statusCode;
 	std::string m_body;
-	Server 		m_server;
-	Location	m_location;
 	std::string m_serverName;
-	std::string m_response;
+	char*		m_response;
+	Request		m_request;
+	bool		m_done;
+	std::string m_readcursor;
 
 public:
 	static std::string	getCodeString(std::string code);
@@ -26,8 +24,11 @@ public:
 	bool	handleGet(const Request &req);
 	bool	handlePost(const Request &req);
 	bool	handleDelete(const Request &req);
+	bool	continueRes();
+	bool	isDone() const;
+	bool	flushRes(int readsize);
 	void	setErrorPage();
-			Response(const Request &request, const std::vector<Server> &servers);
+			Response(const Request &request);
 			Response();
 			~Response();
 };

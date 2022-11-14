@@ -219,7 +219,7 @@ bool Response::handleGet(const Request &req)
 			m_statusCode = "301";
 			m_response = "HTTP/1.1 " + m_statusCode + " " + getCodeString(m_statusCode) + "\r\n";
 			m_response += "Location: " + req.getHeader("host") + m_location.getPath() + filename + "/\r\n";
-			return (false);
+			return (true);
 		}
 		if (m_location.getAutoIndex() == 1)
 		{
@@ -304,8 +304,9 @@ bool Response::handlePost(const Request &req)
 
 Response::Response(const Request &request)
 {
+	m_done = false;
 	bool pass = true;
-	if (request.getError() != "200 OK")
+	if ((m_statusCode = request.getError()) != "")
 		pass = false;
 	else if (request.getMethod() == "GET")
 		pass = handleGet(request);
@@ -314,7 +315,10 @@ Response::Response(const Request &request)
 	else if (request.getMethod() == "DELETE")
 		pass = handleDelete(request);
 	if (pass == false)
+	{
 		setErrorPage();
+		m_done = true;
+	}
 }
 
 Response::~Response() {}
