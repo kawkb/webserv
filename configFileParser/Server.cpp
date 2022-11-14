@@ -84,7 +84,7 @@ std::ostream& operator<<(std::ostream& out, Server server)
     out << "=============Server==============" << std::endl;
     std::vector<std::string> method = server.getMethod();
     std::vector<Location> location = server.getLocation();
-    std::map<std::string, std::string>  errorPage = server.getErrorPage();
+    // std::map<std::string, std::string>  errorPage = server.getErrorPage();
     std::map<std::string, std::string >::iterator itr;
 	out << "Server port: " << server.getPort() << std::endl;
     out << "Server name: " << server.getName() << std::endl;
@@ -96,8 +96,8 @@ std::ostream& operator<<(std::ostream& out, Server server)
 	out << "server index:" << server.getIndex() << std::endl;
 	out << "server autoIndex:" << server.getAutoIndex() << std::endl;
     out << "server bodysize: " << server.getMaxBodySize() << std::endl;
-    for( itr = errorPage.begin(); itr != errorPage.end();++itr)
-        out << "server error page: " << itr->first << " " << itr->second << std::endl;
+    // for( itr = errorPage.begin(); itr != errorPage.end();++itr)
+    //     out << "server error page: " << itr->first << " " << itr->second << std::endl;
     // for (long unsigned int i = 0; i < location.size(); i++)
     // {
     //     out << location[i];
@@ -105,9 +105,12 @@ std::ostream& operator<<(std::ostream& out, Server server)
 	return out;
 }
 
-std::map<std::string, std::string>    Server::getErrorPage(void) const
+std::string   Server::getErrorPage(std::string errorcode) const
 {
-    return(m_errorPage);
+	std::map<std::string,std::string>::const_iterator i = m_errorPage.find(errorcode);
+	if (i != m_errorPage.end())
+		return (i->second);
+	return ("");
 }
 std::vector<Location> Server::getLocation(void) const
 {
@@ -177,7 +180,7 @@ Server & Server::operator=(const Server &cp)
     m_location = cp.getLocation();
     m_method = cp.getMethod();
     m_maxBodySize = cp.getMaxBodySize();
-    m_errorPage = cp.getErrorPage();
+    // m_errorPage = cp.getErrorPage();
     return (*this);
 }
 

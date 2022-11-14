@@ -5,13 +5,29 @@
 #include <string.h>
 #include <algorithm>
 #include <map>
-
+#include<dirent.h>
+#include <fstream>
+#include <sys/stat.h>
+template<class T>
+std::string toString(const T& value)
+{
+	std::ostringstream oss;
+	oss << value;
+	return oss.str();
+}
 
 int main()
 {
-    std::vector<char> m;
-        std::string line = std::string(m.begin(), m.end());
-    std::cout << line.size() << std::endl;
+	std::string uri = "/Users/sa";
+	std::string location = "/";
+	// check if location ends with a slash
+	std::string rest = uri.substr(location.size());
+	if (rest[0] == '/')
+		rest = rest.substr(1);
+	if (rest == "")
+		rest = "index.html";
+	std::cout << rest;
+	// std::string path = m_location.getRoot() + rest;
 }
 
 // GET / HTTP/1.1

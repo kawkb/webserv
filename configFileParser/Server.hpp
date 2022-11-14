@@ -48,7 +48,7 @@ class Server
 		std::string                         getCgi(void) const;
 		int                                 getMaxBodySize(void) const;
 		std::vector<Location>               getLocation(void) const;
-		std::map<std::string, std::string>  getErrorPage(void) const;
+		std::string  						getErrorPage(std::string errorcode) const;
 		Server& 							operator=(const Server &cp);
 };
 

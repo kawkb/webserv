@@ -124,7 +124,7 @@ Location::Location()
 	m_root 			= "";
 	m_path			= "";
 	m_uploadPath 	= "";
-	m_autoIndex 	= 1;
+	m_autoIndex 	= 0;
 	m_redirection.first = "";
 	m_redirection.second = "";
 }
