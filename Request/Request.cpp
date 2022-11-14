@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/14 17:29:43 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/14 17:36:22 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,8 +92,6 @@ void    Request::isWellformed()
 	    	m_status = "400";
 	    if (m_uri.length() > 2048)
 	    	m_status = "414";
-	    else
-	    	return (true);
     }
 }
 

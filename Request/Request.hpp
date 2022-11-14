@@ -19,7 +19,7 @@ class Request
 		bool								m_firstLine;
 		bool								m_headerStart;
 		bool								m_bodyStart;
-		bool								m_readingDone;
+		bool								m_isDone;
 		std::string							m_status;
 	public:
 		// Class methods:
