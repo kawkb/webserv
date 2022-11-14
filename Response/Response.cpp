@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/13 22:50:20 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/14 17:02:45 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -305,7 +305,9 @@ bool Response::handlePost(const Request &req)
 Response::Response(const Request &request)
 {
 	bool pass = true;
-	if (request.getMethod() == "GET")
+	if (request.getError() != "200 OK")
+		pass = false;
+	else if (request.getMethod() == "GET")
 		pass = handleGet(request);
 	else if (request.getMethod() == "POST")
 		pass = handlePost(request);

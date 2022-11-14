@@ -27,11 +27,7 @@ public:
 	bool	handlePost(const Request &req);
 	bool	handleDelete(const Request &req);
 	void	setErrorPage();
-	int		methodAllowed(const Request &request);
-	bool	matchLocation(const Request &request);
-	bool	matchServer(const std::vector<Server> &servers, const Request &request);
-	bool	isWellFormed(const Request &request);
-			Response(const Request &request);
+			Response(const Request &request, const std::vector<Server> &servers);
 			Response();
 			~Response();
 };
