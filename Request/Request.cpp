@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/14 17:36:22 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/14 18:43:00 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ Request::Request(int sd)
     m_bodyStart = 0;
     m_firstLine = 1;
     m_headerStart = 0;
-    m_status = "200 OK";
+    m_status = "";
 }
 
 Request::Request(const Request &cp)
@@ -77,7 +77,6 @@ void    Request::fillBody()
 
 void    Request::isWellformed()
 {
-    m_bodyStart = 1;
     bool Response::isWellFormed(const Request &request)
     {
 	    if ((m_method != "GET" && m_method != "POST" && m_method != "DELETE"))
@@ -174,15 +173,19 @@ void    Request::parse(const char *buf, int bufSize)
         if (m_firstLine == 1)
             fillReqLine(line);
         else if ((pos + 2) != m_requestBuffer.end() && *(pos + 2) == '\r')
+        {
             checkErrors();
-        else if (m_bodyStart == 1 && m_status == "200 OK")
+            if (m_isDone() == true)
+                break;
+        }    
+        else if (m_status == "200 OK")
             fillBody(); 
         else
             addHeader(line);
         m_requestBuffer.erase(m_requestBuffer.begin(), pos + 2);
         pos = find(m_requestBuffer.begin(), m_requestBuffer.end(), '\r');
     }
-    if (m_bodyStart == 1)
+    if (m_status == "200 OK")
     {
         m_body.insert(m_body.end(), m_requestBuffer.begin(), m_requestBuffer.end());
         m_requestBuffer.clear();
@@ -192,6 +195,26 @@ void    Request::parse(const char *buf, int bufSize)
         addHeader(std::string(m_requestBuffer.begin(), m_requestBuffer.end()));
         m_requestBuffer.clear();
     }
+}
+
+int                                 Request::getSd(void) const{return(m_sd);}
+std::string                         Request::getUri(void) const{return(m_uri);}
+std::string                         Request::getVersion(void) const{return(m_version);}
+std::vector<char>                   Request::getRequestBuffer(void) const{return(m_requestBuffer);}
+std::string                         Request::getMethod(void)const{return(m_method);}
+std::map<std::string, std::string>  Request::getHeaders(void) const {return(m_headers);}
+std::vector<char>                   Request::getBody(void) const {return(m_body);}
+int                                 Request::getFirstLine(void) const{return(m_firstLine);}
+int                                 Request::getHeaderStart(void) const{return(m_headerStart);}
+int                                 Request::getBodyStart(void) const{return(m_bodyStart);}
+bool                                Request::getIsDone(void) const{return (m_isDone)};
+std::string                         Request::getError(void) const{return (m_status)};
+{
+	std::map<std::string,std::string>::const_iterator i = m_headers.find(key);
+	if (i == m_headers.end())
+		return ("");
+	else
+		return (i->second);
 }
 
 std::ostream& operator<<(std::ostream& out, Request request)
@@ -208,23 +231,4 @@ std::ostream& operator<<(std::ostream& out, Request request)
 	    out << "  " << i->first << ":" << i->second << std::endl;
     out << "request body: " << std::endl << std::string(body.begin(), body.end()) << std::endl;
 	return out;
-}
-
-int                                 Request::getSd(void) const{return(m_sd);}
-std::string                         Request::getUri(void) const{return(m_uri);}
-std::string                         Request::getVersion(void) const{return(m_version);}
-std::vector<char>                   Request::getRequestBuffer(void) const{return(m_requestBuffer);}
-std::string                         Request::getMethod(void)const{return(m_method);}
-std::map<std::string, std::string>  Request::getHeaders(void) const {return(m_headers);}
-std::vector<char>                   Request::getBody(void) const {return(m_body);}
-int                                 Request::getFirstLine(void) const{return(m_firstLine);}
-int                                 Request::getHeaderStart(void) const{return(m_headerStart);}
-int                                 Request::getBodyStart(void) const{return(m_bodyStart);}
-std::string                         Request::getHeader(std::string key)const
-{
-	std::map<std::string,std::string>::const_iterator i = m_headers.find(key);
-	if (i == m_headers.end())
-		return ("");
-	else
-		return (i->second);
 }
