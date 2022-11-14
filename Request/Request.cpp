@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/14 18:43:00 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/14 19:20:01 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -200,6 +200,8 @@ void    Request::parse(const char *buf, int bufSize)
 int                                 Request::getSd(void) const{return(m_sd);}
 std::string                         Request::getUri(void) const{return(m_uri);}
 std::string                         Request::getVersion(void) const{return(m_version);}
+Server                              Request::getServer(void) const{return(m_server);}
+Location                            Request::getLocation(void) const{return(m_location);}
 std::vector<char>                   Request::getRequestBuffer(void) const{return(m_requestBuffer);}
 std::string                         Request::getMethod(void)const{return(m_method);}
 std::map<std::string, std::string>  Request::getHeaders(void) const {return(m_headers);}
