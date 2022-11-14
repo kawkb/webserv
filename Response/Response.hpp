@@ -31,7 +31,7 @@ public:
 	bool	matchLocation(const Request &request);
 	bool	matchServer(const std::vector<Server> &servers, const Request &request);
 	bool	isWellFormed(const Request &request);
-			Response(const Request &request, const std::vector<Server> &servers);
+			Response(const Request &request);
 			Response();
 			~Response();
 };

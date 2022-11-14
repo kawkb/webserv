@@ -95,7 +95,7 @@ void		handle_requests(std::vector<TcpListener> &tcpListeners, fd_set &read_set, 
 // 	{	
 // 		if (FD_ISSET(i->getSd(), &write_set))
 // 		{
-// 			responses.push_back(Response(*i));
+// 	
 // 		}
 // 	}
 // }

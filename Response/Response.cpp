@@ -124,70 +124,6 @@ std::string	Response::generateAutoIndex(std::string path)
 	return authIndexHtml;
 }
 
-int Response::methodAllowed(const Request &request)
-{
-	for (std::vector<std::string>::iterator i = m_location.getMethod().begin(); i != m_location.getMethod().end(); i++)
-		if (*i == request.getMethod())
-			return (0);
-	return (1);
-}
-
-bool Response::matchLocation(const Request &request)
-{
-	std::vector<Location> locations = m_server.getLocation();
-	for (std::vector<Location>::iterator i = locations.begin(); i != locations.end(); i++)
-	{
-		std::string sub = request.getUri().substr(0, i->getPath().size());
-		if (i->getPath() == sub)
-		{
-			m_location = *i;
-			return (0);
-		}
-	}
-	return (1);
-
-	if (m_location.getRedirection().first != "")
-		return ("301 Moved Permanently\n");
-}
-
-bool Response::matchServer(const std::vector<Server> &servers, const Request &request)
-{
-	std::string serverName, port, host;
-	host = request.getHeader("Host");
-	size_t pos = host.find(":");
-	if (pos != std::string::npos)
-	{
-		serverName = host.substr(0, pos);
-		port = host.substr(pos + 1);
-	}
-	bool first = false;
-	for (std::vector<Server>::const_iterator i = servers.begin(); i != servers.end(); i++)
-	{
-		if (i->getPort() == atoi(port.c_str()))
-		{
-			if (first == false)
-			{
-				m_server = *i;
-				first = true;
-			}
-			if (i->getName() == serverName)
-			{
-				m_server = *i;
-				break;
-			}
-		}
-	}
-	if (request.getHeader("Content_length") > m_server.getMaxBodySize())
-	{
-		m_statusCode = 413;
-		return (false);
-	}
-	return (true);
-}
-
-Response::~Response() {}
-Response::Response() {}
-
 std::string readFile(std::string path)
 {
 	std::ifstream file(path.c_str());
@@ -195,17 +131,80 @@ std::string readFile(std::string path)
 	return content;
 }
 
+std::string getContentType(std::string filename)
+{
+	std::string extension = filename.substr(filename.find_last_of(".") + 1);
+	if (extension == "html" || extension == "htm")
+		return "text/html";
+	else if (extension == "css")
+		return "text/css";
+	else if (extension == "js")
+		return "application/javascript";
+	else if (extension == "jpg" || extension == "jpeg")
+		return "image/jpeg";
+	else if (extension == "png")
+		return "image/png";
+	else if (extension == "gif")
+		return "image/gif";
+	else if (extension == "swf")
+		return "application/x-shockwave-flash";
+	else if (extension == "ico")
+		return "image/x-icon";
+	else if (extension == "xml")
+		return "text/xml";
+	else if (extension == "pdf")
+		return "application/pdf";
+	else if (extension == "zip")
+		return "application/zip";
+	else if (extension == "gz")
+		return "application/x-gzip";
+	else if (extension == "tar")
+		return "application/x-tar";
+	else if (extension == "svg")
+		return "image/svg+xml";
+	else if (extension == "txt")
+		return "text/plain";
+	else if (extension == "mp3")
+		return "audio/mpeg";
+	else if (extension == "wav")
+		return "audio/x-wav";
+	else if (extension == "mpeg" || extension == "mpg" || extension == "mpe")
+		return "video/mpeg";
+	else if (extension == "qt" || extension == "mov")
+		return "video/quicktime";
+	else if (extension == "avi")
+		return "video/x-msvideo";
+	else if (extension == "doc")
+		return "application/msword";
+	else if (extension == "rtf")
+		return "application/rtf";
+	else if (extension == "xls")
+		return "application/vnd.ms-excel";
+	else if (extension == "ppt")
+		return "application/vnd.ms-powerpoint";
+	else if (extension == "wml")
+		return "text/vnd.wap.wml";
+	else if (extension == "wmlc")
+		return "application/vnd.wap.wmlc";
+	else if (extension == "wmls")
+		return "text/vnd.wap.wmlscript";
+	else if (extension == "wmlsc")
+		return "application/vnd.wap.wmlscriptc";
+	else
+		return "application/octet-stream";
+}
+
 bool Response::handleGet(const Request &req)
 {
 	// location should never end with a slash
 	// path should always end with a slash
 	std::string uri = req.getUri();
-	std::string rest = uri.substr(m_location.getPath().size());
-	if (rest[0] == '/')
-		rest = rest.substr(1);
-	if (rest == "")
-		rest = m_location.getIndex();
-	std::string path = m_location.getRoot() + rest;
+	std::string filename = uri.substr(m_location.getPath().size());
+	if (filename[0] == '/')
+		filename = filename.substr(1);
+	if (filename == "")
+		filename = m_location.getIndex();
+	std::string path = m_location.getRoot() + filename;
 	// check if path is a directory
 	struct stat path_stat;
 	if (stat(path.c_str(), &path_stat) < 0)
@@ -219,7 +218,7 @@ bool Response::handleGet(const Request &req)
 		{
 			m_statusCode = "301";
 			m_response = "HTTP/1.1 " + m_statusCode + " " + getCodeString(m_statusCode) + "\r\n";
-			m_response += "Location: " + req.getHeader("host") + m_location.getPath() + rest + "/\r\n";
+			m_response += "Location: " + req.getHeader("host") + m_location.getPath() + filename + "/\r\n";
 			return (false);
 		}
 		if (m_location.getAutoIndex() == 1)
@@ -243,7 +242,7 @@ bool Response::handleGet(const Request &req)
 	{
 		m_statusCode = "200";
 		m_response = "HTTP/1.1 " + m_statusCode + " " + getCodeString(m_statusCode) + "\r\n";
-		m_response += "Content-Type: " + getContentType(path) + "\r\n";
+		m_response += "Content-Type: " + getContentType(filename) + "\r\n";
 		m_response += "Content-Length: " + toString(path_stat.st_size) + "\r\n";
 		m_response += "\r\n";
 		m_body = readFile(path);
@@ -255,14 +254,21 @@ bool Response::handleGet(const Request &req)
 void Response::setErrorPage()
 {
 	m_response = "HTTP/1.1 " + m_statusCode + " " + getCodeString(m_statusCode) + "\r\n";
-	m_response += "Content-Type: text/html; charset=UTF-8\r\n";
+	m_response += "Content-Type: text/html\r\n";
 	std::string errorPagePath = m_server.getErrorPage(m_statusCode);
 	if (errorPagePath == "")
-	{
-		// fall back to default error page
-		// m_response += "Content-Length: " + toString(m_errorPage.size()) + "\r\n";
-		// m_response += "\r\n";
-		// m_response += m_errorPage;
+	{	m_body = "<html><head><title>" + m_statusCode + " " + getCodeString(m_statusCode) + "</title></head><body>";
+		m_body += "<div class=\"base\">\n\t<div class=\"point\">></div>\n\t<h1><i>Http Error " + m_statusCode +":</i> <br>";
+		std::string errorString = getCodeString(m_statusCode);
+		std::cout << errorString << std::endl;
+		for (size_t i = 0; i < errorString.size(); i++)
+		{
+			if (errorString[i] == ' ')
+				errorString.replace(i, 1, "<br>");
+		}
+		m_body += errorString + "</h1>\n</div></body></html>";
+		m_body += "<style>body {\n  background-color: #23307e;\n}\nbody .base {\n  background-color: #23307e;\n  width: 100%;\n  height: 100vh;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-direction: column;\n  position: relative;\n}\nbody .base .point {\n  font-family: \"Ubuntu\", sans-serif;\n  font-size: 10vw;\n  position: absolute;\n  top: 2vh;\n  color: #f2e9df;\n  left: 10vw;\n}\nbody .base .point:after {\n  content: \"_\";\n  animation: sparkle 0.5s infinite;\n  position: absolute;\n}\nbody .base h1 {\n  color: #ff3d57;\n  font-family: \"Ubuntu\", sans-serif;\n  text-transform: uppercase;\n  font-size: 6vw;\n  position: absolute;\n  top: 20vh;\n  left: 10vw;\n  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);\n}\n@media only screen and (max-width: 992px) {\n  body .base h1 {\n    font-size: 10vw;\n  }\n}\nbody .base h1.glitch {\n  animation: clap 0.1s 5 forwards;\n}\n\n@keyframes sparkle {\n  0%, 100% {\n    opacity: 0;\n  }\n  50% {\n    opacity: 1;\n  }\n}\n@keyframes clap {\n  0%, 100% {\n    opacity: 1;\n  }\n  30% {\n    left: 11vw;\n    color: #f2e9df;\n  }\n  70% {\n    opacity: 0;\n  }\n}</style>";
+		m_response += "Content-Length: " + toString(m_body.size()) + "\r\n";
 	}
 	else
 	{
@@ -273,42 +279,6 @@ void Response::setErrorPage()
 		m_response += "\r\n";
 		m_response += content;
 	}
-}
-
-bool Response::isWellFormed(const Request &request)
-{
-	if ((request.getMethod() != "GET" && request.getMethod() != "POST" && request.getMethod() != "DELETE"))
-	{
-		m_statusCode = "501";
-		return (false);
-	}
-	if (request.getVersion() != "HTTP/1.1")
-	{
-		m_statusCode = "505";
-		return (false);
-	}
-	if (request.getHeader("Transfer-Encoding") != "chunked")
-	{
-		m_statusCode = "501";
-		return (false);
-	}
-	if (request.getMethod() == "POST" && request.getHeader("Transfer-Encoding").empty() && request.getHeader("Content-Length").empty())
-	{
-		m_statusCode = "400";
-		return (false);
-	}
-	if (request.getUri().find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ._~:/?#[]@!$&'()*+,;=%") != std::string::npos)
-	{
-		m_statusCode = "400";
-		return (false);
-	}
-	if (request.getUri().length() > 2048)
-	{
-		m_statusCode = "414";
-		return (false);
-	}
-	else
-		return (true);
 }
 
 bool Response::handlePost(const Request &req)
@@ -332,17 +302,10 @@ bool Response::handlePost(const Request &req)
 	}
 }
 
-Response::Response(const Request &request, const std::vector<Server> &servers)
+Response::Response(const Request &request)
 {
 	bool pass = true;
-
-	if (!isWellFormed(request))
-		pass = false;
-	else if (!matchServer(servers, request))
-		pass = false;
-	else if (!matchLocation(request))
-		pass = false;
-	else if (request.getMethod() == "GET")
+	if (request.getMethod() == "GET")
 		pass = handleGet(request);
 	else if (request.getMethod() == "POST")
 		pass = handlePost(request);
@@ -351,3 +314,7 @@ Response::Response(const Request &request, const std::vector<Server> &servers)
 	if (pass == false)
 		setErrorPage();
 }
+
+Response::~Response() {}
+
+Response::Response() {}
