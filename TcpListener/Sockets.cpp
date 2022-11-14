@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/25 17:52:09 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/13 17:49:53 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/14 16:51:42 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,21 +84,21 @@ void		handle_requests(std::vector<TcpListener> &tcpListeners, fd_set &read_set, 
 		{
 			int rec = recv(i->getSd(), &buf, 1024, 0);
 			i->parse(buf, rec);
-			std::cout << *i;
+			// std::cout << *i;
 		}
 	}
 }
 
-// void	handle_responses(std::vector<Server> &servers, fd_set &write_set, std::vector<Request> &requests, std::vector<Response> &responses)
-// {
-// 	for (std::vector<Request>::iterator i = requests.begin(); i != requests.end(); ++i)
-// 	{	
-// 		if (FD_ISSET(i->getSd(), &write_set))
-// 		{
-// 			responses.push_back(Response(*i));
-// 		}
-// 	}
-// }
+void	handle_responses(std::vector<Server> &servers, fd_set &write_set, std::vector<Request> &requests, std::vector<Response> &responses)
+{
+	for (std::vector<Request>::iterator i = requests.begin(); i != requests.end(); ++i)
+	{	
+		if (FD_ISSET(i->getSd(), &write_set))
+		{
+			responses.push_back(Response(*i));
+		}
+	}
+}
 
 int     run_server(std::vector<Server> &servers, std::vector<TcpListener> &tcpListeners)
 {

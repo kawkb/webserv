@@ -16,16 +16,19 @@ class Request
 		std::string							m_version;
 		std::map<std::string, std::string>	m_headers;
 		std::vector<char>					m_body;
-		int									m_firstLine;
-		int									m_headerStart;
-		int									m_bodyStart;
-
+		bool								m_firstLine;
+		bool								m_headerStart;
+		bool								m_bodyStart;
+		bool								m_readingDone;
+		std::string							m_status;
 	public:
+		// Class methods:
 		void                                parse(const char *buf, int bufSize);
-		std::string                         isWellFormed(void);
 		void                                fillReqLine(std::string line);
 		void                                addHeader(std::string line);
-
+		void								fillBody();
+		void								isWellFormed();
+		// Class attributes getters:
 		std::vector<char>                   getBody(void) const;
 		int                                 getSd(void) const;
 		std::map<std::string, std::string>  getHeaders(void) const;
@@ -36,9 +39,9 @@ class Request
 		int                                 getFirstLine(void) const;
 		int                                 getHeaderStart(void) const;
 		int                                 getBodyStart(void) const;
-	    std::string            getHeader(std::string key)const;
+	    std::string            				getHeader(std::string key)const;
 		Request&                            operator= (const Request &req);
-
+		// Class Constructors/destructor			
 											Request(void);
 											Request(const Request &cp);
 											Request(int sd);
@@ -46,3 +49,9 @@ class Request
 };
 std::ostream& operator<<(std::ostream& os, Request request);
 
+//read more about the request on rfc 
+// write the fillbody fnction
+// test well your request;
+// go to dinner
+// socket all nighter : add the fcntl no blocking flag + timeout ;
+// but first lets drink coffe with my baby

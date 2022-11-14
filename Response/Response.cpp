@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/13 22:50:20 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/14 17:02:45 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,66 +124,7 @@ std::string	Response::generateAutoIndex(std::string path)
 	return authIndexHtml;
 }
 
-int Response::methodAllowed(const Request &request)
-{
-	for (std::vector<std::string>::iterator i = m_location.getMethod().begin(); i != m_location.getMethod().end(); i++)
-		if (*i == request.getMethod())
-			return (0);
-	return (1);
-}
 
-bool Response::matchLocation(const Request &request)
-{
-	std::vector<Location> locations = m_server.getLocation();
-	for (std::vector<Location>::iterator i = locations.begin(); i != locations.end(); i++)
-	{
-		std::string sub = request.getUri().substr(0, i->getPath().size());
-		if (i->getPath() == sub)
-		{
-			m_location = *i;
-			return (0);
-		}
-	}
-	return (1);
-
-	if (m_location.getRedirection().first != "")
-		return ("301 Moved Permanently\n");
-}
-
-bool Response::matchServer(const std::vector<Server> &servers, const Request &request)
-{
-	std::string serverName, port, host;
-	host = request.getHeader("Host");
-	size_t pos = host.find(":");
-	if (pos != std::string::npos)
-	{
-		serverName = host.substr(0, pos);
-		port = host.substr(pos + 1);
-	}
-	bool first = false;
-	for (std::vector<Server>::const_iterator i = servers.begin(); i != servers.end(); i++)
-	{
-		if (i->getPort() == atoi(port.c_str()))
-		{
-			if (first == false)
-			{
-				m_server = *i;
-				first = true;
-			}
-			if (i->getName() == serverName)
-			{
-				m_server = *i;
-				break;
-			}
-		}
-	}
-	if (request.getHeader("Content_length") > m_server.getMaxBodySize())
-	{
-		m_statusCode = 413;
-		return (false);
-	}
-	return (true);
-}
 
 Response::~Response() {}
 Response::Response() {}
@@ -275,42 +216,6 @@ void Response::setErrorPage()
 	}
 }
 
-bool Response::isWellFormed(const Request &request)
-{
-	if ((request.getMethod() != "GET" && request.getMethod() != "POST" && request.getMethod() != "DELETE"))
-	{
-		m_statusCode = "501";
-		return (false);
-	}
-	if (request.getVersion() != "HTTP/1.1")
-	{
-		m_statusCode = "505";
-		return (false);
-	}
-	if (request.getHeader("Transfer-Encoding") != "chunked")
-	{
-		m_statusCode = "501";
-		return (false);
-	}
-	if (request.getMethod() == "POST" && request.getHeader("Transfer-Encoding").empty() && request.getHeader("Content-Length").empty())
-	{
-		m_statusCode = "400";
-		return (false);
-	}
-	if (request.getUri().find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ._~:/?#[]@!$&'()*+,;=%") != std::string::npos)
-	{
-		m_statusCode = "400";
-		return (false);
-	}
-	if (request.getUri().length() > 2048)
-	{
-		m_statusCode = "414";
-		return (false);
-	}
-	else
-		return (true);
-}
-
 bool Response::handlePost(const Request &req)
 {
 	const std::string upload_path = m_location.getUploadPath();
@@ -332,15 +237,10 @@ bool Response::handlePost(const Request &req)
 	}
 }
 
-Response::Response(const Request &request, const std::vector<Server> &servers)
+Response::Response(const Request &request)
 {
 	bool pass = true;
-
-	if (!isWellFormed(request))
-		pass = false;
-	else if (!matchServer(servers, request))
-		pass = false;
-	else if (!matchLocation(request))
+	if (request.getError() != "200 OK")
 		pass = false;
 	else if (request.getMethod() == "GET")
 		pass = handleGet(request);
