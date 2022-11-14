@@ -14,12 +14,13 @@ class Request
 		std::string							m_method;
 		std::string							m_uri;
 		std::string							m_version;
+		Server								m_server;
+		Location							m_location;
 		std::map<std::string, std::string>	m_headers;
 		std::vector<char>					m_body;
 		bool								m_firstLine;
 		bool								m_headerStart;
-		bool								m_bodyStart;
-		bool								m_readingDone;
+		bool								m_isDone;
 		std::string							m_status;
 	public:
 		// Class methods:
@@ -36,9 +37,10 @@ class Request
 		std::string                         getUri(void) const;
 		std::string                         getVersion(void) const;
 		std::vector<char>                   getRequestBuffer(void) const;
-		int                                 getFirstLine(void) const;
-		int                                 getHeaderStart(void) const;
-		int                                 getBodyStart(void) const;
+		bool                                getFirstLine(void) const;
+		bool                                getHeaderStart(void) const;
+		bool                                getIsDone(void) const;
+		std::string                         getError(void) const;
 	    std::string            				getHeader(std::string key)const;
 		Request&                            operator= (const Request &req);
 		// Class Constructors/destructor			
