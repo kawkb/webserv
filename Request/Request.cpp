@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/14 19:20:01 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/14 19:30:34 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ Request::Request(int sd)
     m_method = "";
     m_sd = sd;
     m_bodyStart = 0;
-    m_firstLine = 1;
+    m_firstLine = true;
     m_headerStart = 0;
     m_status = "";
 }
@@ -56,7 +56,7 @@ void    Request::addHeader(std::string line)
 
 void    Request::fillReqLine(std::string line)
 {
-    m_firstLine = 0;
+    m_firstLine = false;
     std::vector<std::string> tokens = tokenize(line);
     for(std::vector<std::string>::iterator i = tokens.begin(); i != tokens.end(); ++i)
     {
@@ -75,24 +75,6 @@ void    Request::fillBody()
     std::cout << "here is body" << std::endl;
 }
 
-void    Request::isWellformed()
-{
-    bool Response::isWellFormed(const Request &request)
-    {
-	    if ((m_method != "GET" && m_method != "POST" && m_method != "DELETE"))
-	    	m_status = "501";
-	    if (m_version != "HTTP/1.1")
-	    	m_status = "505";
-	    if (getHeader("Transfer-Encoding") != "chunked")
-	    	m_status = "501";
-	    if (m_method == "POST" && getHeader("Transfer-Encoding").empty() && getHeader("Content-Length").empty())
-	    	m_status = "400";
-	    if (m_uri.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ._~:/?#[]@!$&'()*+,;=%") != std::string::npos)
-	    	m_status = "400";
-	    if (m_uri.length() > 2048)
-	    	m_status = "414";
-    }
-}
 
 int Request::methodAllowed(const Request &request)
 {
@@ -154,9 +136,28 @@ bool Request::matchServer(const std::vector<Server> &servers, const Request &req
 	return (true);
 }
 
+bool   Request::isWellformed()
+{
+	if ((m_method != "GET" && m_method != "POST" && m_method != "DELETE"))
+		m_status = "501";
+	if (m_version != "HTTP/1.1")
+		m_status = "505";
+	if (getHeader("Transfer-Encoding") != "chunked")
+		m_status = "501";
+	if (m_method == "POST" && getHeader("Transfer-Encoding").empty() && getHeader("Content-Length").empty())
+		m_status = "400";
+	if (m_uri.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ._~:/?#[]@!$&'()*+,;=%") != std::string::npos)
+		m_status = "400";
+	if (m_uri.length() > 2048)
+		m_status = "414";
+    if (m_status != "")
+        m_isDone = true;
+}
+
 void    Request::checkErrors()
 {
-    isWellFormed();
+    if (isWellFormed())
+        return;
     matchServer();
     matchLocation();
 }
@@ -170,7 +171,7 @@ void    Request::parse(const char *buf, int bufSize)
     while(pos != m_requestBuffer.end() && (pos + 1) != m_requestBuffer.end() && *(pos + 1) == '\n')
     {
         std::string line =  std::string(m_requestBuffer.begin(), pos);
-        if (m_firstLine == 1)
+        if (m_firstLine == true)
             fillReqLine(line);
         else if ((pos + 2) != m_requestBuffer.end() && *(pos + 2) == '\r')
         {

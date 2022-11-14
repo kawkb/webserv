@@ -28,7 +28,7 @@ class Request
 		void                                fillReqLine(std::string line);
 		void                                addHeader(std::string line);
 		void								fillBody();
-		void								isWellFormed();
+		bool								isWellFormed();
 		// Class attributes getters:
 		std::vector<char>                   getBody(void) const;
 		int                                 getSd(void) const;
