@@ -18,6 +18,7 @@ class Request
 		Location							m_location;
 		std::map<std::string, std::string>	m_headers;
 		std::FILE							*m_body;
+		int									m_bodyLength;
 		bool								m_firstLine;
 		bool								m_headerStart;
 		bool								m_bodyStart;

@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/15 07:33:17 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/15 08:23:47 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ Request::Request(int sd)
     m_headerStart = false;
     m_status = "";
     m_bodyStart = false;
+    m_bodyLength = 0;
 }
 
 Request::Request(const Request &cp)
@@ -212,6 +213,7 @@ void    Request::checkErrors(const std::vector<Server> &servers)
         return;
     if (!methodAllowed())
         return;
+        //delee /r/n from requestline;
     m_bodyStart = true;
 }
 
@@ -241,19 +243,24 @@ void    Request::addHeader(std::string line)
         m_headers.insert(std::pair<std::string, std::string>(line.substr(0, found), line.substr(found + 2)));
 }
 
-void    Request::fillBody(std::vector<char> pos)
+void    Request::fillBody()
 {
     m_body = tmpfile();
-    if (getHeader("Transfer-Encoding") == "chunked")
+    if (m_bodyLength < atoi(getHeader("Content-Length").c_str()))
     {
+        if (m_requestBuffer.size() > m_bodyLength)
+        {
+            // vector erase;
+            fputs(reinterpret_cast<char*> (&m_requestBuffer[0]), m_body);
+            m_status = "ok";
+            return;
+        }
         
     }
-    else if (contenet length)
-    {
-        fputs(body, m_body);
-        reinterpret_cast<char*> (&buf[0]);
-        insert(m_body.end(), m_requestBuffer.begin(), pos + 1);
-    }
+    // else if (getHeader("Transfer-Encoding") == "chunked")
+    // {
+        
+    // }
 }
 
 void    Request::parse(const std::vector<Server> &servers, const char *buf, int bufSize)
@@ -261,10 +268,8 @@ void    Request::parse(const std::vector<Server> &servers, const char *buf, int 
     std::vector<char> vectorHugo;
     vectorHugo.assign(buf,buf+bufSize);
     m_requestBuffer.insert(m_requestBuffer.end(), vectorHugo.begin(),vectorHugo.end());
-    std::vector<char>::iterator pos = find(m_requestBuffer.begin(), m_requestBuffer.end(), '\r');
-    if (m_bodyStart)
-        fillBody(); 
-    while(pos != m_requestBuffer.end() && (pos + 1) != m_requestBuffer.end() && *(pos + 1) == '\n')
+    std::vector<char>::iterator pos = find(m_requestBuffer.begin(), m_requestBuffer.end(), '\r'); 
+    while(pos != m_requestBuffer.end() && (pos + 1) != m_requestBuffer.end() && *(pos + 1) == '\n' && m_bodyStart == false)
     {
         std::string line =  std::string(m_requestBuffer.begin(), pos);
         if (m_firstLine)
@@ -278,6 +283,8 @@ void    Request::parse(const std::vector<Server> &servers, const char *buf, int 
         m_requestBuffer.erase(m_requestBuffer.begin(), pos + 2);
         pos = find(m_requestBuffer.begin(), m_requestBuffer.end(), '\r');
     }
+    if (m_bodyStart)
+        fillBody();
     if (m_headerStart)
     {
         addHeader(std::string(m_requestBuffer.begin(), m_requestBuffer.end()));
