@@ -53,27 +53,20 @@ int min(int a, int b)
 	return (a < b ? a : b);
 }
 
-#define BUFFER_SIZE 11
+#define BUFFER_SIZE 10
 void	peekBody(char *buf, long *chunksize, long m_bodySize, long *m_bodyCursor, FILE *m_bodyFile, bool *done)
 {
-	// const int restsize = m_bodySize - *m_bodyCursor + 1;
-	// *chunksize = min(restsize , BUFFER_SIZE);
-	// if (*chunksize  BUFFER_SIZE)
-	// 	std::cout << *chunksize << std::endl;
-	// fseek(m_bodyFile, *m_bodyCursor , SEEK_SET);
-	// std::cout << "ftell: " << ftell(m_bodyFile) << std::endl;
-	// std::cout << "m_bodyCursor: " << *m_bodyCursor << std::endl;
-	fgets(buf, *chunksize, m_bodyFile);
-	// if (feof(m_bodyFile))
-	// 	*done = true;
-	if (restsize < BUFFER_SIZE)
+	*chunksize = min(BUFFER_SIZE, m_bodySize - *m_bodyCursor);
+
+	fseek(m_bodyFile, *m_bodyCursor, SEEK_SET);
+	fread(buf, 1, *chunksize, m_bodyFile);
+	if (*chunksize < BUFFER_SIZE)
+	{
+		std::cout << *chunksize << std::endl;
+		buf[*chunksize] = '\0';
 		*done = true;
-	// if (*m_bodyCursor == m_bodySize)
-	// {
-	// 	*done = true;
-	// 	return ;
-	// }
-	*m_bodyCursor += *chunksize - 1;
+	}
+	*m_bodyCursor += *chunksize;
 }
 
 int main (int argc, char **argv)
@@ -98,7 +91,7 @@ int main (int argc, char **argv)
 	while (!done)
 	{
 		peekBody(buf, &chunksize, m_bodySize, &m_bodyCursor, m_bodyFile, &done);
-		// std::cout << buf;
+		std::cout << buf;
 		// std::cout << "cursor: " << m_bodyCursor << std::endl;
 		// std::cout << "chunksize: " << chunksize << std::endl;
 		// std::cout << "buf: " << buf << std::endl;

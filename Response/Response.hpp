@@ -28,6 +28,10 @@ public:
 	bool				handlePost(const Request &req);
 	bool				handleDelete(const Request &req);
 	bool				continueRes();
+	std::string			getRequestHeader(std::string key)const;
+	std::string			getRequestMethod(void) const;
+	FILE				*getBodyFile(void) const;
+	std::string			getCgiPath(void) const;
 	bool				isDone() const;
 	void				setErrorPage();
 	int					getSd();
