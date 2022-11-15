@@ -26,7 +26,6 @@ public:
 	bool	handleDelete(const Request &req);
 	bool	continueRes();
 	bool	isDone() const;
-	bool	flushRes(int readsize);
 	void	setErrorPage();
 			Response(const Request &request);
 			Response();

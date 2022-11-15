@@ -13,13 +13,15 @@
 #include "Response.hpp"
 
 // add to utils later
-template<class T>
-std::string toString(const T& value)
+template <class T>
+std::string toString(const T &value)
 {
 	std::ostringstream oss;
 	oss << value;
 	return oss.str();
 }
+
+
 
 std::string Response::getCodeString(std::string code)
 {
@@ -70,16 +72,16 @@ std::string Response::getCodeString(std::string code)
 	return "Unknown";
 }
 
-std::string	Response::generateAutoIndex(std::string path)
+std::string Response::generateAutoIndex(std::string path)
 {
 	std::vector<std::string> files;
 	std::vector<std::string> dirs;
 	std::string authIndexHtml;
 	DIR *dir;
 	struct dirent *ent;
-	if ((dir = opendir (path.c_str())) != NULL)
+	if ((dir = opendir(path.c_str())) != NULL)
 	{
-		while ((ent = readdir (dir)) != NULL)
+		while ((ent = readdir(dir)) != NULL)
 		{
 			if (strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0)
 			{
@@ -89,7 +91,7 @@ std::string	Response::generateAutoIndex(std::string path)
 					files.push_back(ent->d_name);
 			}
 		}
-		closedir (dir);
+		closedir(dir);
 	}
 	else
 	{
@@ -194,12 +196,12 @@ std::string getContentType(std::string filename)
 		return "application/octet-stream";
 }
 
-bool Response::handleGet(const Request &req)
+bool Response::handleGet()
 {
 	// location should never end with a slash
 	// path should always end with a slash
 	std::string uri = req.getUri();
-	std::string filename = uri.substr(m_location.getPath().size());
+	std::string filename = uri.substr(.getPath().size());
 	if (filename[0] == '/')
 		filename = filename.substr(1);
 	if (filename == "")
@@ -227,7 +229,7 @@ bool Response::handleGet(const Request &req)
 			m_response = "HTTP/1.1 " + m_statusCode + " " + getCodeString(m_statusCode) + "\r\n";
 			m_response += "Content-Type: text/html\r\n";
 			m_body = generateAutoIndex(path);
-			m_response += "Content-Length: " + toString(m_body.size())  + "\r\n";
+			m_response += "Content-Length: " + toString(m_body.size()) + "\r\n";
 			m_response += "\r\n";
 			m_response += m_body;
 			return (true);
@@ -257,8 +259,9 @@ void Response::setErrorPage()
 	m_response += "Content-Type: text/html\r\n";
 	std::string errorPagePath = m_server.getErrorPage(m_statusCode);
 	if (errorPagePath == "")
-	{	m_body = "<html><head><title>" + m_statusCode + " " + getCodeString(m_statusCode) + "</title></head><body>";
-		m_body += "<div class=\"base\">\n\t<div class=\"point\">></div>\n\t<h1><i>Http Error " + m_statusCode +":</i> <br>";
+	{
+		m_body = "<html><head><title>" + m_statusCode + " " + getCodeString(m_statusCode) + "</title></head><body>";
+		m_body += "<div class=\"base\">\n\t<div class=\"point\">></div>\n\t<h1><i>Http Error " + m_statusCode + ":</i> <br>";
 		std::string errorString = getCodeString(m_statusCode);
 		std::cout << errorString << std::endl;
 		for (size_t i = 0; i < errorString.size(); i++)
@@ -281,7 +284,7 @@ void Response::setErrorPage()
 	}
 }
 
-bool Response::handlePost(const Request &req)
+bool Response::handlePost()
 {
 	const std::string upload_path = m_location.getUploadPath();
 	if (upload_path == "")
@@ -298,7 +301,7 @@ bool Response::handlePost(const Request &req)
 		std::string uri = req.getUri();
 		std::string location = m_location.getPath();
 		std::string path = uri.substr(location.size());
-		if 
+		if
 	}
 }
 
@@ -319,6 +322,7 @@ Response::Response(const Request &request)
 		setErrorPage();
 		m_done = true;
 	}
+	
 }
 
 Response::~Response() {}
