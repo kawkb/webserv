@@ -6,6 +6,8 @@
 #include <dirent.h>
 #include <vector>
 #include <map>
+#include <string.h>
+#include <stdio.h>
 
 int remove_directory(const std::string path)
 {
@@ -46,28 +48,52 @@ int remove_directory(const std::string path)
 	return r;
 }
 
-std::vector<std::string> split(std::string str, std::string sep)
+int min(int a, int b)
 {
-
-	
+	return (a < b ? a : b);
 }
 
-void	fillQueryString(std::string &m_uri, std::map<std::string, std::string> &m_queryString)
+#define BUFFER_SIZE 10
+void	peekBody(char *buf, long *chunksize, long m_bodySize, long *m_bodyCursor, FILE *m_bodyFile, bool *done)
 {
+	*chunksize = min(BUFFER_SIZE, m_bodySize - *m_bodyCursor);
 
+	fseek(m_bodyFile, *m_bodyCursor, SEEK_SET);
+	fread(buf, 1, *chunksize, m_bodyFile);
+	if (*chunksize < BUFFER_SIZE)
+	{
+		std::cout << *chunksize << std::endl;
+		buf[*chunksize] = '\0';
+		*done = true;
+	}
+	*m_bodyCursor += *chunksize;
 }
 
 int main (int argc, char **argv)
 {
-	std::string path = argv[1];
-	std::map<std::string, std::string> m_queryString;
-	fillQueryString(path, m_queryString);
-	// print query string
-	std::cout <<"path : " + path << std::endl;
-	std::map<std::string, std::string>::iterator it;
-	for (it = m_queryString.begin(); it != m_queryString.end(); it++)
+	if (argc != 2)
 	{
-		std::cout << "Key : " << it->first << " --- Value : " << it->second << std::endl;
+		std::cout << "usage: ./a.out [path]" << std::endl;
+		return 1;
 	}
-	return 0;
+	std::string path = argv[1];
+	FILE *m_bodyFile = fopen(path.c_str(), "r");
+	long m_bodySize = 0;
+	long m_bodyCursor = 0;
+	char buf[BUFFER_SIZE];
+	long chunksize = 0;
+	// get body size
+	fseek(m_bodyFile, 0L, SEEK_END);
+	m_bodySize = ftell(m_bodyFile);
+	rewind(m_bodyFile);
+	// peek body loop
+	bool done = false;
+	while (!done)
+	{
+		peekBody(buf, &chunksize, m_bodySize, &m_bodyCursor, m_bodyFile, &done);
+		std::cout << buf;
+		// std::cout << "cursor: " << m_bodyCursor << std::endl;
+		// std::cout << "chunksize: " << chunksize << std::endl;
+		// std::cout << "buf: " << buf << std::endl;
+	}
 }
