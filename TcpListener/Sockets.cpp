@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/25 17:52:09 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/15 15:04:32 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/15 15:10:31 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,8 +108,18 @@ void	handle_responses(fd_set &write_set, std::vector<Request> &requests, std::ve
 	{
 		if (FD_ISSET(i->getSd(), &write_set))
 		{
-			// Close 
-			send();
+			char buf[BUFFER_SIZE];
+			long sendsize = BUFFER_SIZE;
+			if (i->peek(buf, &sendsize))
+			{
+				send(i->getSd(), buf, sendsize, 0);
+			}
+			else
+			{
+				close(i->getSd());
+				responses.erase(i);
+			}
+			
 		}
 	}
 }

@@ -6,15 +6,11 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/15 17:02:27 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/16 00:22:06 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Response.hpp"
-
-
-extern char** environ;
-// add to utils later
 
 std::string Response::getCodeString(std::string code)
 {
@@ -119,7 +115,6 @@ std::string Response::generateAutoIndex(std::string path)
 	return authIndexHtml;
 }
 
-
 std::string getContentType(std::string filename)
 {
 	std::string extension = filename.substr(filename.find_last_of(".") + 1);
@@ -185,58 +180,71 @@ std::string getContentType(std::string filename)
 
 bool Response::handleGet()
 {
-	// location should never end with a slash
-	// path should always end with a slash
-	std::string uri = req.getUri();
-	std::string filename = uri.substr(.getPath().size());
-	if (filename[0] == '/')
-		filename = filename.substr(1);
-	if (filename == "")
-		filename = m_location.getIndex();
-	std::string path = m_location.getRoot() + filename;
-	// check if path is a directory
-	struct stat path_stat;
-	if (stat(path.c_str(), &path_stat) < 0)
+	// location path should never end with a slash
+	// root path should always end with a slash
+	Location location = m_request.getLocation();
+	std::string path = location.getPath();
+	std::string root = location.getRoot();
+	std::string uri = m_request.getUri();
+	// parse request path
+	m_filePath = root + uri.substr(path.size());
+	// resolve path
+	m_filePath = getAbsolutePath(m_filePath);
+	if (m_filePath == "")
 	{
 		m_statusCode = "404";
-		return (false);
+		return false;
 	}
-	if (S_ISDIR(path_stat.st_mode))
+	// check if absolute path is in root
+	if (m_filePath.find(root) != 0)
 	{
-		if (path[path.size() - 1] != '/')
+		m_statusCode = "403";
+		return false;
+	}
+	// check for permission
+	struct stat fileStat;
+	stat(m_filePath.c_str(), &fileStat);
+	if (S_ISDIR(fileStat.st_mode))
+	{
+		// check for index file
+		std::string indexFile = m_filePath + location.getIndex();
+		if (stat(indexFile.c_str(), &fileStat) == 0)
 		{
-			m_statusCode = "301";
-			m_response = "HTTP/1.1 " + m_statusCode + " " + getCodeString(m_statusCode) + "\r\n";
-			m_response += "Location: " + req.getHeader("host") + m_location.getPath() + filename + "/\r\n";
-			return (true);
-		}
-		if (m_location.getAutoIndex() == 1)
-		{
+			m_filePath = indexFile;
 			m_statusCode = "200";
-			m_response = "HTTP/1.1 " + m_statusCode + " " + getCodeString(m_statusCode) + "\r\n";
-			m_response += "Content-Type: text/html\r\n";
-			m_body = generateAutoIndex(path);
-			m_response += "Content-Length: " + toString(m_body.size()) + "\r\n";
-			m_response += "\r\n";
-			m_response += m_body;
-			return (true);
+			return true;
 		}
 		else
 		{
-			m_statusCode = "403";
-			return (false);
+			if (errno == EACCES)
+			{
+				m_statusCode = "403";
+				return false;
+			}
+			else
 		}
+		
+		// check for autoindex
+		if (location.getAutoIndex())
+		{
+			m_contentType = "text/html";
+			m_statusCode = "200";
+			m_body = getAutoIndexHtml(m_filePath);
+			return true;
+		}
+		m_statusCode = "403";
+		return false;
+	}
+	else if (S_ISREG(fileStat.st_mode))
+	{
+		m_contentType = getContentType(m_filePath);
+		m_statusCode = "200";
+		return true;
 	}
 	else
 	{
-		m_statusCode = "200";
-		m_response = "HTTP/1.1 " + m_statusCode + " " + getCodeString(m_statusCode) + "\r\n";
-		m_response += "Content-Type: " + getContentType(filename) + "\r\n";
-		m_response += "Content-Length: " + toString(path_stat.st_size) + "\r\n";
-		m_response += "\r\n";
-		m_body = readFile(path);
-		m_response += m_body;
-		return (true);
+		m_statusCode = "403";
+		return false;
 	}
 }
 
@@ -271,51 +279,39 @@ void Response::setErrorPage()
 	}
 }
 
-bool Response::handlePost()
+bool	Response::peekHeaders(char *buf, long *sendSize)
 {
-	const std::string upload_path = m_location.getUploadPath();
-	if (upload_path == "")
+	if (m_headersCursor == m_headers.size())
+		return false;
+	std::string tmp = m_headers.substr(m_headersCursor);
+	if (tmp.size() > BUFFER_SIZE)
 	{
-		// return 403
-		m_response = "";
+		tmp = tmp.substr(0, BUFFER_SIZE);
+		*sendSize = BUFFER_SIZE;
 	}
-	// handle CGI
-	// ...
-	// handle file upload
 	else
 	{
-		// get what is after location in uri
-		std::string uri = req.getUri();
-		std::string location = m_location.getPath();
-		std::string path = uri.substr(location.size());
-		if
+		*sendSize = tmp.size();
 	}
+	memcpy(buf, tmp.c_str(), BUFFER_SIZE);
+	return true
 }
 
-void	Response::increaseHeaderCursor(int cursor)
+bool	Response::peekBody(char *buf, long *sendSize)
 {
-	m_headersCursor += cursor;
-	if (m_headersCursor >= m_headers.size())
-		m_headersSent = true;
-}
-
-void	Response::peekBody(char *buf, int *chunksize)
-{
-	const int restsize = m_bodySize - m_bodyCursor;
-	if (restsize <= 0)
-	{
-		*chunksize = 0;
-		return ;
-	}
-	*chunksize = min(restsize, BUFFER_SIZE);
+	*sendSize = min(BUFFER_SIZE, m_bodySize - m_bodyCursor);
+	if (*sendSize == 0)
+		return false;
 	fseek(m_bodyFile, m_bodyCursor, SEEK_SET);
-	fgets(buf, *chunksize, m_bodyFile);
-	m_bodyCursor += *chunksize;
+	fread(buf, *sendSize,1, m_bodyFile);
 }
 
-std::string Response::peekHeaders()
+bool	Response::peek(char *buf, long *sendSize)
 {
-	return (m_headers.substr(m_headersCursor));
+	if (peekHeaders(buf, sendSize))
+		return true;
+	else if (peekBody(buf, sendSize))
+		return true;
 }
 
 Response::Response(const Request &request)
