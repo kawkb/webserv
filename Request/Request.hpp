@@ -17,23 +17,22 @@ class Request
 		Server								m_server;
 		Location							m_location;
 		std::map<std::string, std::string>	m_headers;
-		std::vector<char>					m_body;
+		std::FILE							*m_body;
 		bool								m_firstLine;
 		bool								m_headerStart;
-		bool								m_isDone;
+		bool								m_bodyStart;
 		std::string							m_status;
 	public:
 		// Class methods:
 		void                                parse(const std::vector<Server> &servers, const char *buf, int bufSize);
-		void                                fillReqLine(std::string line);
+		bool                                fillReqLine(std::string line);
 		void                                addHeader(std::string line);
 		void								fillBody(void);
-		bool								isWellFormed(const std::vector<Server> &servers);
-		void    							checkErrors(void)
-		int									methodAllowed(void);
+		bool								isWellFormed(void);
+		void    							checkErrors(const std::vector<Server> &servers);
+		bool								methodAllowed(void);
 		bool								matchLocation(void);
 		bool								matchServer(const std::vector<Server> &servers);
-
 		// Class attributes getters:
 		std::vector<char>                   getBody(void) const;
 		int                                 getSd(void) const;
@@ -42,10 +41,9 @@ class Request
 		std::string                         getUri(void) const;
 		std::string                         getVersion(void) const;
 		std::vector<char>                   getRequestBuffer(void) const;
-		bool                                getFirstLine(void) const;
-		bool                                getHeaderStart(void) const;
-		bool                                getIsDone(void) const;
 		std::string                         getError(void) const;
+		Server                              getServer(void) const;
+		Location                            getLocation(void) const;
 	    std::string            				getHeader(std::string key)const;
 		Request&                            operator= (const Request &req);
 		// Class Constructors/destructor			

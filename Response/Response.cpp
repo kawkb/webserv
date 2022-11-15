@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/14 18:28:03 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/15 01:54:36 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -306,7 +306,7 @@ Response::Response(const Request &request)
 {
 	m_done = false;
 	bool pass = true;
-	if ((m_statusCode = request.getError()) != "")
+	if ((m_statusCode = request.getError()) != "200")
 		pass = false;
 	else if (request.getMethod() == "GET")
 		pass = handleGet(request);
