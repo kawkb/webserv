@@ -6,20 +6,24 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/15 01:54:36 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/15 07:28:01 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Response.hpp"
 
+
+extern char** environ;
 // add to utils later
-template<class T>
-std::string toString(const T& value)
+template <class T>
+std::string toString(const T &value)
 {
 	std::ostringstream oss;
 	oss << value;
 	return oss.str();
 }
+
+
 
 std::string Response::getCodeString(std::string code)
 {
@@ -70,16 +74,16 @@ std::string Response::getCodeString(std::string code)
 	return "Unknown";
 }
 
-std::string	Response::generateAutoIndex(std::string path)
+std::string Response::generateAutoIndex(std::string path)
 {
 	std::vector<std::string> files;
 	std::vector<std::string> dirs;
 	std::string authIndexHtml;
 	DIR *dir;
 	struct dirent *ent;
-	if ((dir = opendir (path.c_str())) != NULL)
+	if ((dir = opendir(path.c_str())) != NULL)
 	{
-		while ((ent = readdir (dir)) != NULL)
+		while ((ent = readdir(dir)) != NULL)
 		{
 			if (strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0)
 			{
@@ -89,7 +93,7 @@ std::string	Response::generateAutoIndex(std::string path)
 					files.push_back(ent->d_name);
 			}
 		}
-		closedir (dir);
+		closedir(dir);
 	}
 	else
 	{
@@ -194,12 +198,12 @@ std::string getContentType(std::string filename)
 		return "application/octet-stream";
 }
 
-bool Response::handleGet(const Request &req)
+bool Response::handleGet()
 {
 	// location should never end with a slash
 	// path should always end with a slash
 	std::string uri = req.getUri();
-	std::string filename = uri.substr(m_location.getPath().size());
+	std::string filename = uri.substr(.getPath().size());
 	if (filename[0] == '/')
 		filename = filename.substr(1);
 	if (filename == "")
@@ -227,7 +231,7 @@ bool Response::handleGet(const Request &req)
 			m_response = "HTTP/1.1 " + m_statusCode + " " + getCodeString(m_statusCode) + "\r\n";
 			m_response += "Content-Type: text/html\r\n";
 			m_body = generateAutoIndex(path);
-			m_response += "Content-Length: " + toString(m_body.size())  + "\r\n";
+			m_response += "Content-Length: " + toString(m_body.size()) + "\r\n";
 			m_response += "\r\n";
 			m_response += m_body;
 			return (true);
@@ -257,8 +261,9 @@ void Response::setErrorPage()
 	m_response += "Content-Type: text/html\r\n";
 	std::string errorPagePath = m_server.getErrorPage(m_statusCode);
 	if (errorPagePath == "")
-	{	m_body = "<html><head><title>" + m_statusCode + " " + getCodeString(m_statusCode) + "</title></head><body>";
-		m_body += "<div class=\"base\">\n\t<div class=\"point\">></div>\n\t<h1><i>Http Error " + m_statusCode +":</i> <br>";
+	{
+		m_body = "<html><head><title>" + m_statusCode + " " + getCodeString(m_statusCode) + "</title></head><body>";
+		m_body += "<div class=\"base\">\n\t<div class=\"point\">></div>\n\t<h1><i>Http Error " + m_statusCode + ":</i> <br>";
 		std::string errorString = getCodeString(m_statusCode);
 		std::cout << errorString << std::endl;
 		for (size_t i = 0; i < errorString.size(); i++)
@@ -281,7 +286,7 @@ void Response::setErrorPage()
 	}
 }
 
-bool Response::handlePost(const Request &req)
+bool Response::handlePost()
 {
 	const std::string upload_path = m_location.getUploadPath();
 	if (upload_path == "")
@@ -298,7 +303,7 @@ bool Response::handlePost(const Request &req)
 		std::string uri = req.getUri();
 		std::string location = m_location.getPath();
 		std::string path = uri.substr(location.size());
-		if 
+		if
 	}
 }
 
@@ -319,7 +324,105 @@ Response::Response(const Request &request)
 		setErrorPage();
 		m_done = true;
 	}
+	
 }
+
+std::string    Response::serveCgi(Request request)
+{
+    //std::string reqtype = _req.getMethod();
+	pid_t pid;
+	int ret = 0;
+	int fd = open("/tmp/hello", O_RDWR | O_CREAT, 0777);
+	int fbody = open("/cgi/body", O_RDWR | O_CREAT, 0777);
+	// There will always be a reqtype; so no need to check here. But a check might be done getKey level either throw an exception ot check if empty()
+	if (request.getMethod() == "GET")
+	{
+		std::string query = keys["query"];	
+		if (query.size() != 0)
+		{
+			std::string c_size = std::to_string(keys["query"].length());
+			setenv("CONTENT_LENGTH", c_size.c_str(), 1);
+		}		
+		setenv("CONTENT_TYPE", "application/x-www-form-urlencoded", 1);
+	}
+	else if (request.getMethod() == "POST")
+	{
+		std::string content_type = request.getHeader("Content-Type");
+		if (!(content_type.empty()))
+			setenv("CONTENT_TYPE", content_type.c_str(), 1);
+		else
+			setenv("CONTENT_TYPE", "application/x-www-form-urlencoded", 1);
+		std::string content_length = request.getHeader("Content_length");
+		if (!(content_length.empty()))
+			setenv("CONTENT_LENGTH", content_length.c_str(), 1);
+	}
+    
+	setenv("GATEWAY_INTERFACE", "CGI/1.1", 1);
+	setenv("QUERY_STRING", keys["query"].c_str(), 1);
+	// std::cout << "WAA TFA7 <<>><><>" << keys["query"].c_str() << std::endl;
+	setenv("REQUEST_METHOD", request.getMethod().c_str(), 1);
+	setenv("SCRIPT_FILENAME", keys["full_file_path"].c_str(), 1); // Parse file on request level
+	setenv("SERVER_SOFTWARE", "Test", 1);
+	setenv("SERVER_PROTOCOL", "HTTP/1.1", 1);
+	setenv("REDIRECT_STATUS", "true", 1);
+	pid = fork();
+	int status = 0;
+	if (pid == 0)
+	{
+		if (request.getMethod() == "POST")
+			dup2(fbody, 0);
+		else
+			dup2(fd, 0);
+		dup2(fd, 1);
+		if (keys["extension"] == ".php")
+		{
+			char *args[3];
+			args[0] = (char *)keys["cgi_path"].c_str();
+			args[1] = (char *)keys["full_file_path"].c_str();
+			args[2] = NULL;
+			execve(args[0], args, environ);
+		}
+		else if (keys["extension"] == ".py")
+		{
+			char *args[3];
+			std::string python = "/usr/bin/python";
+			args[0] = (char *)python.c_str();
+			args[1] = (char *)keys["full_file_path"].c_str();
+			args[2] = NULL;
+			execve(args[0], args, environ);
+		}
+ // environ is a variable declared in unistd.h, and it keeps track of the environment variables during this running process.
+	}
+	else
+	{
+		time_t t = time(NULL);
+		while (time(NULL) - t < 5)
+		{
+			if (waitpid(pid, &status, WNOHANG) != 0)
+				break;
+		}
+	}
+	char buffer[1024] = {0};
+	lseek(fd, 0, SEEK_SET);
+	std::string res;
+	while (read(fd, buffer, 1024) > 0)
+        res += buffer;
+	close(fd);
+	close(fbody);
+	return res;
+	// keys["version"] = "HTTP/1.1";
+    // keys["code"] = "200";
+    // keys["phrase"] = "OK";
+
+    // keys["body"] = res;
+
+	// std::remove("/tmp/hello");
+	// std::remove("/cgi/body");
+    // appendHeader("Content-Length: " + std::to_string(keys["body"].length()));
+    // appendHeader("Content-Type: text/html");
+	// std::cout << "Received shit: " << res << std::endl;
+}
+
 
 Response::~Response() {}
 

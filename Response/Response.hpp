@@ -5,6 +5,8 @@
 
 #include <dirent.h>
 #include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 class Response
 {
@@ -26,8 +28,8 @@ public:
 	bool	handleDelete(const Request &req);
 	bool	continueRes();
 	bool	isDone() const;
-	bool	flushRes(int readsize);
 	void	setErrorPage();
+	std::string serveCgi(Request Request);
 			Response(const Request &request);
 			Response();
 			~Response();
