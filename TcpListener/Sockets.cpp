@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/25 17:52:09 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/15 13:01:20 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/15 16:59:08 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,7 +108,8 @@ void	handle_responses(std::vector<Server> &servers, fd_set &write_set, std::vect
 	{
 		if (FD_ISSET(i->getSd(), &write_set))
 		{
-			
+			// Close 
+			send();
 		}
 	}
 }
