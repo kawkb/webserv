@@ -8,7 +8,7 @@
 #include <map>
 #include <string.h>
 #include <stdio.h>
-
+#include<cstdlib>
 int remove_directory(const std::string path)
 {
 	DIR *d = opendir(path.c_str());
@@ -53,20 +53,23 @@ int min(int a, int b)
 	return (a < b ? a : b);
 }
 
-#define BUFFER_SIZE 10
+#define BUFFER_SIZE 12
 void	peekBody(char *buf, long *chunksize, long m_bodySize, long *m_bodyCursor, FILE *m_bodyFile, bool *done)
 {
 	*chunksize = min(BUFFER_SIZE, m_bodySize - *m_bodyCursor);
-
-	fseek(m_bodyFile, *m_bodyCursor, SEEK_SET);
-	fread(buf, 1, *chunksize, m_bodyFile);
-	if (*chunksize < BUFFER_SIZE)
+	if (*chunksize == 0)
 	{
-		std::cout << *chunksize << std::endl;
 		buf[*chunksize] = '\0';
 		*done = true;
+		return ;
 	}
-	*m_bodyCursor += *chunksize;
+	fseek(m_bodyFile, *m_bodyCursor, SEEK_SET);
+	fread(buf, *chunksize,1, m_bodyFile);
+}
+
+// generate random int between to values
+int irand(int min, int max) {
+    return ((double)rand() / ((double)RAND_MAX + 1.0)) * (max - min + 1) + min;
 }
 
 int main (int argc, char **argv)
@@ -81,7 +84,7 @@ int main (int argc, char **argv)
 	long m_bodySize = 0;
 	long m_bodyCursor = 0;
 	char buf[BUFFER_SIZE];
-	long chunksize = 0;
+	long chunksize = BUFFER_SIZE;
 	// get body size
 	fseek(m_bodyFile, 0L, SEEK_END);
 	m_bodySize = ftell(m_bodyFile);
@@ -91,9 +94,17 @@ int main (int argc, char **argv)
 	while (!done)
 	{
 		peekBody(buf, &chunksize, m_bodySize, &m_bodyCursor, m_bodyFile, &done);
-		std::cout << buf;
-		// std::cout << "cursor: " << m_bodyCursor << std::endl;
-		// std::cout << "chunksize: " << chunksize << std::endl;
-		// std::cout << "buf: " << buf << std::endl;
+		// std::cout << buf;
+		// read a random size
+		// virtual send-----
+		int randsize = irand(1, chunksize);
+		if (randsize + m_bodyCursor > m_bodySize)
+			randsize = m_bodySize - m_bodyCursor;
+		char *tmp = (char *)malloc(randsize + 1);
+		memcpy(tmp, buf , randsize);
+		tmp[randsize] = '\0';
+		std::cout << tmp;
+		// ----
+		m_bodyCursor += randsize;
 	}
 }

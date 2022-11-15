@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/25 17:52:09 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/15 16:59:08 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/16 00:24:46 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,8 +108,18 @@ void	handle_responses(std::vector<Server> &servers, fd_set &write_set, std::vect
 	{
 		if (FD_ISSET(i->getSd(), &write_set))
 		{
-			// Close 
-			send();
+			char buf[BUFFER_SIZE];
+			long sendsize = BUFFER_SIZE;
+			if (i->peek(buf, &sendsize))
+			{
+				send(i->getSd(), buf, sendsize, 0);
+			}
+			else
+			{
+				close(i->getSd());
+				responses.erase(i);
+			}
+			
 		}
 	}
 }

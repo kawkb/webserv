@@ -17,3 +17,14 @@ int min(int a, int b)
 {
 	return (a < b ? a : b);
 }
+
+// convert relative path to absolute path
+std::string getAbsolutePath(std::string path)
+{
+	char *absolutePath = realpath(path.c_str(), NULL);
+	if (absolutePath == NULL)
+		return "";
+	std::string result(absolutePath);
+	free(absolutePath);
+	return result;
+}
