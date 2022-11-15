@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ziyad <ziyad@student.42.fr>                +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/15 02:18:17 by ziyad            ###   ########.fr       */
+/*   Updated: 2022/11/15 15:38:46 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,15 +15,6 @@
 
 extern char** environ;
 // add to utils later
-template <class T>
-std::string toString(const T &value)
-{
-	std::ostringstream oss;
-	oss << value;
-	return oss.str();
-}
-
-
 
 std::string Response::getCodeString(std::string code)
 {
@@ -128,12 +119,6 @@ std::string Response::generateAutoIndex(std::string path)
 	return authIndexHtml;
 }
 
-std::string readFile(std::string path)
-{
-	std::ifstream file(path.c_str());
-	std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-	return content;
-}
 
 std::string getContentType(std::string filename)
 {
@@ -307,9 +292,40 @@ bool Response::handlePost()
 	}
 }
 
+void	Response::increaseHeaderCursor(int cursor)
+{
+	m_headersCursor += cursor;
+	if (m_headersCursor >= m_headers.size())
+		m_headersSent = true;
+}
+
+void	Response::peekBody(char *buf, int *chunksize)
+{
+	const int restsize = m_bodySize - m_bodyCursor;
+	if (restsize <= 0)
+	{
+		*chunksize = 0;
+		return ;
+	}
+	*chunksize = min(restsize, BUFFER_SIZE);
+	fseek(m_bodyFile, m_bodyCursor, SEEK_SET);
+	fgets(buf, *chunksize, m_bodyFile);
+	m_bodyCursor += *chunksize;
+}
+
+std::string Response::peekHeaders()
+{
+	return (m_headers.substr(m_headersCursor));
+}
+
 Response::Response(const Request &request)
 {
-	m_done = false;
+	m_headersSent = false;
+	m_headersCursor = 0;
+	m_request = request;
+	m_bodySent = false;
+	m_bodyCursor = 0;
+
 	bool pass = true;
 	if ((m_statusCode = request.getError()) != "")
 		pass = false;
@@ -320,11 +336,7 @@ Response::Response(const Request &request)
 	else if (request.getMethod() == "DELETE")
 		pass = handleDelete(request);
 	if (pass == false)
-	{
 		setErrorPage();
-		m_done = true;
-	}
-	
 }
 
 std::string    Response::serveCgi(Request request)
@@ -423,6 +435,10 @@ std::string    Response::serveCgi(Request request)
 	// std::cout << "Received shit: " << res << std::endl;
 }
 
+int		Response::getSd()
+{
+	return m_request.getSd();
+}
 
 Response::~Response() {}
 
