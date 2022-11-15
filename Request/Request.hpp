@@ -24,11 +24,16 @@ class Request
 		std::string							m_status;
 	public:
 		// Class methods:
-		void                                parse(const char *buf, int bufSize);
+		void                                parse(const std::vector<Server> &servers, const char *buf, int bufSize);
 		void                                fillReqLine(std::string line);
 		void                                addHeader(std::string line);
-		void								fillBody();
-		bool								isWellFormed();
+		void								fillBody(void);
+		bool								isWellFormed(const std::vector<Server> &servers);
+		void    							checkErrors(void)
+		int									methodAllowed(void);
+		bool								matchLocation(void);
+		bool								matchServer(const std::vector<Server> &servers);
+
 		// Class attributes getters:
 		std::vector<char>                   getBody(void) const;
 		int                                 getSd(void) const;

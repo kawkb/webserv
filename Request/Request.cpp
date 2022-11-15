@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/14 19:30:34 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/15 01:19:06 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,6 @@ Request::Request(int sd)
 {
     m_method = "";
     m_sd = sd;
-    m_bodyStart = 0;
     m_firstLine = true;
     m_headerStart = 0;
     m_status = "";
@@ -42,7 +41,6 @@ Request&    Request::operator= (const Request &cp)
     m_body = cp.getBody();
     m_firstLine = cp.getFirstLine();
     m_headerStart = cp.getHeaderStart();
-    m_bodyStart = cp.getBodyStart();
     return (*this);
 }
 
@@ -58,15 +56,19 @@ void    Request::fillReqLine(std::string line)
 {
     m_firstLine = false;
     std::vector<std::string> tokens = tokenize(line);
-    for(std::vector<std::string>::iterator i = tokens.begin(); i != tokens.end(); ++i)
+    if(tokens.size() == 3)
     {
-        if(*i == "GET" || *i == "POST" || *i == "DELETE")
-            m_method = *i;
-        else if(*i == "HTTP/1.1")
-            m_version = *i;
-        else
-            m_uri = *i;
+        m_method = tokens[0];
+        m_version = tokens[1];
+        m_uri = tokens[2];
     }
+    else
+    {
+        m_isDone = true;
+        m_status = "400";
+        return;
+    }
+    
 }
 void    Request::fillBody()
 {
@@ -136,7 +138,7 @@ bool Request::matchServer(const std::vector<Server> &servers, const Request &req
 	return (true);
 }
 
-bool   Request::isWellformed()
+bool   Request::isWellFormed(void)
 {
 	if ((m_method != "GET" && m_method != "POST" && m_method != "DELETE"))
 		m_status = "501";
@@ -151,18 +153,24 @@ bool   Request::isWellformed()
 	if (m_uri.length() > 2048)
 		m_status = "414";
     if (m_status != "")
+    {
         m_isDone = true;
+        return (false);
+    }
+    return(true);
 }
 
-void    Request::checkErrors()
+void    Request::checkErrors(const std::vector<Server> &servers)
 {
-    if (isWellFormed())
+    if (!isWellFormed())
         return;
-    matchServer();
-    matchLocation();
+    if (!matchServer(servers))
+        return;
+    if (!matchLocation())
+        return;
 }
 
-void    Request::parse(const char *buf, int bufSize)
+void    Request::parse(const std::vector<Server> &servers, const char *buf, int bufSize)
 {
     std::vector<char> vectorHugo;
     vectorHugo.assign(buf,buf+bufSize);
@@ -176,7 +184,7 @@ void    Request::parse(const char *buf, int bufSize)
         else if ((pos + 2) != m_requestBuffer.end() && *(pos + 2) == '\r')
         {
             checkErrors();
-            if (m_isDone() == true)
+            if (m_isDone == true)
                 break;
         }    
         else if (m_status == "200 OK")
