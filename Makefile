@@ -6,6 +6,7 @@ SRCS = TcpListener/TcpListener.cpp \
 		configFileParser/configParser.cpp \
 		Request/Request.cpp \
 		main.cpp \
+		# Response/Response.cpp \
 
 FLAGS = -Wall -Wextra -Werror  -std=c++98 -fsanitize=address 
 

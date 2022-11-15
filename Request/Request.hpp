@@ -18,7 +18,7 @@ class Request
 		Location							m_location;
 		std::map<std::string, std::string>	m_headers;
 		std::FILE							*m_body;
-		int									m_bodyLength;
+		size_t								m_bodyLength;
 		bool								m_firstLine;
 		bool								m_headerStart;
 		bool								m_bodyStart;
@@ -36,7 +36,7 @@ class Request
 		bool								matchLocation(void);
 		bool								matchServer(const std::vector<Server> &servers);
 		// Class attributes getters:
-		std::vector<char>                   getBody(void) const;
+		std::FILE                   		*getBody(void) const;
 		int                                 getSd(void) const;
 		std::map<std::string, std::string>  getHeaders(void) const;
 		std::string                         getMethod(void) const;
@@ -47,6 +47,7 @@ class Request
 		Server                              getServer(void) const;
 		Location                            getLocation(void) const;
 	    std::string            				getHeader(std::string key)const;
+		std::string                         getStatus(void)const;
 		Request&                            operator= (const Request &req);
 		// Class Constructors/destructor			
 											Request(void);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/15 18:13:14 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/15 15:09:31 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,13 +18,16 @@ Request::~Request(){}
 
 Request::Request(int sd)
 {
-    m_method = "";
     m_sd = sd;
+    m_method = "";
+    m_uri = "";
+    m_version = "";
+    m_bodyLength = 0;
     m_firstLine = true;
     m_headerStart = false;
-    m_status = "";
     m_bodyStart = false;
-    m_bodyLength = 0;
+    m_status = "";
+    m_queryString = "";
 }
 
 Request::Request(const Request &cp)
@@ -34,15 +37,21 @@ Request::Request(const Request &cp)
 
 Request&    Request::operator= (const Request &cp)
 {
-    m_sd = cp.getSd();
-    m_requestBuffer = cp.getRequestBuffer();
-    m_method = cp.getMethod();
-    m_uri = cp.getUri();
-    m_version = cp.getVersion();
-    m_headers = cp.getHeaders();
-    m_body = cp.getBody();
+    m_sd = cp.m_sd;
+    m_requestBuffer = cp.m_requestBuffer;
+    m_method = cp.m_method;
+    m_uri = cp.m_uri;
+    m_version = cp.m_version;
+    m_server = cp.m_server;
+    m_location = cp.m_location;
+    m_headers = cp.m_headers;
+    m_body = cp.m_body;
+    m_bodyLength = cp.m_bodyLength;
     m_firstLine = cp.m_firstLine;
     m_headerStart = cp.m_headerStart;
+    m_bodyStart = cp.m_bodyStart;
+    m_status = cp.m_status;
+    m_queryString = cp.m_queryString;
     return (*this);
 }
 
@@ -54,7 +63,8 @@ Location                            Request::getLocation(void) const{return(m_lo
 std::vector<char>                   Request::getRequestBuffer(void) const{return(m_requestBuffer);}
 std::string                         Request::getMethod(void)const{return(m_method);}
 std::map<std::string, std::string>  Request::getHeaders(void) const {return(m_headers);}
-std::vector<char>                   Request::getBody(void) const {return(m_body);}
+std::FILE                           *Request::getBody(void) const {return(m_body);}
+std::string                         Request::getStatus(void)const {return(m_status);}
 std::string                         Request::getError(void) const{return (m_status);}
 std::string            				Request::getHeader(std::string key)const
 {
@@ -67,8 +77,9 @@ std::string            				Request::getHeader(std::string key)const
 
 std::ostream& operator<<(std::ostream& out, Request request)
 {
+    // char buf[1];
 	std::map<std::string, std::string> headers = request.getHeaders();
-	std::vector<char> body = request.getBody();
+	// std::FILE *body = request.getBody();
     out << "=============Request==============" << std::endl;
     out << "request sd: " << request.getSd() << std::endl;
     out << "request method: " << request.getMethod()<< std::endl;
@@ -76,8 +87,18 @@ std::ostream& operator<<(std::ostream& out, Request request)
     out << "request version: " << request.getVersion()<< std::endl;
     out << "request headers: " << std::endl;
 	for (std::map<std::string, std::string>::iterator i = headers.begin(); i != headers.end(); ++i)
-	    out << "  " << i->first << ":" << i->second << std::endl;
-    out << "request body: " << std::endl << std::string(body.begin(), body.end()) << std::endl;
+	    out << "  |" << i->first << "|:" << i->second << std::endl;
+    out << "request body: " << std::endl;
+    // long lSize;
+    // char * buffer;
+    // size_t result;
+    // while (!feof(body))
+    // {
+    //     fread(&buf, 1, 1, body);
+    //     std::cout << buf << std::endl;
+    // }
+    
+    //     fclose(body);
 	return out;
 }
 
@@ -128,6 +149,7 @@ bool Request::matchLocation(void)
 		m_status = "301 Moved Permanently\n";
         return(false);
     }
+    return(true);
 }
 
 bool Request::matchServer(const std::vector<Server> &servers)
@@ -171,7 +193,7 @@ bool   Request::isWellFormed(void)
 		m_status = "501";
 	if (m_version != "HTTP/1.1")
 		m_status = "505";
-	if (getHeader("Transfer-Encoding") != "chunked")
+	if (getHeader("Transfer-Encoding") != "chunked" &&  getHeader("Transfer-Encoding") != "")
 		m_status = "501";
 	if (m_method == "POST" && getHeader("Transfer-Encoding").empty() && getHeader("Content-Length").empty())
 		m_status = "400";
@@ -192,9 +214,8 @@ void    Request::checkErrors(const std::vector<Server> &servers)
         return;
     if (!matchLocation())
         return;
-    if (!methodAllowed())
-        return;
-        //delee /r/n from requestline;
+    // if (!methodAllowed())
+    //     return;
     m_bodyStart = true;
 }
 
@@ -205,8 +226,8 @@ bool    Request::fillReqLine(std::string line)
     if(tokens.size() == 3)
     {
         m_method = tokens[0];
-        m_version = tokens[1];
-        const std::string tmp = tokens[2];
+        m_version = tokens[2];
+        const std::string tmp = tokens[1];
 		size_t pos = tmp.find("?");
 		if (pos != std::string::npos)
 		{
@@ -235,17 +256,33 @@ void    Request::addHeader(std::string line)
 void    Request::fillBody()
 {
     m_body = tmpfile();
-    if (m_bodyLength < atoi(getHeader("Content-Length").c_str()))
-    {
-        if (m_requestBuffer.size() > m_bodyLength)
-        {
-            // vector erase;
-            fputs(reinterpret_cast<char*> (&m_requestBuffer[0]), m_body);
-            m_status = "ok";
-            return;
-        }
+    // char buffer [256];
+    // std::cout << m_bodyLength << "==="<< m_requestBuffer.size()<< std::endl;
+    // std::cout <<getHeader("Content-Length") << std::endl;
+    // std::cout << m_bodyLength << "==="<<atoi(getHeader("Content-Length").c_str())<< std::endl;
+    // if ((int)m_bodyLength < atoi(getHeader("Content-Length").c_str()))
+    // {
+    //     if (m_requestBuffer.size() > m_bodyLength)
+    //     {
+    //         m_requestBuffer.erase(m_requestBuffer.begin() + m_bodyLength, m_requestBuffer.end());
+    //         // fputs(reinterpret_cast<char*> (&m_requestBuffer[0]), m_body);
+    //         std::cout<<reinterpret_cast<char*> (&m_requestBuffer[0]) << std::endl;
+    //         m_status = "ok";
+    //         return;
+    //     }
+                    std::cout <<"|"<<std::string(m_requestBuffer.begin(),m_requestBuffer.end()) <<"|"<< std::endl;
+
+        // m_bodyLength = m_requestBuffer.size();
+        // std::cout << reinterpret_cast<char*> (&m_requestBuffer[0])  << "test"<< std::endl;
+        // fputs(reinterpret_cast<char*> (&m_requestBuffer[0]), m_body);
+        // while (!feof(m_body)) 
+        // {
+        // if (fgets (buffer, 256, m_body) == NULL) break;
+        // fputs (buffer,stdout);
+        // }
         
-    }
+        // return;
+    // }
     // else if (getHeader("Transfer-Encoding") == "chunked")
     // {
         
@@ -254,6 +291,7 @@ void    Request::fillBody()
 
 void    Request::parse(const std::vector<Server> &servers, const char *buf, int bufSize)
 {
+    (void)servers;
     std::vector<char> vectorHugo;
     vectorHugo.assign(buf,buf+bufSize);
     m_requestBuffer.insert(m_requestBuffer.end(), vectorHugo.begin(),vectorHugo.end());
@@ -263,8 +301,11 @@ void    Request::parse(const std::vector<Server> &servers, const char *buf, int 
         std::string line =  std::string(m_requestBuffer.begin(), pos);
         if (m_firstLine)
             fillReqLine(line);
-        else if ((pos + 2) != m_requestBuffer.end() && *(pos + 2) == '\r') // check /r /n
-            checkErrors(servers); 
+        else if ((pos + 2) != m_requestBuffer.end() && *(pos + 2) == '\r')
+        {
+            addHeader(line);
+            checkErrors(servers); // check /r /n
+        }
         else
             addHeader(line);
         if (m_status != "")
