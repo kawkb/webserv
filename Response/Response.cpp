@@ -6,7 +6,7 @@
 /*   By: ziyad <ziyad@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/15 02:18:17 by ziyad            ###   ########.fr       */
+/*   Updated: 2022/11/15 16:44:23 by ziyad            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -327,14 +327,9 @@ Response::Response(const Request &request)
 	
 }
 
-std::string    Response::serveCgi(Request request)
+
+void	setenvCGI(Request request)
 {
-    //std::string reqtype = _req.getMethod();
-	pid_t pid;
-	int ret = 0;
-	int fd = open("/tmp/hello", O_RDWR | O_CREAT, 0777);
-	int fbody = open("/cgi/body", O_RDWR | O_CREAT, 0777);
-	// There will always be a reqtype; so no need to check here. But a check might be done getKey level either throw an exception ot check if empty()
 	if (request.getMethod() == "GET")
 	{
 		std::string query = keys["query"];	
@@ -352,28 +347,52 @@ std::string    Response::serveCgi(Request request)
 			setenv("CONTENT_TYPE", content_type.c_str(), 1);
 		else
 			setenv("CONTENT_TYPE", "application/x-www-form-urlencoded", 1);
-		std::string content_length = request.getHeader("Content_length");
+		std::string content_length = request.getHeader("Content-Length");
 		if (!(content_length.empty()))
 			setenv("CONTENT_LENGTH", content_length.c_str(), 1);
 	}
-    
+	
+	if (request.getHeader("cookie").size() != 0)
+		setenv("HTTP_COOKIE", request.getHeader("cookie").c_str(), 1);
 	setenv("GATEWAY_INTERFACE", "CGI/1.1", 1);
 	setenv("QUERY_STRING", keys["query"].c_str(), 1);
-	// std::cout << "WAA TFA7 <<>><><>" << keys["query"].c_str() << std::endl;
 	setenv("REQUEST_METHOD", request.getMethod().c_str(), 1);
 	setenv("SCRIPT_FILENAME", keys["full_file_path"].c_str(), 1); // Parse file on request level
 	setenv("SERVER_SOFTWARE", "Test", 1);
 	setenv("SERVER_PROTOCOL", "HTTP/1.1", 1);
 	setenv("REDIRECT_STATUS", "true", 1);
+}
+
+FILE    *Response::serveCgi(Request request)
+{
+	setenvCgi(request);
+	FILE *tempfile = tmpfile();
+	if (tempfile == NULL)
+	{
+		std::cout << "Error creating temporary file" << std::endl;
+		return ;
+	}
+	int stdout_copy = dup(1);
+	dup2(fileno(tempfile), 1);
+	pid_t pid;
 	pid = fork();
 	int status = 0;
 	if (pid == 0)
 	{
 		if (request.getMethod() == "POST")
-			dup2(fbody, 0);
-		else
-			dup2(fd, 0);
-		dup2(fd, 1);
+		{
+			int stdin_copy = dup(0);
+			FILE *body = tmpfile();
+			if (body == NULL)
+			{
+				std::cout << "Error creating temporary file" << std::endl;
+				return ;
+			}
+			std::string body_str = request.keys["body"];
+			fwrite(body_str.c_str(), 1, body_str.length(), body);
+			rewind(body);
+			dup2(fileno(body), 0);
+		}
 		if (keys["extension"] == ".php")
 		{
 			char *args[3];
@@ -391,7 +410,6 @@ std::string    Response::serveCgi(Request request)
 			args[2] = NULL;
 			execve(args[0], args, environ);
 		}
- // environ is a variable declared in unistd.h, and it keeps track of the environment variables during this running process.
 	}
 	else
 	{
@@ -402,25 +420,10 @@ std::string    Response::serveCgi(Request request)
 				break;
 		}
 	}
-	char buffer[1024] = {0};
-	lseek(fd, 0, SEEK_SET);
-	std::string res;
-	while (read(fd, buffer, 1024) > 0)
-        res += buffer;
-	close(fd);
-	close(fbody);
-	return res;
-	// keys["version"] = "HTTP/1.1";
-    // keys["code"] = "200";
-    // keys["phrase"] = "OK";
-
-    // keys["body"] = res;
-
-	// std::remove("/tmp/hello");
-	// std::remove("/cgi/body");
-    // appendHeader("Content-Length: " + std::to_string(keys["body"].length()));
-    // appendHeader("Content-Type: text/html");
-	// std::cout << "Received shit: " << res << std::endl;
+	dup2(stdout_copy, 1);
+	close(stdout_copy);
+	rewind(tempfile);
+	return (tempfile);
 }
 
 

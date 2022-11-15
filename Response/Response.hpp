@@ -29,7 +29,8 @@ public:
 	bool	continueRes();
 	bool	isDone() const;
 	void	setErrorPage();
-	std::string serveCgi(Request Request);
+	FILE 	*serveCgi(Request Request);
+	void	setenvCgi(Request Request);
 			Response(const Request &request);
 			Response();
 			~Response();
