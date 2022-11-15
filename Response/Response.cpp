@@ -6,7 +6,7 @@
 /*   By: ziyad <ziyad@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/15 16:44:23 by ziyad            ###   ########.fr       */
+/*   Updated: 2022/11/15 16:48:14 by ziyad            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -311,7 +311,7 @@ Response::Response(const Request &request)
 {
 	m_done = false;
 	bool pass = true;
-	if ((m_statusCode = request.getError()) != "")
+	if ((m_statusCode = request.getError()) != "200")
 		pass = false;
 	else if (request.getMethod() == "GET")
 		pass = handleGet(request);
