@@ -28,7 +28,6 @@ public:
 	bool	handleDelete(const Request &req);
 	bool	continueRes();
 	bool	isDone() const;
-	bool	flushRes(int readsize);
 	void	setErrorPage();
 	std::string serveCgi(Request Request);
 			Response(const Request &request);

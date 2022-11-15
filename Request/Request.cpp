@@ -52,6 +52,45 @@ void    Request::addHeader(std::string line)
         m_headers.insert(std::pair<std::string, std::string>(line.substr(0, found), line.substr(found + 2)));
 }
 
+std::vector<std::string> split(std::string str, std::string sep)
+{
+	std::vector<std::string> ret;
+	std::string token;
+	size_t pos = str.find(sep);
+	if (pos == std::string::npos)
+	{
+		ret.push_back(str);
+		return ret;
+	}
+	while ((pos = str.find(sep)) != std::string::npos)
+	{
+		token = str.substr(0, pos);
+		ret.push_back(token);
+		str.erase(0, pos + sep.length());
+	}
+	ret.push_back(str);
+	return ret;
+}
+
+void	Request::fillQueryString()
+{
+	size_t found = m_uri.find('?');
+	if (found != std::string::npos)
+	{
+		std::string query = m_uri.substr(found + 1);
+		std::vector<std::string> querySplit = split(query, "&");
+		for (size_t i = 0; i < querySplit.size(); i++)
+		{
+			size_t found2 = querySplit[i].find('=');
+			if (found2 != std::string::npos)
+				m_queryString[querySplit[i].substr(0, found2)] = querySplit[i].substr(found2 + 1);
+			else
+				m_queryString[querySplit[i]]  = "";
+		}
+	}
+	m_uri = m_uri.substr(0, found);
+}
+
 void    Request::fillReqLine(std::string line)
 {
     m_firstLine = false;
@@ -68,8 +107,9 @@ void    Request::fillReqLine(std::string line)
         m_status = "400";
         return;
     }
-    
+	fillQueryString();
 }
+
 void    Request::fillBody()
 {
                 // m_body.insert(m_body.end(), m_requestBuffer.begin(), pos + 1);
