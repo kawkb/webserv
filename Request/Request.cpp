@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/15 07:27:36 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/15 07:33:17 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,21 @@ std::string            				Request::getHeader(std::string key)const
 }
 
 std::ostream& operator<<(std::ostream& out, Request request)
+{
+	std::map<std::string, std::string> headers = request.getHeaders();
+	std::vector<char> body = request.getBody();
+    out << "=============Request==============" << std::endl;
+    out << "request sd: " << request.getSd() << std::endl;
+    out << "request method: " << request.getMethod()<< std::endl;
+    out << "request uri: " << request.getUri()<< std::endl;
+    out << "request version: " << request.getVersion()<< std::endl;
+    out << "request headers: " << std::endl;
+	for (std::map<std::string, std::string>::iterator i = headers.begin(); i != headers.end(); ++i)
+	    out << "  " << i->first << ":" << i->second << std::endl;
+    out << "request body: " << std::endl << std::string(body.begin(), body.end()) << std::endl;
+	return out;
+}
+
 std::vector<std::string> split(std::string str, std::string sep)
 {
 	std::vector<std::string> ret;
@@ -103,44 +118,6 @@ void	Request::fillQueryString()
 	}
 	m_uri = m_uri.substr(0, found);
 }
-
-void    Request::fillReqLine(std::string line)
-{
-    m_firstLine = false;
-    std::vector<std::string> tokens = tokenize(line);
-    if(tokens.size() == 3)
-    {
-        m_method = tokens[0];
-        m_version = tokens[1];
-        m_uri = tokens[2];
-    }
-    else
-    {
-        m_isDone = true;
-        m_status = "400";
-        return;
-    }
-	fillQueryString();
-}
-
-void    Request::fillBody()
-{
-	std::map<std::string, std::string> headers = request.getHeaders();
-	std::vector<char> body = request.getBody();
-    out << "=============Request==============" << std::endl;
-    out << "request sd: " << request.getSd() << std::endl;
-    out << "request method: " << request.getMethod()<< std::endl;
-    out << "request uri: " << request.getUri()<< std::endl;
-    out << "request version: " << request.getVersion()<< std::endl;
-    out << "request headers: " << std::endl;
-	for (std::map<std::string, std::string>::iterator i = headers.begin(); i != headers.end(); ++i)
-	    out << "  " << i->first << ":" << i->second << std::endl;
-    out << "request body: " << std::endl << std::string(body.begin(), body.end()) << std::endl;
-	return out;
-}
-
-
-
 
 bool Request::methodAllowed(void)
 {
@@ -253,6 +230,7 @@ bool    Request::fillReqLine(std::string line)
         m_status = "400";
         return(false);
     }
+    fillQueryString();
 }
 
 void    Request::addHeader(std::string line)
