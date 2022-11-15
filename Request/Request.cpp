@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/15 08:23:47 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/15 18:13:14 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,25 +99,6 @@ std::vector<std::string> split(std::string str, std::string sep)
 	}
 	ret.push_back(str);
 	return ret;
-}
-
-void	Request::fillQueryString()
-{
-	size_t found = m_uri.find('?');
-	if (found != std::string::npos)
-	{
-		std::string query = m_uri.substr(found + 1);
-		std::vector<std::string> querySplit = split(query, "&");
-		for (size_t i = 0; i < querySplit.size(); i++)
-		{
-			size_t found2 = querySplit[i].find('=');
-			if (found2 != std::string::npos)
-				m_queryString[querySplit[i].substr(0, found2)] = querySplit[i].substr(found2 + 1);
-			else
-				m_queryString[querySplit[i]]  = "";
-		}
-	}
-	m_uri = m_uri.substr(0, found);
 }
 
 bool Request::methodAllowed(void)
@@ -225,14 +206,22 @@ bool    Request::fillReqLine(std::string line)
     {
         m_method = tokens[0];
         m_version = tokens[1];
-        m_uri = tokens[2];
+        const std::string tmp = tokens[2];
+		size_t pos = tmp.find("?");
+		if (pos != std::string::npos)
+		{
+			m_uri = tmp.substr(0, pos);
+			m_queryString = tmp.substr(pos + 1);
+		}
+		else
+			m_uri = tmp;
+		return (true);
     }
     else
     {
         m_status = "400";
         return(false);
     }
-    fillQueryString();
 }
 
 void    Request::addHeader(std::string line)
