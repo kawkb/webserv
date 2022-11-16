@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/16 04:53:03 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/16 10:01:26 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,9 +48,11 @@ int     Server::parse(std::ifstream &myfile)
             m_index = token[1];
 		else if (token[0] == "autoindex" && size == 2 )
             m_autoIndex = token[1] == "on" ? 1 : 0;
-		// please make this into cgi_path and cgi_extension check out HPP the format would be something like this : cgi .php /usr/bin/php-cgi
-        else if (token[0] == "cgi"&& size == 2 )
-            m_cgi = token[1];
+        else if (token[0] == "cgi" && size == 3 )
+        {
+            m_cgiExtension = token[1];
+            m_cgiPath = token[2];
+        }
         else if (token[0] == "max_body_size" && size == 2 )
         {
             if (token[1].find_first_not_of("0123456789") == std::string::npos)
