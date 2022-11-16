@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Sockets.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/25 17:52:09 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/15 16:59:08 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/15 15:10:31 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ void	accept_connections(std::vector<TcpListener> &tcpListeners, fd_set &read_set
 			else
 				requests.push_back(Request(connection));
 			if (connection > max_sd)
-				max_sd = connection;
+				max_sd = connection; 
 		}
 	}
 }
@@ -64,7 +64,7 @@ void		set_master_sockets(std::vector<TcpListener> &tcpListeners, fd_set &read_se
 	}
 }
 
-void	set_clients_sockets(std::vector<Request> &requests, fd_set &read_set, int &max_sd)
+void	set_clients_sockets(std::vector<Request> &requests, std::vector<Response> &responses, fd_set &read_set, fd_set &write_set, int &max_sd)
 {
 	for (std::vector<Request>::iterator i = requests.begin(); i != requests.end(); ++i)
 	{
@@ -72,33 +72,33 @@ void	set_clients_sockets(std::vector<Request> &requests, fd_set &read_set, int &
 		if (i->getSd() > max_sd)
 			max_sd = i->getSd();
 	}
-	for (std::vector<Response>::iterator i = response.begin(); i != response.end(); ++i)
-	{
-		FD_SET(i->getSd(), &write_set);
-		if (i->getSd() > max_sd)
-			max_sd = i->getSd();
-	}
+	// for (std::vector<Response>::iterator i = responses.begin(); i != responses.end(); ++i)
+	// {
+	// 	FD_SET(i->getSd(), &write_set);
+	// 	if (i->getSd() > max_sd)
+	// 		max_sd = i->getSd();
+	// }
 }
 
-void		handle_requests(std::vector<TcpListener> &tcpListeners, fd_set &read_set, std::vector<Request> &requests)
+void		handle_requests(const std::vector<Server> &servers, fd_set &read_set, std::vector<Request> &requests)
 {
 	char buf[1024]; 
-	(void)tcpListeners;
 	for (std::vector<Request>::iterator i = requests.begin(); i != requests.end(); ++i)
 	{
 		if (FD_ISSET(i->getSd(), &read_set))
 		{
 			int rec = recv(i->getSd(), &buf, 1024, 0);
-			i->parse(buf, rec);
+			i->parse(servers, buf, rec);
+			// std::cout << *i << std::endl;
 		}
 	}
 }
 
-void	handle_responses(std::vector<Server> &servers, fd_set &write_set, std::vector<Request> &requests, std::vector<Response> &responses)
+void	handle_responses(fd_set &write_set, std::vector<Request> &requests, std::vector<Response> &responses)
 {
 	for (std::vector<Request>::iterator i = requests.begin(); i != requests.end(); ++i)
 	{	
-		if (i->isDone())
+		if (i->getStatus() != "")
 		{
 			responses.push_back(Response(*i));
 			requests.erase(i);
@@ -108,8 +108,18 @@ void	handle_responses(std::vector<Server> &servers, fd_set &write_set, std::vect
 	{
 		if (FD_ISSET(i->getSd(), &write_set))
 		{
-			// Close 
-			send();
+			char buf[BUFFER_SIZE];
+			long sendsize = BUFFER_SIZE;
+			if (i->peek(buf, &sendsize))
+			{
+				send(i->getSd(), buf, sendsize, 0);
+			}
+			else
+			{
+				close(i->getSd());
+				responses.erase(i);
+			}
+			
 		}
 	}
 }
@@ -117,7 +127,7 @@ void	handle_responses(std::vector<Server> &servers, fd_set &write_set, std::vect
 int     run_server(std::vector<Server> &servers, std::vector<TcpListener> &tcpListeners)
 {
 	std::vector<Request>	requests;
-	std::vector<Response>	responses;
+	// std::vector<Response>	responses;
 	fd_set					read_set, write_set, read_set_backup, write_set_backup;
 	int						max_sd;
 	initiate_master_sockets(servers, tcpListeners);
@@ -132,8 +142,8 @@ int     run_server(std::vector<Server> &servers, std::vector<TcpListener> &tcpLi
 		if ((select(max_sd + 1, &read_set, &write_set, NULL, NULL) < 0))
 			exit_failure("select error");
 		accept_connections(tcpListeners, read_set, requests, max_sd);
-		handle_requests(tcpListeners, read_set, requests);
-		handle_responses(servers, write_set, requests, responses);
+		handle_requests(servers, read_set, requests);
+		// handle_responses(write_set, requests, responses);
 	}
 	return (0);
 }

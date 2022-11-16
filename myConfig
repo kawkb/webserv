@@ -2,6 +2,7 @@ server
 {
 	listen          8080
 	server_name		server1
+	allow_methods	GET
 }
 server
 {

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/16 11:01:45 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/09 16:22:05 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/16 04:51:31 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,8 @@ class Server
 		std::string                         m_serverName;
 		std::string                         m_root;
 		std::string                         m_index;
-		std::string                         m_cgi;
+		std::string                         m_cgiPath;
+		std::string							m_cgiExtension;
 		std::vector<Location>               m_location;
 		std::map<std::string, std::string>  m_errorPage;
 		std::vector<std::string>            m_method;
@@ -45,7 +46,8 @@ class Server
 		std::string                         getRoot(void) const;
 		std::string                         getIndex(void) const;
 		int                                 getAutoIndex(void) const;
-		std::string                         getCgi(void) const;
+		std::string							getCgiPath(void) const;
+		std::string							getCgiExtention(void) const;
 		int                                 getMaxBodySize(void) const;
 		std::vector<Location>               getLocation(void) const;
 		std::string  						getErrorPage(std::string errorcode) const;
