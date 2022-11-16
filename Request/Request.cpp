@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/15 15:09:31 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/16 02:24:08 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -256,33 +256,31 @@ void    Request::addHeader(std::string line)
 void    Request::fillBody()
 {
     m_body = tmpfile();
+    size_t contentLength = atoi(getHeader("Content-Length").c_str());
     // char buffer [256];
-    // std::cout << m_bodyLength << "==="<< m_requestBuffer.size()<< std::endl;
     // std::cout <<getHeader("Content-Length") << std::endl;
-    // std::cout << m_bodyLength << "==="<<atoi(getHeader("Content-Length").c_str())<< std::endl;
-    // if ((int)m_bodyLength < atoi(getHeader("Content-Length").c_str()))
-    // {
-    //     if (m_requestBuffer.size() > m_bodyLength)
-    //     {
-    //         m_requestBuffer.erase(m_requestBuffer.begin() + m_bodyLength, m_requestBuffer.end());
-    //         // fputs(reinterpret_cast<char*> (&m_requestBuffer[0]), m_body);
-    //         std::cout<<reinterpret_cast<char*> (&m_requestBuffer[0]) << std::endl;
-    //         m_status = "ok";
-    //         return;
-    //     }
-                    std::cout <<"|"<<std::string(m_requestBuffer.begin(),m_requestBuffer.end()) <<"|"<< std::endl;
-
-        // m_bodyLength = m_requestBuffer.size();
-        // std::cout << reinterpret_cast<char*> (&m_requestBuffer[0])  << "test"<< std::endl;
-        // fputs(reinterpret_cast<char*> (&m_requestBuffer[0]), m_body);
-        // while (!feof(m_body)) 
-        // {
-        // if (fgets (buffer, 256, m_body) == NULL) break;
-        // fputs (buffer,stdout);
-        // }
+        // std::cout << (int)m_bodyLength  << "==="<<atoi(getHeader("Content-Length").c_str())<< "hello"<<std::endl;
+    if (m_bodyLength < contentLength )
+    {
+        if (m_requestBuffer.size() > contentLength)
+        {
+            m_requestBuffer.erase(m_requestBuffer.begin() + contentLength, m_requestBuffer.end());
+            // fputs(reinterpret_cast<char*> (&m_requestBuffer[0]), m_body);
+            std::cout<<std::string(m_requestBuffer.begin(),m_requestBuffer.end());
+            m_status = "ok";
+            return;
+        }
+        m_bodyLength = m_requestBuffer.size();
+        std::cout << std::string(m_requestBuffer.begin(),m_requestBuffer.end());
+        fputs(reinterpret_cast<char*> (&m_requestBuffer[0]), m_body);
+        while (!feof(m_body)) 
+        {
+        if (fgets (buffer, 256, m_body) == NULL) break;
+        fputs (buffer,stdout);
+        }
         
         // return;
-    // }
+    }
     // else if (getHeader("Transfer-Encoding") == "chunked")
     // {
         
@@ -301,10 +299,10 @@ void    Request::parse(const std::vector<Server> &servers, const char *buf, int 
         std::string line =  std::string(m_requestBuffer.begin(), pos);
         if (m_firstLine)
             fillReqLine(line);
-        else if ((pos + 2) != m_requestBuffer.end() && *(pos + 2) == '\r')
+        else if ((pos + 2) != m_requestBuffer.end() && *(pos + 2) == '\r' && (pos + 3) != m_requestBuffer.end() && *(pos + 3) == '\n')
         {
             addHeader(line);
-            checkErrors(servers); // check /r /n
+            checkErrors(servers);
         }
         else
             addHeader(line);
@@ -314,7 +312,10 @@ void    Request::parse(const std::vector<Server> &servers, const char *buf, int 
         pos = find(m_requestBuffer.begin(), m_requestBuffer.end(), '\r');
     }
     if (m_bodyStart)
+    {
+        m_requestBuffer.erase(m_requestBuffer.begin(), pos + 2);
         fillBody();
+    }
     if (m_headerStart)
     {
         addHeader(std::string(m_requestBuffer.begin(), m_requestBuffer.end()));

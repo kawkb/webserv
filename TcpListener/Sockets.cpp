@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/25 17:52:09 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/15 15:10:31 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/15 15:39:03 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,9 @@ void		set_master_sockets(std::vector<TcpListener> &tcpListeners, fd_set &read_se
 	}
 }
 
-void	set_clients_sockets(std::vector<Request> &requests, std::vector<Response> &responses, fd_set &read_set, fd_set &write_set, int &max_sd)
+// void	set_clients_sockets(std::vector<Request> &requests, std::vector<Response> &responses, fd_set &read_set, fd_set &write_set, int &max_sd)
+void	set_clients_sockets(std::vector<Request> &requests,fd_set &read_set, int &max_sd)
+
 {
 	for (std::vector<Request>::iterator i = requests.begin(); i != requests.end(); ++i)
 	{
@@ -94,35 +96,35 @@ void		handle_requests(const std::vector<Server> &servers, fd_set &read_set, std:
 	}
 }
 
-void	handle_responses(fd_set &write_set, std::vector<Request> &requests, std::vector<Response> &responses)
-{
-	for (std::vector<Request>::iterator i = requests.begin(); i != requests.end(); ++i)
-	{	
-		if (i->getStatus() != "")
-		{
-			responses.push_back(Response(*i));
-			requests.erase(i);
-		}
-	}
-	for(std::vector<Response>::iterator i = responses.begin(); i != responses.end(); ++i)
-	{
-		if (FD_ISSET(i->getSd(), &write_set))
-		{
-			char buf[BUFFER_SIZE];
-			long sendsize = BUFFER_SIZE;
-			if (i->peek(buf, &sendsize))
-			{
-				send(i->getSd(), buf, sendsize, 0);
-			}
-			else
-			{
-				close(i->getSd());
-				responses.erase(i);
-			}
+// void	handle_responses(fd_set &write_set, std::vector<Request> &requests, std::vector<Response> &responses)
+// {
+// 	for (std::vector<Request>::iterator i = requests.begin(); i != requests.end(); ++i)
+// 	{	
+// 		if (i->getStatus() != "")
+// 		{
+// 			responses.push_back(Response(*i));
+// 			requests.erase(i);
+// 		}
+// 	}
+// 	for(std::vector<Response>::iterator i = responses.begin(); i != responses.end(); ++i)
+// 	{
+// 		if (FD_ISSET(i->getSd(), &write_set))
+// 		{
+// 			char buf[BUFFER_SIZE];
+// 			long sendsize = BUFFER_SIZE;
+// 			if (i->peek(buf, &sendsize))
+// 			{
+// 				send(i->getSd(), buf, sendsize, 0);
+// 			}
+// 			else
+// 			{
+// 				close(i->getSd());
+// 				responses.erase(i);
+// 			}
 			
-		}
-	}
-}
+// 		}
+// 	}
+// }
 
 int     run_server(std::vector<Server> &servers, std::vector<TcpListener> &tcpListeners)
 {
