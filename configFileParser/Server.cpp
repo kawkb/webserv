@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/12 20:58:52 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/16 04:53:03 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,7 @@ int     Server::parse(std::ifstream &myfile)
             m_index = token[1];
 		else if (token[0] == "autoindex" && size == 2 )
             m_autoIndex = token[1] == "on" ? 1 : 0;
+		// please make this into cgi_path and cgi_extension check out HPP the format would be something like this : cgi .php /usr/bin/php-cgi
         else if (token[0] == "cgi"&& size == 2 )
             m_cgi = token[1];
         else if (token[0] == "max_body_size" && size == 2 )
@@ -143,9 +144,14 @@ int     Server::getAutoIndex(void) const
     return(m_autoIndex);
 }
 
-std::string Server::getCgi(void) const
+std::string Server::getCgiExtention(void) const
 {
-    return(m_cgi);
+    return(m_cgiExtension);
+}
+
+std::string Server::getCgiPath(void) const
+{
+	return (m_cgiPath);
 }
 
 int     Server::getMaxBodySize(void) const
@@ -160,7 +166,8 @@ Server::Server()
     m_serverName = "localhost";
     m_root = "";
     m_index = "";
-    m_cgi = "";
+    m_cgiExtension = "";
+	m_cgiPath = "";
     m_maxBodySize = 1000;
 }
 
@@ -176,7 +183,8 @@ Server & Server::operator=(const Server &cp)
     m_serverName = cp.getName();
     m_root = cp.getRoot();
     m_index = cp.getIndex();
-    m_cgi = cp.getCgi();
+    m_cgiExtension = cp.m_cgiExtension;
+	m_cgiPath = cp.m_cgiPath;
     m_location = cp.getLocation();
     m_method = cp.getMethod();
     m_maxBodySize = cp.getMaxBodySize();
