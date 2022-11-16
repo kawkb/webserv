@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/09 19:05:05 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/06 16:40:04 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/16 18:09:17 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ class Location
 		std::string                 			m_root;
 		std::vector<std::string>    			m_method;
 		std::string								m_path;
-		std::pair<std::string, std::string>   	m_redirection;
+		std::string   							m_redirection;
 		std::string                         	m_uploadPath; 
 		int                         			m_autoIndex;
 	public:
@@ -37,7 +37,7 @@ class Location
 		std::string                     		getIndex(void) const;
 		std::string                     		getPath(void) const;
 		int										getAutoIndex(void) const;
-		std::pair<std::string, std::string> 	getRedirection(void) const;
+		std::string							 	getRedirection(void) const;
 		std::string                         	getUploadPath(void) const;
 		void									setPath(std::string path);
 		int										parse(std::ifstream &myfile);

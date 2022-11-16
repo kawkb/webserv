@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/09 19:04:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/10 13:50:59 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/16 18:08:54 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,11 +37,8 @@ int     Location::parse(std::ifstream &myfile)
                 }
             }
 		}
-		else if (token[0] == "redirection" && size == 3)
-        {
-            m_redirection.first = token[1];
-            m_redirection.second = token[2];
-        }
+		else if (token[0] == "redirection" && size == 2)
+            m_redirection = token[1];
 		else if (token[0] == "root" && size == 2)
 			m_root = token[1];
 		else if (token[0] == "index" && size == 2)
@@ -64,12 +61,11 @@ std::ostream& operator<<(std::ostream& out, Location location)
 {
 	std::cout << std::endl << "==========Location============" << std::endl;
 	std::vector<std::string> method = location.getMethod();
-	std::pair<std::string, std::string> redirection = location.getRedirection();
 	out << "location path: "<< location.getPath() << std::endl;
 	out << "location index: " << location.getIndex() << std::endl;
 	out << "location uploadpath: " << location.getUploadPath() << std::endl;
 	out << "location root: " << location.getRoot() << std::endl;
-	out << "location redirection: " << redirection.first << " " << redirection.second << std::endl;
+	out << "location redirection: " << location.getRedirection() <<std::endl;
 	out << "location autoindex: " << location.getAutoIndex() << std::endl;
 	for (long unsigned int i = 0; i < method.size(); i++)
 	{
@@ -83,7 +79,7 @@ void        Location::setPath(std::string path)
 	m_path = path;
 }
 
-std::pair<std::string, std::string> Location::getRedirection(void) const
+std::string Location::getRedirection(void) const
 {
     return(m_redirection);
 }
@@ -125,8 +121,7 @@ Location::Location()
 	m_path			= "";
 	m_uploadPath 	= "";
 	m_autoIndex 	= 0;
-	m_redirection.first = "";
-	m_redirection.second = "";
+	m_redirection = "";
 }
 
 Location::Location(const Location &cp)
