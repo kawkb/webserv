@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:39 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/17 05:11:21 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/17 05:42:15 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,59 +34,32 @@ void	Response::setCgiEnv()
 bool	Response::handleCgi()
 {
 	setCgiEnv();
-	// create temporary file for cgi response using tempfile
 	FILE *tempfile = tmpfile();
 	if (tempfile == NULL)
-	{
-		return NULL;
-	}
-	// dup standard output to temporary file
-	int stdout_copy = dup(1);
-	dup2(fileno(tempfile), 1);
-	// formulate environement variables
-	// if get request, add query string to environement variables
-	// if post request, add content type and content length to environement variables
-	// if post request, dup standard input to request body file descriptor
+		return false;
+
+	int stdout_copy = dup(STDOUT_FILENO);
+	if (stdout_copy == -1)
+		return false;
+
+	if (dup2(fileno(tempfile), 1) == -1)
+		return false;
+
 	pid_t pid;
 	pid = fork();
 	int status = 0;
 	if (pid == 0)
 	{
-		if (request.getMethod() == "POST")
+		if (m_request.getMethod() == "POST")
 		{
 			int stdin_copy = dup(0);
-			// write request body to temporary file
-			FILE *body = tmpfile();
-			if (body == NULL)
-			{
-				std::cout << "Error creating temporary file" << std::endl;
-				return ;
-			}
-			std::string body_str = request.keys["body"];
-			fwrite(body_str.c_str(), 1, body_str.length(), body);
-			rewind(body);
-			// dup standard input to temporary file
-			dup2(fileno(body), 0);
-			// execute cgi script
+			dup2(fileno(m_bodyFile), 0);
 		}
-		if (keys["extension"] == ".php")
-		{
-			char *args[3];
-			args[0] = (char *)keys["cgi_path"].c_str();
-			args[1] = (char *)keys["full_file_path"].c_str();
-			args[2] = NULL;
-			execve(args[0], args, environ);
-		}
-		else if (keys["extension"] == ".py")
-		{
-			char *args[3];
-			std::string python = "/usr/bin/python";
-			args[0] = (char *)python.c_str();
-			args[1] = (char *)keys["full_file_path"].c_str();
-			args[2] = NULL;
-			execve(args[0], args, environ);
-		}
- // environ is a variable declared in unistd.h, and it keeps track of the environment variables during this running process.
+		char *args[3];
+		args[0] = (char *)m_request.getServer().getCgiPath().c_str();
+		args[1] = (char *)m_filePath.c_str();
+		args[2] = NULL;
+		execve(args[0], args, environ);
 	}
 	else
 	{
@@ -97,10 +70,19 @@ bool	Response::handleCgi()
 				break;
 		}
 	}
-	// restore standard output
+	if (WIFEXITED(status))
+	{
+		if (WEXITSTATUS(status) != 0)
+		{
+			dup2(stdout_copy, 1);
+			close(stdout_copy);
+			return false;
+		}
+	}
 	dup2(stdout_copy, 1);
 	close(stdout_copy);
 	rewind(tempfile);
-	return (tempfile);
+	m_bodyFile = tempfile;
+	return true;
 }
 

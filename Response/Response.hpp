@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:33 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/16 18:23:36 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/17 05:20:17 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,8 @@
 #include "../utils/utils.hpp"
 #include <dirent.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <fcntl.h>
 
