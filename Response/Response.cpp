@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/16 05:36:09 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/16 18:24:29 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -210,7 +210,7 @@ bool Response::handleGet()
 		m_statusCode = "404";
 		return false;
 	}
-	if (m_filePath.find(root) != 0)
+	if (absolute.find(root) != 0)
 	{
 		m_statusCode = "403";
 		return false;
@@ -226,8 +226,10 @@ bool Response::handleGet()
 	{
 		if (errno == EACCES)
 			m_statusCode = "403";
-		else
+		else if (errno == ENOENT)
 			m_statusCode = "404";
+		else
+			m_statusCode = "500";
 		return false;
 	}
 	if (S_ISDIR(fileStat.st_mode))
@@ -246,17 +248,22 @@ bool Response::handleGet()
 			{
 				if (errno == EACCES)
 					m_statusCode = "403";
-				else
+				else if (errno == ENOENT)
 					m_statusCode = "404";
+				else
+					m_statusCode = "500";
 				return false;
 			}
-			// get file extention
 			std::string extension = m_filePath.substr(m_filePath.find_last_of(".") + 1);
 			if (extension == server.getCgiExtention())
 			{
 				m_statusCode = "200";
 				m_headersMap["Content-Type"] = "text/html";
-				m_bodyFile = cgiHandler();
+				if (!handleCgi())
+				{
+					m_statusCode = "500";
+					return false;
+				}
 				fseek(m_bodyFile, 0, SEEK_END);
 				m_bodySize = ftell(m_bodyFile);
 				rewind(m_bodyFile);
@@ -271,7 +278,6 @@ bool Response::handleGet()
 				m_statusCode = "500";
 				return false;
 			}
-			return true;
 		}
 		else if (location.getAutoIndex())
 		{
@@ -288,14 +294,30 @@ bool Response::handleGet()
 	}
 	else if (S_ISREG(fileStat.st_mode))
 	{
-		m_bodySize = fileStat.st_size;
-		m_headersMap["Content-Type"] = getContentType(m_filePath);
-		m_headersMap["Content-Length"] = toString(m_bodySize);
-		m_bodyFile = fopen(m_filePath.c_str(), "r");
-		if (!m_bodyFile)
+		std::string extension = m_filePath.substr(m_filePath.find_last_of(".") + 1);
+		if (extension == server.getCgiExtention())
 		{
-			m_statusCode = "500";
-			return false;
+			m_headersMap["Content-Type"] = "text/html";
+			if (!handleCgi())
+			{
+				m_statusCode = "500";
+				return false;
+			}
+			fseek(m_bodyFile, 0, SEEK_END);
+			m_bodySize = ftell(m_bodyFile);
+			rewind(m_bodyFile);
+		}
+		else
+		{
+			m_bodySize = fileStat.st_size;
+			m_headersMap["Content-Type"] = getContentType(m_filePath);
+			m_headersMap["Content-Length"] = toString(m_bodySize);
+			m_bodyFile = fopen(m_filePath.c_str(), "r");
+			if (!m_bodyFile)
+			{
+				m_statusCode = "500";
+				return false;
+			}	
 		}
 	}
 	else
@@ -303,6 +325,8 @@ bool Response::handleGet()
 		m_statusCode = "403";
 		return false;
 	}
+	m_statusCode = "200";
+	return true;
 }
 
 bool Response::handlePost()
@@ -324,9 +348,9 @@ void Response::setErrorPage()
 	if (errorPagePath.empty())
 	{
 		m_headersMap["Content-Type"] = "text/html";
-		errorPage = "<html><head><title>" + m_statusCode + " " + getCodeString(m_statusCode) + "</title></head><body>";
+		errorPage = "<html><head><title>" + m_statusCode + " " + getCodeString() + "</title></head><body>";
 		errorPage += "<div class=\"base\">\n\t<div class=\"point\">></div>\n\t<h1><i>Http Error " + m_statusCode + ":</i> <br>";
-		std::string errorString = getCodeString(m_statusCode);
+		std::string errorString = getCodeString();
 		for (size_t i = 0; i < errorString.size(); i++)
 		{
 			if (errorString[i] == ' ')
@@ -352,6 +376,16 @@ void Response::setErrorPage()
 	}
 }
 
+void	Response::moveHeaderCursor(int cursor)
+{
+	m_headersCursor += cursor;
+}
+
+void	Response::moveBodyCursor(int cursor)
+{
+	m_bodyCursor += cursor;
+}
+
 bool Response::peekHeaders(char *buf, long *sendSize)
 {
 	if (m_headersCursor == m_headers.size())
@@ -366,8 +400,8 @@ bool Response::peekHeaders(char *buf, long *sendSize)
 	{
 		*sendSize = tmp.size();
 	}
-	memcpy(buf, tmp.c_str(), BUFFER_SIZE);
-	return true
+	memcpy(buf, tmp.c_str(), *sendSize);
+	return true;
 }
 
 bool Response::peekBody(char *buf, long *sendSize)
@@ -381,12 +415,14 @@ bool Response::peekBody(char *buf, long *sendSize)
 	fread(buf, *sendSize, 1, m_bodyFile);
 }
 
-bool Response::peek(char *buf, long *sendSize)
+int Response::peek(char *buf, long *sendSize)
 {
 	if (peekHeaders(buf, sendSize))
-		return true;
+		return SENDING_HEADERS;
 	else if (peekBody(buf, sendSize))
-		return true;
+		return SENDING_BODY;
+	else
+		return SENDING_DONE;
 }
 
 Response::Response(const Request &request)

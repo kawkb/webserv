@@ -28,3 +28,18 @@ std::string getAbsolutePath(std::string path)
 	free(absolutePath);
 	return result;
 }
+
+std::string stringToUpper(std::string str)
+{
+	for (size_t i = 0; i < str.length(); i++)
+		str[i] = toupper(str[i]);
+	return str;
+}
+
+std::string getExtention(std::string path)
+{
+	size_t pos = path.find_last_of(".");
+	if (pos == std::string::npos)
+		return "";
+	return path.substr(pos);
+}

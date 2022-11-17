@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/16 02:24:08 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/16 22:37:29 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,6 +57,7 @@ Request&    Request::operator= (const Request &cp)
 
 int                                 Request::getSd(void) const{return(m_sd);}
 std::string                         Request::getUri(void) const{return(m_uri);}
+std::string							Request::getQueryString(void) const {return(m_queryString);}
 std::string                         Request::getVersion(void) const{return(m_version);}
 Server                              Request::getServer(void) const{return(m_server);}
 Location                            Request::getLocation(void) const{return(m_location);}
@@ -143,12 +144,6 @@ bool Request::matchLocation(void)
 			break;
 		}
 	}
-    //get server location;
-	if (m_location.getRedirection().first != "")
-    {
-		m_status = "301 Moved Permanently\n";
-        return(false);
-    }
     return(true);
 }
 

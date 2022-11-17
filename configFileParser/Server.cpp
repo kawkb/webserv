@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/16 10:01:26 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/16 15:57:51 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -180,17 +180,19 @@ Server::Server(const Server &cp)
 
 Server & Server::operator=(const Server &cp)
 {
-    m_port = cp.getPort();
-    m_autoIndex = cp.getAutoIndex();
-    m_serverName = cp.getName();
-    m_root = cp.getRoot();
-    m_index = cp.getIndex();
-    m_cgiExtension = cp.m_cgiExtension;
+	if (this == &cp)
+		return (*this);
+	m_port = cp.m_port;
+	m_autoIndex = cp.m_autoIndex;
+	m_serverName = cp.m_serverName;
+	m_root = cp.m_root;
+	m_index = cp.m_index;
+	m_cgiExtension = cp.m_cgiExtension;
 	m_cgiPath = cp.m_cgiPath;
-    m_location = cp.getLocation();
-    m_method = cp.getMethod();
-    m_maxBodySize = cp.getMaxBodySize();
-    // m_errorPage = cp.getErrorPage();
+	m_maxBodySize = cp.m_maxBodySize;
+	m_method = cp.m_method;
+	m_location = cp.m_location;
+	m_errorPage = cp.m_errorPage;
     return (*this);
 }
 

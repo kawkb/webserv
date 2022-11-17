@@ -4,6 +4,7 @@
 #include <vector>
 #include <algorithm>
 #include "../configFileParser/Server.hpp"
+
 std::vector<std::string>    tokenize(std::string line);
 
 class Request
@@ -26,35 +27,38 @@ class Request
 		std::string							m_queryString;
 	public:
 		// Class methods:
-		void                                parse(const std::vector<Server> &servers, const char *buf, int bufSize);
-		bool                                fillReqLine(std::string line);
-		void                                addHeader(std::string line);
+		void								parse(const std::vector<Server> &servers, const char *buf, int bufSize);
+		bool								fillReqLine(std::string line);
+		void								addHeader(std::string line);
 		void								fillBody(void);
 		bool								isWellFormed(void);
-		void    							checkErrors(const std::vector<Server> &servers);
+		void								checkErrors(const std::vector<Server> &servers);
 		bool								methodAllowed(void);
 		bool								matchLocation(void);
 		bool								matchServer(const std::vector<Server> &servers);
-		// Class attributes getters:
-		std::FILE                   		*getBody(void) const;
-		int                                 getSd(void) const;
-		std::map<std::string, std::string>  getHeaders(void) const;
-		std::string                         getMethod(void) const;
-		std::string                         getUri(void) const;
-		std::string                         getVersion(void) const;
-		std::vector<char>                   getRequestBuffer(void) const;
-		std::string                         getError(void) const;
-		Server                              getServer(void) const;
-		Location                            getLocation(void) const;
-	    std::string            				getHeader(std::string key)const;
-		std::string                         getStatus(void)const;
-		Request&                            operator= (const Request &req);
-		// Class Constructors/destructor			
+		// Class attributes getters :
+		std::FILE							*getBody(void) const;
+		int									getSd(void) const;
+		std::map<std::string, std::string>	getHeaders(void) const;
+		std::string							getMethod(void) const;
+		std::string							getUri(void) const;
+		std::string							getQueryString(void) const;
+		std::string							getVersion(void) const;
+		std::vector<char>					getRequestBuffer(void) const;
+		std::string							getError(void) const;
+		Server								getServer(void) const;
+		Location							getLocation(void) const;
+		std::string							getHeader(std::string key)const;
+		std::string							getStatus(void)const;
+		// operator overloads :
+		Request&							operator= (const Request &req);
+		// Class Constructors/destructor :
 											Request(void);
 											Request(const Request &cp);
 											Request(int sd);
 											~Request(void);
 };
+
 std::ostream& operator<<(std::ostream& os, Request request);
 
 //read more about the request on rfc 
