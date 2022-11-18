@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/16 22:37:29 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/18 06:08:58 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@ Request::Request(int sd)
     m_bodyStart = false;
     m_status = "";
     m_queryString = "";
+    m_cursor = 0;
 }
 
 Request::Request(const Request &cp)
@@ -51,6 +52,7 @@ Request&    Request::operator= (const Request &cp)
     m_headerStart = cp.m_headerStart;
     m_bodyStart = cp.m_bodyStart;
     m_status = cp.m_status;
+    m_cursor = cp.m_cursor;
     m_queryString = cp.m_queryString;
     return (*this);
 }
@@ -78,7 +80,6 @@ std::string            				Request::getHeader(std::string key)const
 
 std::ostream& operator<<(std::ostream& out, Request request)
 {
-    // char buf[1];
 	std::map<std::string, std::string> headers = request.getHeaders();
 	// std::FILE *body = request.getBody();
     out << "=============Request==============" << std::endl;
@@ -88,18 +89,15 @@ std::ostream& operator<<(std::ostream& out, Request request)
     out << "request version: " << request.getVersion()<< std::endl;
     out << "request headers: " << std::endl;
 	for (std::map<std::string, std::string>::iterator i = headers.begin(); i != headers.end(); ++i)
-	    out << "  |" << i->first << "|:" << i->second << std::endl;
+	    out << "  " << i->first << ":" << i->second << std::endl;
     out << "request body: " << std::endl;
-    // long lSize;
-    // char * buffer;
-    // size_t result;
+    // char buffer[252];
     // while (!feof(body))
     // {
-    //     fread(&buf, 1, 1, body);
-    //     std::cout << buf << std::endl;
+    //     fread(buffer, sizeof(buffer), 1, body);
+    //     std::cout << buffer << std::endl;
     // }
-    
-    //     fclose(body);
+    // fclose(body);
 	return out;
 }
 
@@ -252,34 +250,37 @@ void    Request::fillBody()
 {
     m_body = tmpfile();
     size_t contentLength = atoi(getHeader("Content-Length").c_str());
-    // char buffer [256];
-    // std::cout <<getHeader("Content-Length") << std::endl;
-        // std::cout << (int)m_bodyLength  << "==="<<atoi(getHeader("Content-Length").c_str())<< "hello"<<std::endl;
-    if (m_bodyLength < contentLength )
+    if (getHeader("Transfer-Encoding") == "chunked")
     {
+        // std::cout << m_requestBuffer.size() << std::endl ;
+        // for (std::vector<char>::iterator i = m_requestBuffer.begin(); i != m_requestBuffer.end(); i++)
+        //     std::cout << "|." << *i << "|" << std::endl;
+        // for(std::vector<char>::iterator i = m_requestBuffer.begin(); i != m_requestBuffer.end(); i++)
+        // {
+        //     if(*i == '\r' && (i + 1) != m_requestBuffer.end() && *(i + 1) == '\n')
+        //     {
+        //         int chunckLen = ;
+        //     }
+        // }
+        // fwrite(m_requestBuffer.data(), sizeof(char), m_requestBuffer.size(), m_body);
+        // rewind(m_body);
+        // fclose(m_body);
+        // return;
+    }
+    else if (m_bodyLength < contentLength)
+    {
+        m_requestBuffer.erase(m_requestBuffer.begin(), m_requestBuffer.begin() + m_cursor);
         if (m_requestBuffer.size() > contentLength)
         {
-            m_requestBuffer.erase(m_requestBuffer.begin() + contentLength, m_requestBuffer.end());
-            // fputs(reinterpret_cast<char*> (&m_requestBuffer[0]), m_body);
-            std::cout<<std::string(m_requestBuffer.begin(),m_requestBuffer.end());
+            fwrite(m_requestBuffer.data(), sizeof(char), contentLength - m_bodyLength, m_body);
             m_status = "ok";
             return;
         }
-        m_bodyLength = m_requestBuffer.size();
-        std::cout << std::string(m_requestBuffer.begin(),m_requestBuffer.end());
-        fputs(reinterpret_cast<char*> (&m_requestBuffer[0]), m_body);
-        while (!feof(m_body)) 
-        {
-        if (fgets (buffer, 256, m_body) == NULL) break;
-        fputs (buffer,stdout);
-        }
-        
-        // return;
+        m_bodyLength = m_requestBuffer.size(); 
+        fwrite(m_requestBuffer.data(), sizeof(char), m_requestBuffer.size(), m_body);
+        rewind(m_body);
+        return;
     }
-    // else if (getHeader("Transfer-Encoding") == "chunked")
-    // {
-        
-    // }
 }
 
 void    Request::parse(const std::vector<Server> &servers, const char *buf, int bufSize)
@@ -288,32 +289,34 @@ void    Request::parse(const std::vector<Server> &servers, const char *buf, int 
     std::vector<char> vectorHugo;
     vectorHugo.assign(buf,buf+bufSize);
     m_requestBuffer.insert(m_requestBuffer.end(), vectorHugo.begin(),vectorHugo.end());
-    std::vector<char>::iterator pos = find(m_requestBuffer.begin(), m_requestBuffer.end(), '\r'); 
-    while(pos != m_requestBuffer.end() && (pos + 1) != m_requestBuffer.end() && *(pos + 1) == '\n' && m_bodyStart == false)
+    if (!m_bodyStart)
     {
-        std::string line =  std::string(m_requestBuffer.begin(), pos);
-        if (m_firstLine)
-            fillReqLine(line);
-        else if ((pos + 2) != m_requestBuffer.end() && *(pos + 2) == '\r' && (pos + 3) != m_requestBuffer.end() && *(pos + 3) == '\n')
+        for(std::vector<char>::iterator i = m_requestBuffer.begin() + m_cursor ; i != m_requestBuffer.end(); i++)
         {
-            addHeader(line);
-            checkErrors(servers);
+            if(*i == '\r' && (i + 1) != m_requestBuffer.end() && *(i + 1) == '\n')
+            {
+                std::string line = std::string(m_requestBuffer.begin() + m_cursor, i);
+                std::cout << line.size() << std::endl;
+                if (m_firstLine)
+                    fillReqLine(line);
+                else if ((i + 2) != m_requestBuffer.end() && *(i + 2) == '\r' && (i + 3) != m_requestBuffer.end() && *(i + 3) == '\n')
+                {
+                    addHeader(line);
+                    std::cout << "hello world" << std::endl;
+                    checkErrors(servers);
+                }
+                else
+                    addHeader(line);
+                m_cursor += line.size();
+                if (m_status != "")
+                    return;
+            }
+            // std::cout << "the party never ends" << std::endl;
         }
-        else
-            addHeader(line);
-        if (m_status != "")
-            return;
-        m_requestBuffer.erase(m_requestBuffer.begin(), pos + 2);
-        pos = find(m_requestBuffer.begin(), m_requestBuffer.end(), '\r');
     }
-    if (m_bodyStart)
-    {
-        m_requestBuffer.erase(m_requestBuffer.begin(), pos + 2);
-        fillBody();
-    }
-    if (m_headerStart)
-    {
-        addHeader(std::string(m_requestBuffer.begin(), m_requestBuffer.end()));
-        m_requestBuffer.clear();
-    }
+    else
+        std::cout << "---" << m_requestBuffer[m_cursor] << "---" << std::endl;
+        // std::cout << "----" << std::string(m_requestBuffer.begin() + m_cursor , m_requestBuffer.end()) << "----" <<std::endl;
+    // else
+    //     fillBody();
 }

@@ -25,6 +25,7 @@ class Request
 		bool								m_bodyStart;
 		std::string							m_status;
 		std::string							m_queryString;
+		size_t								m_cursor;
 	public:
 		// Class methods:
 		void								parse(const std::vector<Server> &servers, const char *buf, int bufSize);
@@ -61,9 +62,32 @@ class Request
 
 std::ostream& operator<<(std::ostream& os, Request request);
 
-//read more about the request on rfc 
-// write the fillbody fnction
-// test well your request;
-// go to dinner
-// socket all nighter : add the fcntl no blocking flag + timeout ;
-// but first lets drink coffe with my baby
+//finish chuncked;
+//make location;
+//config file errors;
+//sockets;
+
+// 4\r\n        (bytes to send)
+// Wiki\r\n     (data)
+// 6\r\n        (bytes to send)
+// pedia \r\n   (data)
+// E\r\n        (bytes to send)
+// in \r\n
+// \r\n
+// chunks.\r\n  (data)
+// 0\r\n        (final byte - 0)
+// \r\n         (end message)
+
+// 10
+
+// GET / HTTP/1.1
+// Host: localhost:8080
+// Transfer-Encoding: chunked
+// Content-Type: text/plain
+// Content-Length: 53
+
+// FDASDKLFJASD;FJKADS
+// ASDFKLAJSDF;ASDFKLAJSDFDFAKLSDFA
+
+
+// /test/hello /test/hello/ root +  alo/karma
