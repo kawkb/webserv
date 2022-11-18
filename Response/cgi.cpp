@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:39 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/17 17:12:46 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/18 12:43:00 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,15 +38,9 @@ void	Response::setCgiEnv()
 bool	Response::handleCgi()
 {
 	setCgiEnv();
+	bool timeout = true;
 	FILE *tempfile = tmpfile();
 	if (tempfile == NULL)
-		return false;
-
-	int stdout_copy = dup(STDOUT_FILENO);
-	if (stdout_copy == -1)
-		return false;
-
-	if (dup2(fileno(tempfile), 1) == -1)
 		return false;
 
 	pid_t pid;
@@ -54,10 +48,12 @@ bool	Response::handleCgi()
 	int status = 0;
 	if (pid == 0)
 	{
+		if (dup2(fileno(tempfile), 1) == -1)
+			exit (1);
 		if (m_request.getMethod() == "POST")
 		{
-			int stdin_copy = dup(0);
-			dup2(fileno(m_bodyFile), 0);
+			if (m_bodyFile != NULL)
+				dup2(fileno(m_bodyFile), 0);
 		}
 		char *args[3];
 		args[0] = (char *)m_request.getServer().getCgiPath().c_str();
@@ -70,24 +66,40 @@ bool	Response::handleCgi()
 		time_t t = time(NULL);
 		while (time(NULL) - t < 5)
 		{
-			if (waitpid(pid, &status, WNOHANG) != 0)
+			pid_t val = waitpid(pid, &status, WNOHANG);
+			if (val == -1)
+				return false;
+			if (val != 0)
+			{
+				timeout = false;
 				break;
+			}
 		}
+		if (timeout)
+			kill(pid, SIGTERM);
 	}
 	if (WIFEXITED(status))
 	{
-		if (WEXITSTATUS(status) != 0)
+		if (WEXITSTATUS(status) == 143)
 		{
-			dup2(stdout_copy, 1);
-			close(stdout_copy);
+			m_statusCode = "408";
+			return false;
+		}
+		else if (WEXITSTATUS(status) != 0)
+		{
+			m_statusCode = "500";
 			return false;
 		}
 	}
-	dup2(stdout_copy, 1);
-	close(stdout_copy);
-	rewind(tempfile);
-	
-	m_bodyFile = tempfile;
+	// read response headers from tempfile
+	char *line = NULL;
+	size_t len = 0;
+	ssize_t read;
+	while ((read = getline(&line, &len, tempfile)) != -1)
+	{
+		if (strcmp(line, "\r\n") == 0)
+			break;
+	}
 	return true;
 }
 

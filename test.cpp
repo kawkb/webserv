@@ -1,102 +1,85 @@
-// #include <string>
-// #include <fstream>
-// #include <iostream>
-// #include <unistd.h>
-// #include <sys/stat.h>
-// #include <dirent.h>
-// #include <vector>
-// #include <map>
-// #include <string.h>
-// #include <stdio.h>
-// #include<cstdlib>
-
-
-
-
-// int min(int a, int b)
-// {
-// 	return (a < b ? a : b);
-// }
-
-// #define BUFFER_SIZE 12
-// void	peekBody(char *buf, long *chunksize, long m_bodySize, long *m_bodyCursor, FILE *m_bodyFile, bool *done)
-// {
-// 	*chunksize = min(BUFFER_SIZE, m_bodySize - *m_bodyCursor);
-// 	if (*chunksize == 0)
-// 	{
-// 		buf[*chunksize] = '\0';
-// 		*done = true;
-// 		return ;
-// 	}
-// 	fseek(m_bodyFile, *m_bodyCursor, SEEK_SET);
-// 	fread(buf, *chunksize,1, m_bodyFile);
-// }
-
-// // generate random int between to values
-// int irand(int min, int max) {
-//     return ((double)rand() / ((double)RAND_MAX + 1.0)) * (max - min + 1) + min;
-// }
-
-// int main (int argc, char **argv)
-// {
-// 	if (argc != 2)
-// 	{
-// 		std::cout << "usage: ./a.out [path]" << std::endl;
-// 		return 1;
-// 	}
-// 	std::string path = argv[1];
-// 	FILE *m_bodyFile = fopen(path.c_str(), "r");
-// 	long m_bodySize = 0;
-// 	long m_bodyCursor = 0;
-// 	char buf[BUFFER_SIZE];
-// 	long chunksize = BUFFER_SIZE;
-// 	// get body size
-// 	fseek(m_bodyFile, 0L, SEEK_END);
-// 	m_bodySize = ftell(m_bodyFile);
-// 	rewind(m_bodyFile);
-// 	// peek body loop
-// 	bool done = false;
-// 	while (!done)
-// 	{
-// 		peekBody(buf, &chunksize, m_bodySize, &m_bodyCursor, m_bodyFile, &done);
-// 		// std::cout << buf;
-// 		// read a random size
-// 		// virtual send-----
-// 		int randsize = irand(1, chunksize);
-// 		if (randsize + m_bodyCursor > m_bodySize)
-// 			randsize = m_bodySize - m_bodyCursor;
-// 		char *tmp = (char *)malloc(randsize + 1);
-// 		memcpy(tmp, buf , randsize);
-// 		tmp[randsize] = '\0';
-// 		std::cout << tmp;
-// 		// ----
-// 		m_bodyCursor += randsize;
-// 	}
-// }
-
-
+#include <unistd.h>
+#include <stdio.h>
+#include <string.h>
 #include <string>
+#include <vector>
 #include <iostream>
-#include <cstdlib>
 
-std::string getAbsolutePath(std::string path)
+int main()
 {
-	char *absolutePath = realpath(path.c_str(), NULL);
-	if (absolutePath == NULL)
-		return "";
-	std::string result(absolutePath);
-	std::free(absolutePath);
-	return result;
+	FILE *fp = fopen("foo", "r");
+	char *line = NULL;
+	size_t len = 0;
+	ssize_t read;
+
+	while ((read = getline(&line, &len, fp) != -1)) {
+		if (strcmp(line, "\r\n") == 0)
+			break;
+	}
+	// copy what's left to a tmpfile
+	FILE *tmp = tmpfile();
+	char buf[1024];
+	while ((read = fread(buf, 1, 1024, fp)) > 0) {
+		std::cout << read << std::endl;
+		fwrite(buf, 1, read, tmp);
+	}
+	fclose(fp);
+	rewind(tmp);
+	// print file contents
+	while ((read = getline(&line, &len, tmp)) != -1) {
+		std::cout << line;
+	}
 }
 
+// std::string getAbsolutePath(std::string path)
+// {
+// 	std::vector<std::string> v;
+// 	size_t n = path.length();
+// 	std::string ans;
+// 	for (int i = 0; i < n; i++)
+// 	{
+// 		std::string dir = "";
+// 		while (i < n && path[i] != '/')
+// 		{
+// 			dir += path[i];
+// 			i++;
+// 		}
+// 		if (dir == "..")
+// 		{
+// 			if (!v.empty())
+// 				v.pop_back();
+// 		}
+// 		else if (dir != "." && dir != "")
+// 		{
+// 			v.push_back(dir);
+// 		}
+// 	}
+// 	std::vector<std::string>::iterator i;
+// 	for (i = v.begin(); i != v.end(); i++)
+// 	{
+// 		ans += "/" + *i;
+// 	}
+// 	if (ans == "")
+// 		return "/";
 
-std::string stringToUpper(std::string str)
-{
-	for (size_t i = 0; i < str.length(); i++)
-		str[i] = toupper(str[i]);
-	return str;
-}
-int main(int argc, char **argv)
-{
-	std::cout << stringToUpper(argv[1]);
-}
+// 	return ans;
+// }
+
+// bool startsWith(std::string str, std::string start)
+// {
+// 	if (str.length() < start.length())
+// 		return false;
+// 	for (size_t i = 0; i < start.length(); i++)
+// 	{
+// 		if (str[i] != start[i])
+// 			return false;
+// 	}
+// 	return true;
+// }
+
+// int main(int ac, char **av)
+// {
+// 	if (ac != 3)
+// 		return 1;
+// 	std::cout << startsWith(std::string(av[1]) + "/", av[2])<< std::endl;
+// }
