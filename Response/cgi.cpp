@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:39 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/17 05:42:15 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/17 17:12:46 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ void	Response::setCgiEnv()
 	if (!(content_type.empty()))
 		setenv("CONTENT_TYPE", content_type.c_str(), 1);
 	else
-		setenv("CONTENT_TYPE", "application/x-www-form-urlencoded", 1);
+		setenv("CONTENT_TYPE", "text/html", 1);
 	std::string content_length = m_request.getHeader("Content-Length");
 	if (!(content_length.empty()))
 		setenv("CONTENT_LENGTH", content_length.c_str(), 1);
@@ -29,6 +29,10 @@ void	Response::setCgiEnv()
 	setenv("SERVER_SOFTWARE", "Webserv", 1);
 	setenv("SERVER_PROTOCOL", "HTTP/1.1", 1);
 	setenv("REDIRECT_STATUS", "true", 1);
+	// set cookie env
+	std::string cookie = m_request.getHeader("Cookie");
+	if (!(cookie.empty()))
+		setenv("HTTP_COOKIE", cookie.c_str(), 1);
 }
 
 bool	Response::handleCgi()
@@ -82,6 +86,7 @@ bool	Response::handleCgi()
 	dup2(stdout_copy, 1);
 	close(stdout_copy);
 	rewind(tempfile);
+	
 	m_bodyFile = tempfile;
 	return true;
 }
