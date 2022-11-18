@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 12:12:04 by zmeribaa          #+#    #+#             */
-/*   Updated: 2022/11/18 19:29:37 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/18 20:04:45 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,7 +102,9 @@ bool Response::handleDelete()
 	}
 	else if (S_ISREG(fileStat.st_mode))
 	{
-		if ()
+		std::string ext = getExtention();
+		if (ext == server.getCgiExtention() && ext != "")
+		
 		if (unlink(m_filePath.c_str()) != 0)
 		{
 			if (errno == EACCES)
