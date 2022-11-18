@@ -1,7 +1,4 @@
-Status: 301 Moved Permanently
+Status:
 X-Powered-By: PHP/8.1.12
 Location: http://www.example.com/new.php
 Content-type: text/html; charset=UTF-8
-
-
-Hello World

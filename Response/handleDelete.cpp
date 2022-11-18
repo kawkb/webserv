@@ -6,12 +6,20 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 12:12:04 by zmeribaa          #+#    #+#             */
-/*   Updated: 2022/11/16 16:58:39 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/18 19:29:37 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Response.hpp"
 
+
+std::string Response::getExtention()
+{
+	size_t pos = m_filePath.find_last_of(".");
+	std::string extenstion = "";
+	if (pos != std::string::npos)
+		extenstion = m_filePath.substr(pos + 1);
+}
 
 int remove_directory(const std::string path)
 {
@@ -58,38 +66,27 @@ bool Response::handleDelete()
 	m_filePath = root + uri.substr(path.size());
 	// resolve path
 	std::string absolute = getAbsolutePath(m_filePath);
-	if (absolute == "")
-	{
-		m_statusCode = "404";
-		return false;
-	}
-	if (absolute.find(root) != 0)
+	if (!startsWith(absolute + "/", root))
 	{
 		m_statusCode = "403";
 		return false;
-	}
-	if (absolute != m_filePath)
-	{
-		m_statusCode = "301";
-		m_headersMap["Location"] = path + absolute.substr(root.size());
-		return true;
 	}
 	struct stat fileStat;
 	if (stat(m_filePath.c_str(), &fileStat) != 0)
 	{
 		if (errno == EACCES)
 			m_statusCode = "403";
-		else
-		
+		else if (errno == ENOENT)
 			m_statusCode = "404";
+		else
+			m_statusCode = "500";
 		return false;
 	}
 	if (S_ISDIR(fileStat.st_mode))
 	{
 		if (m_filePath[m_filePath.size() - 1] != '/')
 		{
-			m_statusCode = "301";
-			m_headersMap["Location"] = uri + "/";
+			m_statusCode = "409";
 			return false;
 		}
 		if (remove_directory(m_filePath) != 0)
@@ -105,6 +102,7 @@ bool Response::handleDelete()
 	}
 	else if (S_ISREG(fileStat.st_mode))
 	{
+		if ()
 		if (unlink(m_filePath.c_str()) != 0)
 		{
 			if (errno == EACCES)

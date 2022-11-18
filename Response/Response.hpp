@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:33 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/18 09:36:11 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/18 19:28:43 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,7 @@ class Response
 		int									m_headersCursor;
 
 	public:
+		std::string							getExtention();
 		std::string							getCodeString();
 		FILE								*generateAutoIndex();
 		bool								handleGetFile(off_t filesize);
@@ -54,6 +55,7 @@ class Response
 		bool								handleDelete();
 		bool								handleCgi();
 		void								setErrorPage();
+		std::string							getHeader(std::string key);
 		int									getSd();
 		void								moveHeaderCursor(int cursor);
 		void								moveBodyCursor(int cursor);

@@ -6,11 +6,18 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/18 10:37:50 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/18 19:16:03 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Response.hpp"
+std::string	Response::getHeader(std::string key)
+{
+	std::map<std::string, std::string>::iterator it = m_headersMap.find(key);
+	if (it != m_headersMap.end())
+		return (it->second);
+	return ("");
+}
 
 std::string	Response::getCodeString()
 {
@@ -42,6 +49,8 @@ std::string	Response::getCodeString()
 		return "Not Acceptable";
 	if (m_statusCode == "408")
 		return "Request Timeout";
+	if (m_statusCode == "409")
+		return "Conflict";
 	if (m_statusCode == "413")
 		return "Payload Too Large";
 	if (m_statusCode == "414")
@@ -65,7 +74,7 @@ FILE		*Response::generateAutoIndex()
 {
 	std::vector<std::string> files;
 	std::vector<std::string> dirs;
-	std::string authIndexHtml;
+	std::string autoindexHtml;
 	DIR *dir;
 	struct dirent *ent;
 	if ((dir = opendir(m_filePath.c_str())) != NULL)
@@ -88,8 +97,8 @@ FILE		*Response::generateAutoIndex()
 	}
 	std::sort(files.begin(), files.end());
 	std::sort(dirs.begin(), dirs.end());
-	authIndexHtml += "<!DOCTYPE html>\n<html>\n<head>\n<title>Index of " + m_filePath + "</title>\n</head>\n<body>\n<h1>Index of " + m_filePath + "</h1>\n<hr>\n<table>\n<tr><th>Name</th><th>Last Modified</th><th>Size</th></tr>\n";
-	authIndexHtml += "<tr><td><a href=\"../\">../</a></td><td></td><td></td></tr>\n";
+	autoindexHtml += "<!DOCTYPE html>\n<html>\n<head>\n<title>Index of " + m_filePath + "</title>\n</head>\n<body>\n<h1>Index of " + m_filePath + "</h1>\n<hr>\n<table>\n<tr><th>Name</th><th>Last Modified</th><th>Size</th></tr>\n";
+	autoindexHtml += "<tr><td><a href=\"../\">../</a></td><td></td><td></td></tr>\n";
 	for (std::vector<std::string>::iterator i = dirs.begin(); i != dirs.end(); i++)
 	{
 		std::string folderpath = m_filePath + "/" + *i;
@@ -97,7 +106,7 @@ FILE		*Response::generateAutoIndex()
 		if (stat(folderpath.c_str(), &attrib) < 0)
 			return NULL;
 		std::string lastModified = ctime(&attrib.st_mtime);
-		authIndexHtml += "<tr><td><a href=\"" + *i + "/\">" + *i + "/</a></td><td>" + lastModified + "</td><td></td></tr>\n";
+		autoindexHtml += "<tr><td><a href=\"" + *i + "/\">" + *i + "/</a></td><td>" + lastModified + "</td><td></td></tr>\n";
 	}
 	for (std::vector<std::string>::iterator i = files.begin(); i != files.end(); i++)
 	{
@@ -106,18 +115,18 @@ FILE		*Response::generateAutoIndex()
 		if (stat(filePath.c_str(), &fileStat) < 0)
 			return NULL;
 		std::string lastModified = ctime(&fileStat.st_mtime);
-		authIndexHtml += "<tr><td><a href=\"" + *i + "\">" + *i + "</a></td><td>" + lastModified + "</td><td>" + toString(fileStat.st_size) + "</td></tr>\n";
+		autoindexHtml += "<tr><td><a href=\"" + *i + "\">" + *i + "</a></td><td>" + lastModified + "</td><td>" + toString(fileStat.st_size) + "</td></tr>\n";
 	}
-	authIndexHtml += "</table>\n<hr>\n</body>\n</html>";
-	authIndexHtml += "<style>\nbody {\nfont-family: sans-serif;\n}\n\nh1 {\nfont-size: 1.5em;\n}\n\nhr {\nmargin: 1em 0;\n}\n\ntable {\nborder-collapse: collapse;\nwidth: 100%;\n}\n\ntd, th {\nborder: 1px solid #ccc;\npadding: 0.5em;\n}\n\nth {\nbackground: #eee;\n}\n\ntr:nth-child(even) {\nbackground: #f8f8f8;\n}\n</style>";
+	autoindexHtml += "</table>\n<hr>\n</body>\n</html>";
+	autoindexHtml += "<style>\nbody {\nfont-family: sans-serif;\n}\n\nh1 {\nfont-size: 1.5em;\n}\n\nhr {\nmargin: 1em 0;\n}\n\ntable {\nborder-collapse: collapse;\nwidth: 100%;\n}\n\ntd, th {\nborder: 1px solid #ccc;\npadding: 0.5em;\n}\n\nth {\nbackground: #eee;\n}\n\ntr:nth-child(even) {\nbackground: #f8f8f8;\n}\n</style>";
 	// write to file
 	FILE *ret = tmpfile();
 	if (ret == NULL)
 		return NULL;
-	fwrite(authIndexHtml.c_str(), 1, authIndexHtml.size(), ret);
+	fwrite(autoindexHtml.c_str(), 1, autoindexHtml.size(), ret);
 	rewind(ret);
 	// set body size
-	m_bodySize = authIndexHtml.size();
+	m_bodySize = autoindexHtml.size();
 	return ret;
 }
 
@@ -210,6 +219,7 @@ bool		Response::handleGetFile(off_t filesize)
 			m_statusCode = "500";
 			return false;
 		}
+		return true;
 	}
 }
 
@@ -225,7 +235,7 @@ bool		Response::handleGet()
 	m_filePath = root + uri.substr(path.size());
 	// resolve path
 	std::string absolute = getAbsolutePath(m_filePath);
-	if (!startsWith(absolute + "/", root) == false)
+	if (!startsWith(absolute + "/", root))
 	{
 		m_statusCode = "403";
 		return false;
@@ -233,7 +243,7 @@ bool		Response::handleGet()
 	if (absolute != m_filePath)
 	{
 		m_statusCode = "301";
-		m_headersMap["Location"] = path + absolute.substr(root.size());
+		m_headersMap["Location"] = path + absolute.substr(root.size()) + m_request.getQueryString();
 		return true;
 	}
 
@@ -275,7 +285,7 @@ bool		Response::handleGet()
 			if (S_ISDIR(indexStat.st_mode))
 			{
 				m_statusCode = "301";
-				m_headersMap["Location"] = uri + index + "/";
+				m_headersMap["Location"] = uri + index + "/?" + m_request.getQueryString();
 				return false;
 			}
 			else if (S_ISREG(indexStat.st_mode))
