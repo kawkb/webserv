@@ -24,8 +24,8 @@ class Request
 		bool								m_headerStart;
 		bool								m_bodyStart;
 		std::string							m_status;
+		int									m_chunckLen;
 		std::string							m_queryString;
-		size_t								m_cursor;
 	public:
 		// Class methods:
 		void								parse(const std::vector<Server> &servers, const char *buf, int bufSize);
