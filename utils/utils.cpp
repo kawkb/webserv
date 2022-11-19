@@ -18,15 +18,38 @@ int min(int a, int b)
 	return (a < b ? a : b);
 }
 
-// convert relative path to absolute path
 std::string getAbsolutePath(std::string path)
 {
-	char *absolutePath = realpath(path.c_str(), NULL);
-	if (absolutePath == NULL)
-		return "";
-	std::string result(absolutePath);
-	free(absolutePath);
-	return result;
+	std::vector<std::string> v;
+	size_t n = path.length();
+	std::string ans;
+	for (int i = 0; i < n; i++)
+	{
+		std::string dir = "";
+		while (i < n && path[i] != '/')
+		{
+			dir += path[i];
+			i++;
+		}
+		if (dir == "..")
+		{
+			if (!v.empty())
+				v.pop_back();
+		}
+		else if (dir != "." && dir != "")
+		{
+			v.push_back(dir);
+		}
+	}
+	std::vector<std::string>::iterator i;
+	for (i = v.begin(); i != v.end(); i++)
+	{
+		ans += "/" + *i;
+	}
+	if (ans == "")
+		return "/";
+
+	return ans;
 }
 
 std::string stringToUpper(std::string str)
@@ -42,4 +65,16 @@ std::string getExtention(std::string path)
 	if (pos == std::string::npos)
 		return "";
 	return path.substr(pos);
+}
+
+bool startsWith(std::string str, std::string start)
+{
+	if (str.length() < start.length())
+		return false;
+	for (size_t i = 0; i < start.length(); i++)
+	{
+		if (str[i] != start[i])
+			return false;
+	}
+	return true;
 }

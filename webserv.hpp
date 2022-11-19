@@ -6,12 +6,13 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/22 15:30:27 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/16 00:16:55 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/17 22:11:47 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 #include <string>
+#include <vector>
 #include "configFileParser/Server.hpp"
 #include "TcpListener/TcpListener.hpp"
 #include "Request/Request.hpp"

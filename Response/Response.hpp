@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:33 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/17 05:20:17 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/18 19:28:43 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,10 +21,14 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <signal.h>
 
 # define SENDING_DONE 0
 # define SENDING_HEADERS 1
 # define SENDING_BODY 2
+
+// environ
+extern char **environ;
 
 class Response
 {
@@ -42,24 +46,22 @@ class Response
 		int									m_headersCursor;
 
 	public:
+		std::string							getExtention();
 		std::string							getCodeString();
 		FILE								*generateAutoIndex();
+		bool								handleGetFile(off_t filesize);
 		bool								handleGet();
 		bool								handlePost();
 		bool								handleDelete();
-		std::string							getRequestHeader(std::string key)const;
-		std::string							getRequestMethod(void) const;
-		std::string							getFilePath(void);
-		FILE								*getBodyFile(void) const;
-		bool								isDone() const;
+		bool								handleCgi();
 		void								setErrorPage();
+		std::string							getHeader(std::string key);
 		int									getSd();
 		void								moveHeaderCursor(int cursor);
 		void								moveBodyCursor(int cursor);
 		bool								peekHeaders(char *buf, long *sendSize);
 		bool								peekBody(char *buf, long *sendSize);
 		int									peek(char *buf, long *sendSize);
-		bool								handleCgi();
 		void								setCgiEnv();
 		void								buildHeaders();
 											Response(const Request &request);

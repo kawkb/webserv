@@ -6,13 +6,20 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/16 18:24:29 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/18 19:16:03 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Response.hpp"
+std::string	Response::getHeader(std::string key)
+{
+	std::map<std::string, std::string>::iterator it = m_headersMap.find(key);
+	if (it != m_headersMap.end())
+		return (it->second);
+	return ("");
+}
 
-std::string Response::getCodeString()
+std::string	Response::getCodeString()
 {
 	if (m_statusCode == "200")
 		return "OK";
@@ -42,6 +49,8 @@ std::string Response::getCodeString()
 		return "Not Acceptable";
 	if (m_statusCode == "408")
 		return "Request Timeout";
+	if (m_statusCode == "409")
+		return "Conflict";
 	if (m_statusCode == "413")
 		return "Payload Too Large";
 	if (m_statusCode == "414")
@@ -61,11 +70,11 @@ std::string Response::getCodeString()
 	return "Unknown";
 }
 
-FILE *Response::generateAutoIndex()
+FILE		*Response::generateAutoIndex()
 {
 	std::vector<std::string> files;
 	std::vector<std::string> dirs;
-	std::string authIndexHtml;
+	std::string autoindexHtml;
 	DIR *dir;
 	struct dirent *ent;
 	if ((dir = opendir(m_filePath.c_str())) != NULL)
@@ -88,8 +97,8 @@ FILE *Response::generateAutoIndex()
 	}
 	std::sort(files.begin(), files.end());
 	std::sort(dirs.begin(), dirs.end());
-	authIndexHtml += "<!DOCTYPE html>\n<html>\n<head>\n<title>Index of " + m_filePath + "</title>\n</head>\n<body>\n<h1>Index of " + m_filePath + "</h1>\n<hr>\n<table>\n<tr><th>Name</th><th>Last Modified</th><th>Size</th></tr>\n";
-	authIndexHtml += "<tr><td><a href=\"../\">../</a></td><td></td><td></td></tr>\n";
+	autoindexHtml += "<!DOCTYPE html>\n<html>\n<head>\n<title>Index of " + m_filePath + "</title>\n</head>\n<body>\n<h1>Index of " + m_filePath + "</h1>\n<hr>\n<table>\n<tr><th>Name</th><th>Last Modified</th><th>Size</th></tr>\n";
+	autoindexHtml += "<tr><td><a href=\"../\">../</a></td><td></td><td></td></tr>\n";
 	for (std::vector<std::string>::iterator i = dirs.begin(); i != dirs.end(); i++)
 	{
 		std::string folderpath = m_filePath + "/" + *i;
@@ -97,7 +106,7 @@ FILE *Response::generateAutoIndex()
 		if (stat(folderpath.c_str(), &attrib) < 0)
 			return NULL;
 		std::string lastModified = ctime(&attrib.st_mtime);
-		authIndexHtml += "<tr><td><a href=\"" + *i + "/\">" + *i + "/</a></td><td>" + lastModified + "</td><td></td></tr>\n";
+		autoindexHtml += "<tr><td><a href=\"" + *i + "/\">" + *i + "/</a></td><td>" + lastModified + "</td><td></td></tr>\n";
 	}
 	for (std::vector<std::string>::iterator i = files.begin(); i != files.end(); i++)
 	{
@@ -106,22 +115,22 @@ FILE *Response::generateAutoIndex()
 		if (stat(filePath.c_str(), &fileStat) < 0)
 			return NULL;
 		std::string lastModified = ctime(&fileStat.st_mtime);
-		authIndexHtml += "<tr><td><a href=\"" + *i + "\">" + *i + "</a></td><td>" + lastModified + "</td><td>" + toString(fileStat.st_size) + "</td></tr>\n";
+		autoindexHtml += "<tr><td><a href=\"" + *i + "\">" + *i + "</a></td><td>" + lastModified + "</td><td>" + toString(fileStat.st_size) + "</td></tr>\n";
 	}
-	authIndexHtml += "</table>\n<hr>\n</body>\n</html>";
-	authIndexHtml += "<style>\nbody {\nfont-family: sans-serif;\n}\n\nh1 {\nfont-size: 1.5em;\n}\n\nhr {\nmargin: 1em 0;\n}\n\ntable {\nborder-collapse: collapse;\nwidth: 100%;\n}\n\ntd, th {\nborder: 1px solid #ccc;\npadding: 0.5em;\n}\n\nth {\nbackground: #eee;\n}\n\ntr:nth-child(even) {\nbackground: #f8f8f8;\n}\n</style>";
+	autoindexHtml += "</table>\n<hr>\n</body>\n</html>";
+	autoindexHtml += "<style>\nbody {\nfont-family: sans-serif;\n}\n\nh1 {\nfont-size: 1.5em;\n}\n\nhr {\nmargin: 1em 0;\n}\n\ntable {\nborder-collapse: collapse;\nwidth: 100%;\n}\n\ntd, th {\nborder: 1px solid #ccc;\npadding: 0.5em;\n}\n\nth {\nbackground: #eee;\n}\n\ntr:nth-child(even) {\nbackground: #f8f8f8;\n}\n</style>";
 	// write to file
 	FILE *ret = tmpfile();
 	if (ret == NULL)
 		return NULL;
-	fwrite(authIndexHtml.c_str(), 1, authIndexHtml.size(), ret);
+	fwrite(autoindexHtml.c_str(), 1, autoindexHtml.size(), ret);
 	rewind(ret);
 	// set body size
-	m_bodySize = authIndexHtml.size();
+	m_bodySize = autoindexHtml.size();
 	return ret;
 }
 
-std::string getContentType(std::string filename)
+std::string	getContentType(std::string filename)
 {
 	std::string extension = filename.substr(filename.find_last_of(".") + 1);
 	if (extension == "html" || extension == "htm")
@@ -184,20 +193,41 @@ std::string getContentType(std::string filename)
 		return "application/octet-stream";
 }
 
-void Response::buildHeaders()
+void		Response::buildHeaders()
 {
 	std::string headers = "HTTP/1.1 " + m_statusCode + " " + getCodeString() + "\r\n";
 	std::map<std::string, std::string>::iterator i;
 	for (i = m_headersMap.begin(); i != m_headersMap.end(); i++)
 		headers += i->first + ": " + i->second + "\r\n";
+	headers += "\r\n";
 }
 
-bool Response::handleGet()
+bool		Response::handleGetFile(off_t filesize)
+{
+	Server server = m_request.getServer();
+	std::string extension = m_filePath.substr(m_filePath.find_last_of(".") + 1);
+	if (extension == server.getCgiExtention())
+		return handleCgi();
+	else
+	{
+		m_bodySize = filesize;
+		m_headersMap["Content-Type"] = getContentType(m_filePath);
+		m_headersMap["Content-Length"] = toString(m_bodySize);
+		m_bodyFile = fopen(m_filePath.c_str(), "r");
+		if (!m_bodyFile)
+		{
+			m_statusCode = "500";
+			return false;
+		}
+		return true;
+	}
+}
+
+bool		Response::handleGet()
 {
 	// location path should never end with a slash except if it is literally /
 	// root path should always end with a slash
 	Location location = m_request.getLocation();
-	Server server = m_request.getServer();
 	std::string path = location.getPath();
 	std::string root = location.getRoot();
 	std::string uri = m_request.getUri();
@@ -205,12 +235,7 @@ bool Response::handleGet()
 	m_filePath = root + uri.substr(path.size());
 	// resolve path
 	std::string absolute = getAbsolutePath(m_filePath);
-	if (absolute == "")
-	{
-		m_statusCode = "404";
-		return false;
-	}
-	if (absolute.find(root) != 0)
+	if (!startsWith(absolute + "/", root))
 	{
 		m_statusCode = "403";
 		return false;
@@ -218,9 +243,10 @@ bool Response::handleGet()
 	if (absolute != m_filePath)
 	{
 		m_statusCode = "301";
-		m_headersMap["Location"] = path + absolute.substr(root.size());
+		m_headersMap["Location"] = path + absolute.substr(root.size()) + m_request.getQueryString();
 		return true;
 	}
+
 	struct stat fileStat;
 	if (stat(m_filePath.c_str(), &fileStat) != 0)
 	{
@@ -232,6 +258,7 @@ bool Response::handleGet()
 			m_statusCode = "500";
 		return false;
 	}
+
 	if (S_ISDIR(fileStat.st_mode))
 	{
 		if (m_filePath[m_filePath.size() - 1] != '/')
@@ -243,8 +270,9 @@ bool Response::handleGet()
 		std::string index = location.getIndex();
 		if (!index.empty())
 		{
+			struct stat indexStat;
 			m_filePath += index;
-			if (stat(m_filePath.c_str(), &fileStat) != 0)
+			if (stat(m_filePath.c_str(), &indexStat) != 0)
 			{
 				if (errno == EACCES)
 					m_statusCode = "403";
@@ -254,28 +282,17 @@ bool Response::handleGet()
 					m_statusCode = "500";
 				return false;
 			}
-			std::string extension = m_filePath.substr(m_filePath.find_last_of(".") + 1);
-			if (extension == server.getCgiExtention())
+			if (S_ISDIR(indexStat.st_mode))
 			{
-				m_statusCode = "200";
-				m_headersMap["Content-Type"] = "text/html";
-				if (!handleCgi())
-				{
-					m_statusCode = "500";
-					return false;
-				}
-				fseek(m_bodyFile, 0, SEEK_END);
-				m_bodySize = ftell(m_bodyFile);
-				rewind(m_bodyFile);
-				return true;
+				m_statusCode = "301";
+				m_headersMap["Location"] = uri + index + "/?" + m_request.getQueryString();
+				return false;
 			}
-			m_bodySize = fileStat.st_size;
-			m_headersMap["Content-Type"] = getContentType(m_filePath);
-			m_headersMap["Content-Length"] = toString(m_bodySize);
-			m_bodyFile = fopen(m_filePath.c_str(), "r");
-			if (!m_bodyFile)
+			else if (S_ISREG(indexStat.st_mode))
+				return handleGetFile(indexStat.st_size);
+			else
 			{
-				m_statusCode = "500";
+				m_statusCode = "403";
 				return false;
 			}
 		}
@@ -293,43 +310,15 @@ bool Response::handleGet()
 		}
 	}
 	else if (S_ISREG(fileStat.st_mode))
-	{
-		std::string extension = m_filePath.substr(m_filePath.find_last_of(".") + 1);
-		if (extension == server.getCgiExtention())
-		{
-			m_headersMap["Content-Type"] = "text/html";
-			if (!handleCgi())
-			{
-				m_statusCode = "500";
-				return false;
-			}
-			fseek(m_bodyFile, 0, SEEK_END);
-			m_bodySize = ftell(m_bodyFile);
-			rewind(m_bodyFile);
-		}
-		else
-		{
-			m_bodySize = fileStat.st_size;
-			m_headersMap["Content-Type"] = getContentType(m_filePath);
-			m_headersMap["Content-Length"] = toString(m_bodySize);
-			m_bodyFile = fopen(m_filePath.c_str(), "r");
-			if (!m_bodyFile)
-			{
-				m_statusCode = "500";
-				return false;
-			}	
-		}
-	}
+		return handleGetFile(fileStat.st_size);
 	else
 	{
 		m_statusCode = "403";
 		return false;
 	}
-	m_statusCode = "200";
-	return true;
 }
 
-bool Response::handlePost()
+bool		Response::handlePost()
 {
 	std::string uploadPath = m_request.getLocation().getUploadPath();
 	if (!uploadPath.empty())
@@ -337,11 +326,12 @@ bool Response::handlePost()
 		std::string uri = m_request.getUri();
 		std::string path = m_request.getLocation().getPath();
 		std::string filePath = uploadPath + uri.substr(path.size());
-		// you should work on handlling . and .. in the path
+		std::string absolute = getAbsolutePath(filePath);
+
 	}
 }
 
-void Response::setErrorPage()
+void		Response::setErrorPage()
 {
 	std::string errorPagePath = m_request.getServer().getErrorPage(m_statusCode);
 	std::string errorPage;
@@ -376,17 +366,17 @@ void Response::setErrorPage()
 	}
 }
 
-void	Response::moveHeaderCursor(int cursor)
+void		Response::moveHeaderCursor(int cursor)
 {
 	m_headersCursor += cursor;
 }
 
-void	Response::moveBodyCursor(int cursor)
+void		Response::moveBodyCursor(int cursor)
 {
 	m_bodyCursor += cursor;
 }
 
-bool Response::peekHeaders(char *buf, long *sendSize)
+bool		Response::peekHeaders(char *buf, long *sendSize)
 {
 	if (m_headersCursor == m_headers.size())
 		return false;
@@ -404,7 +394,7 @@ bool Response::peekHeaders(char *buf, long *sendSize)
 	return true;
 }
 
-bool Response::peekBody(char *buf, long *sendSize)
+bool		Response::peekBody(char *buf, long *sendSize)
 {
 	if (m_bodySize == 0)
 		return false;
@@ -412,10 +402,10 @@ bool Response::peekBody(char *buf, long *sendSize)
 	if (*sendSize == 0)
 		return false;
 	fseek(m_bodyFile, m_bodyCursor, SEEK_SET);
-	fread(buf, *sendSize, 1, m_bodyFile);
+	fread(buf, 1, *sendSize, m_bodyFile);
 }
 
-int Response::peek(char *buf, long *sendSize)
+int 		Response::peek(char *buf, long *sendSize)
 {
 	if (peekHeaders(buf, sendSize))
 		return SENDING_HEADERS;
@@ -423,6 +413,11 @@ int Response::peek(char *buf, long *sendSize)
 		return SENDING_BODY;
 	else
 		return SENDING_DONE;
+}
+
+int			Response::getSd()
+{
+	return m_request.getSd();
 }
 
 Response::Response(const Request &request)
@@ -447,11 +442,6 @@ Response::Response(const Request &request)
 	if (pass == false)
 		setErrorPage();
 	buildHeaders();
-}
-
-int Response::getSd()
-{
-	return m_request.getSd();
 }
 
 Response::~Response() 
