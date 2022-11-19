@@ -21,7 +21,6 @@ class Request
 		std::FILE							*m_body;
 		size_t								m_bodyLength;
 		bool								m_firstLine;
-		bool								m_headerStart;
 		bool								m_bodyStart;
 		std::string							m_status;
 		int									m_chunckLen;
@@ -37,6 +36,8 @@ class Request
 		bool								methodAllowed(void);
 		bool								matchLocation(void);
 		bool								matchServer(const std::vector<Server> &servers);
+		void    							fillChunked(void);
+		void    							fillContentLength(size_t contentLength);
 		// Class attributes getters :
 		std::FILE							*getBody(void) const;
 		int									getSd(void) const;
@@ -62,7 +63,6 @@ class Request
 
 std::ostream& operator<<(std::ostream& os, Request request);
 
-//finish chuncked;
 //make location;
 //config file errors;
 //sockets;

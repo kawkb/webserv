@@ -6,11 +6,13 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/19 01:14:58 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/19 02:40:10 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Request.hpp"
+#include <fcntl.h>
+#include <unistd.h>
 
 Request::Request(){}
     
@@ -25,7 +27,6 @@ Request::Request(int sd)
     m_version = "";
     m_bodyLength = 0;
     m_firstLine = true;
-    m_headerStart = false;
     m_bodyStart = false;
     m_status = "";
     m_chunckLen = 0;
@@ -50,7 +51,6 @@ Request&    Request::operator= (const Request &cp)
     m_body = cp.m_body;
     m_bodyLength = cp.m_bodyLength;
     m_firstLine = cp.m_firstLine;
-    m_headerStart = cp.m_headerStart;
     m_bodyStart = cp.m_bodyStart;
     m_status = cp.m_status;
     m_queryString = cp.m_queryString;
@@ -82,6 +82,7 @@ std::string            				Request::getHeader(std::string key)const
 std::ostream& operator<<(std::ostream& out, Request request)
 {
 	std::map<std::string, std::string> headers = request.getHeaders();
+    int fd = open("tmpfile", O_RDWR | O_APPEND | O_CREAT);
     out << "=============Request==============" << std::endl;
     out << "request sd: " << request.getSd() << std::endl;
     out << "request method: " << request.getMethod()<< std::endl;
@@ -98,7 +99,8 @@ std::ostream& operator<<(std::ostream& out, Request request)
         int t = fread(buffer, 1, 10, body);
         buffer[t] = '\0';
         std::cout << buffer;
-    }
+        write(fd, buffer, 10);
+    } 
     fclose(body);
 	return out;
 }
@@ -242,63 +244,68 @@ bool    Request::fillReqLine(std::string line)
 
 void    Request::addHeader(std::string line)
 {
-    m_headerStart = true;
     size_t found = line.find(':');
     if(found != std::string::npos)
         m_headers.insert(std::pair<std::string, std::string>(line.substr(0, found), line.substr(found + 2)));
 }
-
-void    Request::fillBody()
+void    Request::fillChunked(void)
 {
-        // std::cout << m_requestBuffer.size() << std::endl ;
-    // std::cout << "before ==|" << std::string(m_requestBuffer.begin(), m_requestBuffer.end()) << "|" << std::endl;
-    size_t contentLength = atoi(getHeader("Content-Length").c_str());
     std::vector<char> temp;
-    if (getHeader("Transfer-Encoding") == "chunked")
+    for(std::vector<char>::iterator i = m_requestBuffer.begin(); i != m_requestBuffer.end(); i++)
     {
-        for(std::vector<char>::iterator i = m_requestBuffer.begin(); i != m_requestBuffer.end(); i++)
+        if (m_chunckLen > 0)
         {
-            if (m_chunckLen > 0)
+            fwrite(&(*i), sizeof(char), 1, m_body);
+            m_chunckLen--;
+        }
+        else if(*i == '\r' && (i + 1) != m_requestBuffer.end() && *(i + 1) == '\n')
+        {
+            if (!temp.empty())
             {
-                std::cout << *i ;
-                // fwrite(*i, sizeof(char), 1, m_body);
-                m_chunckLen--;
-            }
-            else if(*i == '\r' && (i + 1) != m_requestBuffer.end() && *(i + 1) == '\n')
-            {
-                if (!temp.empty())
+                m_chunckLen = std::stoul(std::string(temp.begin(), temp.end()), nullptr, 16);
+                if (m_chunckLen == 0)
                 {
-                    m_chunckLen = std::stoul(std::string(temp.begin(), temp.end()), nullptr, 16);
-                    temp.clear(); 
+                    m_status = "ok";
+                    rewind(m_body);
+                    return;
                 }
-                i++;
+                temp.clear(); 
             }
-            else
-                temp.push_back(*i);
-        } 
-        m_requestBuffer = temp;
-        std::cout <<std::endl;
-        // std::cout << "after copy === |" << std::string(m_requestBuffer.begin(), m_requestBuffer.end()) << "|" << std::endl;
-    }
-    else if (m_bodyLength < contentLength)
+            i++;
+        }
+        else
+            temp.push_back(*i);
+    } 
+    m_requestBuffer = temp;
+}
+
+void    Request::fillContentLength(size_t contentLength)
+{
+    if (m_requestBuffer.size() >= contentLength)
     {
-        if (m_requestBuffer.size() >= contentLength)
-        {
-            fwrite(m_requestBuffer.data(), sizeof(char), contentLength - m_bodyLength, m_body);
-            rewind(m_body);
-            m_status = "ok";
-            return;
-        }
-        m_bodyLength += m_requestBuffer.size();
-        fwrite(m_requestBuffer.data(), 1, m_requestBuffer.size(), m_body);
-        m_requestBuffer.clear();
-        if (m_bodyLength >= contentLength)
-        {
-            rewind(m_body);
-            m_status = "ok";
-        }
+        fwrite(m_requestBuffer.data(), sizeof(char), contentLength - m_bodyLength, m_body);
+        rewind(m_body);
+        m_status = "ok";
         return;
     }
+    m_bodyLength += m_requestBuffer.size();
+    fwrite(m_requestBuffer.data(), 1, m_requestBuffer.size(), m_body);
+    m_requestBuffer.clear();
+    if (m_bodyLength >= contentLength)
+    {
+        rewind(m_body);
+        m_status = "ok";
+    }
+    return;
+}
+
+void    Request::fillBody(void)
+{
+    size_t contentLength = atoi(getHeader("Content-Length").c_str());
+    if (getHeader("Transfer-Encoding") == "chunked")
+        fillChunked();
+    else if (m_bodyLength < contentLength)
+        fillContentLength(contentLength);
 }
 
 void    Request::parse(const std::vector<Server> &servers, const char *buf, int bufSize)
