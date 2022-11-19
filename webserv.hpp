@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/22 15:30:27 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/17 22:11:47 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/19 03:12:42 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,10 +18,12 @@
 #include "Request/Request.hpp"
 #include "Response/Response.hpp"
 # define BUFFER_SIZE 1024
+#typedef std::vector<Server> Servers;
+#typedef TcpListeners TcpListeners;
 
 
-int		initiate_master_sockets(std::vector<Server> &server, std::vector<TcpListener> &tcpListener);
-int     run_server(std::vector<Server> &servers, std::vector<TcpListener> &tcpListeners);
-int     parse_config_file(char *av, std::vector<Server> &server);
-int     check_server(std::vector<Server> &server);
+int		initiate_master_sockets(Servers &server, TcpListeners &tcpListener);
+int     run_server(Servers &servers, TcpListeners &tcpListeners);
+int     parse_config_file(char *av, Servers &server);
+int     check_server(Servers &server);
 void	exit_failure(std::string str);
