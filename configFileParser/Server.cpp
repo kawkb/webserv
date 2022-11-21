@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/21 06:42:15 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/21 06:52:15 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,31 +97,31 @@ int     Server::parse(std::ifstream &myfile, size_t &lineCount)
     return (1);
 }
 
-std::ostream& operator<<(std::ostream& out, Server server)
-{
-    out << "=============Server==============" << std::endl;
-    std::vector<std::string> method = server.getMethod();
-    std::vector<Location> location = server.getLocation();
-    // std::map<std::string, std::string>  errorPage = server.getErrorPage();
-    std::map<std::string, std::string >::iterator itr;
-	out << "Server port: " << server.getPort() << std::endl;
-    out << "Server name: " << server.getName() << std::endl;
-    out << "server method: ";
-	for (long unsigned int i = 0; i < method.size(); i++)
-	    out << method[i] << " ";
-    out << std::endl;
-	out << "server root:" << server.getRoot() << std::endl;
-	out << "server index:" << server.getIndex() << std::endl;
-	out << "server autoIndex:" << server.getAutoIndex() << std::endl;
-    out << "server bodysize: " << server.getMaxBodySize() << std::endl;
-    // for( itr = errorPage.begin(); itr != errorPage.end();++itr)
-    //     out << "server error page: " << itr->first << " " << itr->second << std::endl;
-    // for (long unsigned int i = 0; i < location.size(); i++)
-    // {
-    //     out << location[i];
-    // }
-	return out;
-}
+// std::ostream& operator<<(std::ostream& out, Server server)
+// {
+//     out << "=============Server==============" << std::endl;
+//     std::vector<std::string> method = server.getMethod();
+//     std::vector<Location> location = server.getLocation();
+//     // std::map<std::string, std::string>  errorPage = server.getErrorPage();
+//     std::map<std::string, std::string >::iterator itr;
+// 	out << "Server port: " << server.getPort() << std::endl;
+//     out << "Server name: " << server.getName() << std::endl;
+//     out << "server method: ";
+// 	for (long unsigned int i = 0; i < method.size(); i++)
+// 	    out << method[i] << " ";
+//     out << std::endl;
+// 	out << "server root:" << server.getRoot() << std::endl;
+// 	out << "server index:" << server.getIndex() << std::endl;
+// 	out << "server autoIndex:" << server.getAutoIndex() << std::endl;
+//     out << "server bodysize: " << server.getMaxBodySize() << std::endl;
+//     // for( itr = errorPage.begin(); itr != errorPage.end();++itr)
+//     //     out << "server error page: " << itr->first << " " << itr->second << std::endl;
+//     // for (long unsigned int i = 0; i < location.size(); i++)
+//     // {
+//     //     out << location[i];
+//     // }
+// 	return out;
+// }
 
 std::string   Server::getErrorPage(std::string errorcode) const
 {
@@ -130,51 +130,16 @@ std::string   Server::getErrorPage(std::string errorcode) const
 		return (i->second);
 	return ("");
 }
-std::vector<Location> Server::getLocation(void) const
-{
-    return(m_location);
-}
-
-int     Server::getPort(void) const
-{
-    return(m_port);
-}
-
-std::string     Server::getName(void) const
-{
-    return(m_serverName);
-}
-std::vector<std::string>     Server::getMethod(void) const
-{
-    return(m_method);
-}
-std::string     Server::getRoot(void) const
-{
-    return(m_root);
-}
-std::string     Server::getIndex(void) const
-{
-    return(m_index);
-} 
-int     Server::getAutoIndex(void) const
-{
-    return(m_autoIndex);
-}
-
-std::string Server::getCgiExtention(void) const
-{
-    return(m_cgiExtension);
-}
-
-std::string Server::getCgiPath(void) const
-{
-	return (m_cgiPath);
-}
-
-int     Server::getMaxBodySize(void) const
-{
-    return(m_maxBodySize);
-}
+int                         Server::getPort(void) const{return(m_port);}
+int                         Server::getAutoIndex(void) const{return(m_autoIndex);}
+int                         Server::getMaxBodySize(void) const{return(m_maxBodySize);}
+std::string                 Server::getName(void) const{return(m_serverName);}
+std::string                 Server::getRoot(void) const{return(m_root);}
+std::string                 Server::getIndex(void) const{return(m_index);} 
+std::string                 Server::getCgiExtention(void) const{return(m_cgiExtension);}
+std::string                 Server::getCgiPath(void) const{return (m_cgiPath);}
+std::vector<std::string>    Server::getMethod(void) const{return(m_method);}
+std::vector<Location>       Server::getLocation(void) const{return(m_location);}
 
 Server::Server()
 {
@@ -188,10 +153,7 @@ Server::Server()
     m_maxBodySize = 1000;
 }
 
-Server::Server(const Server &cp)
-{
-    *this = cp;
-}
+Server::Server(const Server &cp){*this = cp;}
 
 Server & Server::operator=(const Server &cp)
 {
@@ -211,8 +173,4 @@ Server & Server::operator=(const Server &cp)
     return (*this);
 }
 
-Server::~Server()
-{
-}
-//smaller code
-//start tcplistner shit
+Server::~Server(){}

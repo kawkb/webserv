@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/09 19:04:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/21 06:42:38 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/21 06:52:43 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,62 +61,31 @@ int     Location::parse(std::ifstream &myfile, size_t &lineCount)
     return(1);
 }
 
-std::ostream& operator<<(std::ostream& out, Location location)
-{
-	std::cout << std::endl << "==========Location============" << std::endl;
-	std::vector<std::string> method = location.getMethod();
-	out << "location path: "<< location.getPath() << std::endl;
-	out << "location index: " << location.getIndex() << std::endl;
-	out << "location uploadpath: " << location.getUploadPath() << std::endl;
-	out << "location root: " << location.getRoot() << std::endl;
-	out << "location redirection: " << location.getRedirection() <<std::endl;
-	out << "location autoindex: " << location.getAutoIndex() << std::endl;
-	for (long unsigned int i = 0; i < method.size(); i++)
-	{
-		out << "Method:" << " " <<method[i] << " ";
-	}
-	return out;
-}
+// std::ostream& operator<<(std::ostream& out, Location location)
+// {
+// 	std::cout << std::endl << "==========Location============" << std::endl;
+// 	std::vector<std::string> method = location.getMethod();
+// 	out << "location path: "<< location.getPath() << std::endl;
+// 	out << "location index: " << location.getIndex() << std::endl;
+// 	out << "location uploadpath: " << location.getUploadPath() << std::endl;
+// 	out << "location root: " << location.getRoot() << std::endl;
+// 	out << "location redirection: " << location.getRedirection() <<std::endl;
+// 	out << "location autoindex: " << location.getAutoIndex() << std::endl;
+// 	for (long unsigned int i = 0; i < method.size(); i++)
+// 	{
+// 		out << "Method:" << " " <<method[i] << " ";
+// 	}
+// 	return out;
+// }
 
-void        Location::setPath(std::string path)
-{
-	m_path = path;
-}
-
-std::string Location::getRedirection(void) const
-{
-    return(m_redirection);
-}
-
-std::string                     Location::getPath(void) const
-{
-	return(m_path);
-}
-
-int			Location::getAutoIndex(void) const
-{
-	return(m_autoIndex);
-}
-
-std::string Location::getUploadPath(void) const
-{
-    return(m_uploadPath);
-}
-
-std::vector<std::string>     Location::getMethod(void) const
-{
-	return(m_method);
-}
-
-std::string     Location::getRoot(void) const
-{
-	return(m_root);
-}
-
-std::string     Location::getIndex(void) const
-{
-	return(m_index);
-}
+void        				Location::setPath(std::string path){m_path = path;}
+std::string 				Location::getRedirection(void) const{return(m_redirection);}
+std::string     			Location::getPath(void) const{return(m_path);}
+int							Location::getAutoIndex(void) const{return(m_autoIndex);}
+std::string 				Location::getUploadPath(void) const{return(m_uploadPath);}
+std::vector<std::string>	Location::getMethod(void) const{return(m_method);}
+std::string     			Location::getRoot(void) const{return(m_root);}
+std::string     			Location::getIndex(void) const{return(m_index);}
 
 Location::Location()
 {
@@ -128,10 +97,7 @@ Location::Location()
 	m_redirection = "";
 }
 
-Location::Location(const Location &cp)
-{
-    *this = cp;
-}
+Location::Location(const Location &cp){*this = cp;}
 
 Location & Location::operator=(const Location &cp)
 {
@@ -145,6 +111,4 @@ Location & Location::operator=(const Location &cp)
 	return (*this);
 }
 
-Location::~Location()
-{
-}
+Location::~Location(){}
