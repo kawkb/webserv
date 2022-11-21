@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "Debug",
             "program": "${workspaceFolder}/webserv",
-            "args": ["GET / HTTP/1.1\r\nUser-Agent: PostmanRuntime/7.29.2\r\n\r\nhellobitches\r\nhowareyou"],
+            "args": ["myConf1"],
             "cwd": "${workspaceFolder}"
         }
     ]

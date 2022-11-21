@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/09 19:04:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/21 06:17:12 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/21 06:42:38 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ int     Location::parse(std::ifstream &myfile, size_t &lineCount)
                     m_method.push_back(token[i]);
                 else
                 {
-					std::cerr << "\033[1;31mLocation Configfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"";
+					std::cerr << "\033[1;31mConfigfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"";
                     return(1);
                 }
             }
@@ -53,11 +53,11 @@ int     Location::parse(std::ifstream &myfile, size_t &lineCount)
 			return(0);
 		else
 		{
-			std::cerr << "\033[1;31mLocation Configfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"";
+			std::cerr << "\033[1;31mConfigfile Error in Line  "+ std::to_string(lineCount)+ ": \""+line + "\"";
 			return(1);
 		}
 	}
-    std::cerr << "\033[1;31mLocation Configfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"";
+    std::cerr << "\033[1;31mConfigfile Error in Lineb "+ std::to_string(lineCount)+ ": \""+line + "\"";
     return(1);
 }
 

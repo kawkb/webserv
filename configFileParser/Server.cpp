@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/21 06:16:54 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/21 06:42:15 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,6 @@
 int     Server::parse(std::ifstream &myfile, size_t &lineCount)
 {
     std::string                 line;
-    Location                    holder;
     bool		                isServer = 0;
     std::vector<std::string>    token;
     while (getline(myfile, line))
@@ -35,7 +34,7 @@ int     Server::parse(std::ifstream &myfile, size_t &lineCount)
                     m_method.push_back(token[i]);
                 else
                 {
-                    std::cerr << "\033[1;31mSERVER Configfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"";
+                    std::cerr << "\033[1;31mConfigfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"";
                     return(1);
                 }
             }
@@ -58,7 +57,7 @@ int     Server::parse(std::ifstream &myfile, size_t &lineCount)
                 m_autoIndex = 0;
             else
             {
-                std::cerr << "\033[1;31mSERVER Configfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"";
+                std::cerr << "\033[1;31mConfigfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"";
                 return(1);
             }
             
@@ -74,26 +73,27 @@ int     Server::parse(std::ifstream &myfile, size_t &lineCount)
                 m_maxBodySize = atoi(token[1].c_str());
             else
             {
-                std::cerr << "\033[1;31mSERVER Configfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"";
+                std::cerr << "\033[1;31mConfigfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"";
                 return(1);
             }  
         }
         else if (token[0] == "location" && size == 2 && lineCount++ && isServer)
         {
+            Location    holder;
             holder.setPath(token[1]);
             if (holder.parse(myfile, lineCount))
                 return(1);
             m_location.push_back(holder);
         }
-        else if(token[0] == "}" && size == 1 && isServer && lineCount++ && isServer)
+        else if(token[0] == "}" && size == 1 && isServer && lineCount++)
             return(0);
         else
         {
-            std::cerr << "\033[1;31mSERVER Configfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"";
+            std::cerr << "\033[1;31mConfigfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"";
             return(1);
         }
     }
-    std::cerr << "\033[1;31mSERVER Configfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"";
+    std::cerr << "\033[1;31mConfigfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"";
     return (1);
 }
 
