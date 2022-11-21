@@ -3,27 +3,31 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/16 15:57:51 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/21 06:16:54 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Server.hpp"
+#include "../webserv.hpp"
 
-int     Server::parse(std::ifstream &myfile)
+int     Server::parse(std::ifstream &myfile, size_t &lineCount)
 {
-    std::string line;
-    std::vector<std::string> token;
+    std::string                 line;
+    Location                    holder;
+    bool		                isServer = 0;
+    std::vector<std::string>    token;
     while (getline(myfile, line))
     {
-        if (!line.empty() && line.find_first_not_of(" \t") != std::string::npos)
+        if ((line.empty() || line.find_first_not_of(" \t") == std::string::npos) && lineCount++)
+            continue;
+        else
             token = tokenize(line);
         int size = token.size();
-        if (line.empty() || line.find_first_not_of(" \t") == std::string::npos || token[0] == "{")
-            continue;
-        if (token[0] == "allow_methods" && size <= 4)
+        if (token[0] == "{" && size == 1 && !isServer && lineCount++)
+			isServer = 1;
+        else if (token[0] == "allow_methods" && size <= 4 && lineCount++ && isServer && m_method.empty())
         {
             for( int i = 1; i < size; i++)
             {  
@@ -31,55 +35,66 @@ int     Server::parse(std::ifstream &myfile)
                     m_method.push_back(token[i]);
                 else
                 {
-                   std::cout << "\033[1;31mConfigfile error: \033[0m" << line  << std::endl;
+                    std::cerr << "\033[1;31mSERVER Configfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"";
                     return(1);
                 }
             }
         }
-        else if (token[0] == "error_page" && size == 3)
+        else if (token[0] == "error_page" && size == 3 && lineCount++ && isServer)
             m_errorPage.insert(std::pair<std::string, std::string>(token[1], token[2]));
-        else if (token[0] == "listen" && size == 2 )
+        else if (token[0] == "listen" && size == 2 && lineCount++ && isServer && m_port == -1)
             m_port =  atoi(token[1].c_str());
-        else if (token[0] == "server_name" && size == 2 )
+        else if (token[0] == "server_name" && size == 2 && lineCount++ && isServer && m_serverName == "localhost")
             m_serverName = token[1];
-        else if (token[0] == "root" && size == 2 )
+        else if (token[0] == "root" && size == 2 && lineCount++ && isServer && m_root == "")
             m_root  = token[1];
-        else if (token[0] == "index" && size == 2 )
+        else if (token[0] == "index" && size == 2 && lineCount++ && isServer && m_index == "")
             m_index = token[1];
-		else if (token[0] == "autoindex" && size == 2 )
-            m_autoIndex = token[1] == "on" ? 1 : 0;
-        else if (token[0] == "cgi" && size == 3 )
+		else if (token[0] == "autoindex" && size == 2 && lineCount++ && isServer && m_autoIndex == 0)
+        {
+            if (token[1] == "on")
+                m_autoIndex = 1;
+            else if (token[1] == "off")
+                m_autoIndex = 0;
+            else
+            {
+                std::cerr << "\033[1;31mSERVER Configfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"";
+                return(1);
+            }
+            
+        }
+        else if (token[0] == "cgi" && size == 3 && lineCount++ && isServer && m_cgiExtension == "")
         {
             m_cgiExtension = token[1];
             m_cgiPath = token[2];
         }
-        else if (token[0] == "max_body_size" && size == 2 )
+        else if (token[0] == "max_body_size" && size == 2 && lineCount++ && isServer && m_maxBodySize == 1000)
         {
             if (token[1].find_first_not_of("0123456789") == std::string::npos)
                 m_maxBodySize = atoi(token[1].c_str());
             else
             {
-                std::cout << "\033[1;31mConfigfile error: \033[0m" << line << std::endl;
+                std::cerr << "\033[1;31mSERVER Configfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"";
                 return(1);
             }  
         }
-        else if (token[0] == "location" && size == 2 )
+        else if (token[0] == "location" && size == 2 && lineCount++ && isServer)
         {
-            Location holder;
             holder.setPath(token[1]);
-            if (holder.parse(myfile))
+            if (holder.parse(myfile, lineCount))
                 return(1);
             m_location.push_back(holder);
         }
-        else if (token[0] != "}")
+        else if(token[0] == "}" && size == 1 && isServer && lineCount++ && isServer)
+            return(0);
+        else
         {
-            std::cout << "\033[1;31mConfigfile error: \033[0m" << line << std::endl;
+            std::cerr << "\033[1;31mSERVER Configfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"";
             return(1);
         }
-        else
-            return(0);
     }
-    return (0);
+    std::cerr << "\033[1;31mSERVER Configfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"";
+    return (1);
 }
 
 std::ostream& operator<<(std::ostream& out, Server server)
@@ -164,7 +179,7 @@ int     Server::getMaxBodySize(void) const
 Server::Server()
 {
     m_port = -1;
-    m_autoIndex = 1;
+    m_autoIndex = 0;
     m_serverName = "localhost";
     m_root = "";
     m_index = "";

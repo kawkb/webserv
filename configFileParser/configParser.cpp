@@ -6,11 +6,11 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/20 22:02:44 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/06 17:59:15 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/21 05:42:36 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 #include "../webserv.hpp"
-#include "Server.hpp"
 
 std::vector<std::string>    tokenize(std::string line)
 {
@@ -53,42 +53,40 @@ int     check_server(std::vector<Server> &server)
 	return(0);
 }
 
-int     parse_config_file(char *av, std::vector<Server> &server)
+void     parse_config_file(char *av, std::vector<Server> &server)
 {
 	std::ifstream	myfile;
-	std::string  line;
+	std::string		line;
+	size_t			lineCount = 1;
 
 	myfile.open(av);
 	if (myfile.is_open())
 	{
 		while (getline(myfile,line))
 		{
-			if (line.empty() || line.find_first_not_of(" \t") == std::string::npos)
+			if ((line.empty() || line.find_first_not_of(" \t") == std::string::npos) && lineCount++)
             	continue;
-			else if (line == "server")
+			else if (line == "server" && lineCount++)
 			{
 				Server holder;
-				if (holder.parse(myfile))
+				if (holder.parse(myfile, lineCount))
 				{
 					myfile.close();
-					return(1);
+					exit_failure("");
 				}
 				server.push_back(holder);
 			}
 			else
 			{
-				std::cout << "\033[1;31mConfigfile Error: \033[0m" << line << "." << std::endl;
 				myfile.close();
-				return(1);
+				exit_failure("Configfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"");
 			}
 		}
 		myfile.close();
 	}
 	else
-	{
 		exit_failure("Error: open config file");
-	}
 	if (check_server(server))
-		return(1);
-	return(0);
+		return;
+	return;
 }

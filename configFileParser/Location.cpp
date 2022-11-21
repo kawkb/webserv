@@ -6,24 +6,27 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/09 19:04:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/16 18:08:54 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/21 06:17:12 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Location.hpp"
+#include "../webserv.hpp"
 
-int     Location::parse(std::ifstream &myfile)
+int     Location::parse(std::ifstream &myfile, size_t &lineCount)
 {
-	std::string line;
-	std::vector<std::string> token;
+	std::string					line;
+	std::vector<std::string>	token;
+	bool		                isLocation = 0;
 	while (getline(myfile, line))
 	{
-        if (!line.empty() && line.find_first_not_of(" \t") != std::string::npos)
+        if ((line.empty() || line.find_first_not_of(" \t") == std::string::npos) && lineCount++)
+            continue;
+        else
             token = tokenize(line);
 		int size = token.size();
-        if (line.empty() || line.find_first_not_of(" \t") == std::string::npos || token[0] == "{")
-            continue;
-		else if (token[0] == "allow_methods" && size <= 4)
+		if (token[0] == "{" && size == 1 && !isLocation && lineCount++)
+			isLocation = 1;
+		else if (token[0] == "allow_methods" && size <= 4 && lineCount++ && isLocation && m_method.empty())
 		{
             for( int i = 1; i < size; i++)
             {  
@@ -31,32 +34,33 @@ int     Location::parse(std::ifstream &myfile)
                     m_method.push_back(token[i]);
                 else
                 {
-                    std::cout << "\033[1;31mConfigfile error: \033[0m";
-                    std::cout << line << std::endl;
+					std::cerr << "\033[1;31mLocation Configfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"";
                     return(1);
                 }
             }
 		}
-		else if (token[0] == "redirection" && size == 2)
+		else if (token[0] == "redirection" && size == 2 && lineCount++ && isLocation && m_redirection== "")
             m_redirection = token[1];
-		else if (token[0] == "root" && size == 2)
+		else if (token[0] == "root" && size == 2 && lineCount++ && isLocation && m_root == "")
 			m_root = token[1];
-		else if (token[0] == "index" && size == 2)
+		else if (token[0] == "index" && size == 2 && lineCount++ && isLocation && m_index == "")
 			m_index = token[1];
-		else if (token[0] == "upload_path" && size == 2)
+		else if (token[0] == "upload_path" && size == 2 && lineCount++ && isLocation && m_uploadPath == "")
             m_uploadPath = token[1];
-		else if (token[0] == "autoindex" && size == 2)
+		else if (token[0] == "autoindex" && size == 2 && lineCount++ && isLocation && m_autoIndex == 0)
 			m_autoIndex = token[1] == "on" ? 1 : 0;
-		else if (token[0] != "}")
+		else if (token[0] == "}" && size == 1 && isLocation && lineCount++)
+			return(0);
+		else
 		{
-			std::cout << "\033[1;31mConfigfile Error: \033[0m" << line << std::endl;
+			std::cerr << "\033[1;31mLocation Configfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"";
 			return(1);
 		}
-		else
-			return(0);
 	}
-	return(0);
+    std::cerr << "\033[1;31mLocation Configfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"";
+    return(1);
 }
+
 std::ostream& operator<<(std::ostream& out, Location location)
 {
 	std::cout << std::endl << "==========Location============" << std::endl;

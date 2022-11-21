@@ -6,13 +6,11 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/19 02:40:10 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/20 21:03:47 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Request.hpp"
-#include <fcntl.h>
-#include <unistd.h>
+#include "../webserv.hpp"
 
 Request::Request(){}
     

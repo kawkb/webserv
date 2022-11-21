@@ -6,16 +6,12 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/09 19:05:05 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/16 18:09:17 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/21 03:54:25 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <vector>
-#include <sstream>
+#include "../webserv.hpp"
 std::vector<std::string>    tokenize(std::string line);
 
 class Location
@@ -40,7 +36,7 @@ class Location
 		std::string							 	getRedirection(void) const;
 		std::string                         	getUploadPath(void) const;
 		void									setPath(std::string path);
-		int										parse(std::ifstream &myfile);
+		int										parse(std::ifstream &myfile, size_t &lineCount);
 		Location& 								operator=(const Location &cp);
 };
 std::ostream& operator<<(std::ostream& out, Location location);

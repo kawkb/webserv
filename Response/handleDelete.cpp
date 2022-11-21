@@ -3,15 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   handleDelete.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 12:12:04 by zmeribaa          #+#    #+#             */
-/*   Updated: 2022/11/18 20:04:45 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/20 20:44:07 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Response.hpp"
-
+#include "../webserv.hpp"
 
 std::string Response::getExtention()
 {

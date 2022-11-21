@@ -3,23 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/16 11:01:45 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/16 04:51:31 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/21 03:38:28 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <cstring>
-#include <vector>
-#include <sstream>
-#include <map>
-#include <stdlib.h>
-#include "Location.hpp"
+#include "../webserv.hpp"
 
 class Server
 {
@@ -39,7 +31,7 @@ class Server
 											Server();
 											Server(const Server &cp);
 											~Server();
-		int                                 parse(std::ifstream &myfile);
+		int                                 parse(std::ifstream &myfile, size_t &lineCount);
 		std::string                         getName(void) const;
 		int                                 getPort(void) const;
 		std::vector<std::string>            getMethod(void) const;

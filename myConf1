@@ -1,22 +1,12 @@
 server
 {
-	listen         	kawkab:8081
+	listen         	8080
 	server_name     localhost
-
 	allow_methods   GET
 
     root            ./var/www/static_websites/
     index           index.html
     autoindex       off 
-
-	location /PATH00
-	{
-		allow_methods       GET
-		root                ./var/www/static_websites/hangover-master/
-
-		autoindex           on 
-		index               invalid_index
-	}
 
 	location /PATH01/
 	{
@@ -26,6 +16,49 @@ server
 		allow_methods       GET
 	}
 
+	location /PATH02
+	{
+		root                ./var/www/static_websites/the7/
+		autoindex           off
+		index               invalid_index
+		allow_methods       GET
+	}
+}
+server
+{
+	listen         	8080
+	server_name     localhost
+	allow_methods   GET
+
+    root            ./var/www/static_websites/
+    index           index.html
+    autoindex       off 
+
+	location /PATH01/
+	{
+		root                ./var/www/static_websites/roxy/ 
+		autoindex           off
+	}
+		index               index.html
+		allow_methods       GET
+}
+server
+{
+	listen         	8080
+	server_name     localhost
+	allow_methods   GET
+
+    root            ./var/www/static_websites/
+    index           index.html
+    autoindex       off 
+
+	location /PATH01/
+	{
+		root                ./var/www/static_websites/roxy/ 
+		autoindex           off
+		index               index.html
+		allow_methods       GET
+	}
 	location /PATH02
 	{
 		root                ./var/www/static_websites/the7/

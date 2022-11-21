@@ -1,9 +1,5 @@
 #pragma once
-#include <string>
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include "../configFileParser/Server.hpp"
+#include "../webserv.hpp"
 
 std::vector<std::string>    tokenize(std::string line);
 
