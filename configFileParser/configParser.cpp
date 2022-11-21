@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/20 22:02:44 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/21 06:40:00 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/21 06:56:11 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,11 +26,9 @@ int     check_server(std::vector<Server> &server)
 	for (std::vector<Server>::iterator i = server.begin(); i !=server.end();i++)
 	{
 		std::vector<Server>::iterator k = i + 1;
-		if ( i->getPort() < 0 || i->getPort() > 65536)
-		{
-			std::cerr << "\033[1;31mERROR: port out of range. \033[0m"<< std::endl;
-			return(1);
-		}
+		if (i->getPort() < 0 || i->getPort() > 65536)
+			exit_failure("\033[1;31mERROR: port out of range. \033[0m");
+		//if what must be filled isnt filled return error;
 		for (std::vector<Server>::iterator j = i + 1; j != server.end(); j++)
 		{
 			if (i->getPort() == j->getPort())
@@ -86,7 +84,5 @@ void     parse_config_file(char *av, std::vector<Server> &server)
 	}
 	else
 		exit_failure("Error: open config file");
-	if (check_server(server))
-		return;
-	return;
+	check_server(server);
 }
