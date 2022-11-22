@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/20 20:48:34 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/20 20:48:46 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/22 04:13:26 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,4 +89,31 @@ bool startsWith(std::string str, std::string start)
 			return false;
 	}
 	return true;
+}
+
+FILE *createTmpFile(std::string &path)
+{
+    std::string tmpdir = P_tmpdir;
+    // generat unique string
+    static const char alphanum[] =
+        "0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+    std::string tmp_s;
+    tmp_s.reserve(7);
+
+    for (int i = 0; i < 7; ++i) {
+        tmp_s += alphanum[rand() % (sizeof(alphanum) - 1)];
+    }
+    std::string tmpfile = tmpdir + "/webservir" + tmp_s;
+    // check if file already exists
+    struct stat buffer;
+    if (stat(tmpfile.c_str(), &buffer) == 0)
+        return createTmpFile(path);
+    // create file
+    FILE *fs = fopen(tmpfile.c_str(), "w");
+    if (fs == NULL)
+        return NULL;
+    path = tmpfile;
+    return fs;
 }

@@ -21,6 +21,7 @@ class Request
 		std::string							m_status;
 		int									m_chunckLen;
 		std::string							m_queryString;
+		std::string							m_filePath;
 	public:
 		// Class methods:
 		void								parse(const std::vector<Server> &servers, const char *buf, int bufSize);
@@ -48,6 +49,7 @@ class Request
 		Location							getLocation(void) const;
 		std::string							getHeader(std::string key)const;
 		std::string							getStatus(void)const;
+		std::string                         getFilePath(void) const;
 		// operator overloads :
 		Request&							operator= (const Request &req);
 		// Class Constructors/destructor :

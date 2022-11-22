@@ -10,3 +10,4 @@ std::string	getAbsolutePath(std::string path);
 std::string	getExtention(std::string path);
 std::string	stringToUpper(std::string str);
 bool		startsWith(std::string str, std::string start);
+FILE        *createTmpFile(std::string &path);

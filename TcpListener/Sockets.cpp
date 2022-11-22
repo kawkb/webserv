@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/25 17:52:09 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/21 00:43:23 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/22 02:42:09 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,15 +64,16 @@ void		set_master_sockets(std::vector<TcpListener> &tcplisteners, fd_set &read_se
 	}
 }
 
-// void	set_clients_sockets(std::vector<Request> &requests, std::vector<Response> &responses, fd_set &read_set, fd_set &write_set, int &max_sd)
-void	set_clients_sockets(std::vector<Request> &requests,fd_set &read_set, int &max_sd)
-
+void	set_clients_sockets(std::vector<Request> &requests, std::vector<Response> &responses, fd_set &read_set, fd_set &write_set, int &max_sd)
 {
 	for (std::vector<Request>::iterator i = requests.begin(); i != requests.end(); ++i)
 	{
 		FD_SET(i->getSd(), &read_set);
+		FD_SET(i->getBody(), &write_set);
 		if (i->getSd() > max_sd)
 			max_sd = i->getSd();
+		if (i->getBody() > max_sd)
+			max_sd = i->getBody();
 	}
 	// for (std::vector<Response>::iterator i = responses.begin(); i != responses.end(); ++i)
 	// {
@@ -136,7 +137,7 @@ void		handle_requests(const std::vector<Server> &servers, fd_set &read_set, std:
 void     run_server(std::vector<Server> &servers, std::vector<TcpListener> &tcplisteners)
 {
 	std::vector<Request>	requests;
-	// std::vector<Response>	responses;
+	std::vector<Response>	responses;
 	fd_set					read_set, write_set, read_set_backup, write_set_backup;
 	int						max_sd;
 	initiate_master_sockets(servers, tcplisteners);
@@ -146,8 +147,7 @@ void     run_server(std::vector<Server> &servers, std::vector<TcpListener> &tcpl
 	while (TRUE)
 	{
 		read_set = read_set_backup;
-		write_set = write_set_backup;
-		set_clients_sockets(requests, read_set, max_sd);
+		set_clients_sockets(requests, responses, read_set, write_set, max_sd);
 		if ((select(max_sd + 1, &read_set, &write_set, NULL, NULL) < 0))
 			exit_failure("select error");
 		accept_connections(tcplisteners, read_set, requests, max_sd);

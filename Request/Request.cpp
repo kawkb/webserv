@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/20 21:03:47 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/22 04:20:07 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,10 @@
 
 Request::Request(){}
     
-Request::~Request(){}
+Request::~Request(){
+    if (m_body)
+        fclose(m_body);
+}
 
 Request::Request(int sd)
 {
@@ -29,6 +32,7 @@ Request::Request(int sd)
     m_status = "";
     m_chunckLen = 0;
     m_queryString = "";
+    m_filePath = "";
 }
 
 Request::Request(const Request &cp)
@@ -53,6 +57,7 @@ Request&    Request::operator= (const Request &cp)
     m_status = cp.m_status;
     m_queryString = cp.m_queryString;
     m_chunckLen = cp.m_chunckLen;
+    m_filePath = cp.m_filePath;
     return (*this);
 }
 
@@ -64,10 +69,11 @@ Server                              Request::getServer(void) const{return(m_serv
 Location                            Request::getLocation(void) const{return(m_location);}
 std::vector<char>                   Request::getRequestBuffer(void) const{return(m_requestBuffer);}
 std::string                         Request::getMethod(void)const{return(m_method);}
-std::map<std::string, std::string>  Request::getHeaders(void) const {return(m_headers);}
-std::FILE                           *Request::getBody(void) const {return(m_body);}
-std::string                         Request::getStatus(void)const {return(m_status);}
+std::map<std::string, std::string>  Request::getHeaders(void) const{return(m_headers);}
+std::FILE                           *Request::getBody(void) const{return(m_body);}
+std::string                         Request::getStatus(void)const{return(m_status);}
 std::string                         Request::getError(void) const{return (m_status);}
+std::string                         Request::getFilePath(void) const{return(m_filePath);}
 std::string            				Request::getHeader(std::string key)const
 {
 	std::map<std::string,std::string>::const_iterator i = m_headers.find(key);

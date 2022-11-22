@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/21 06:52:15 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/21 22:37:07 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ int     Server::parse(std::ifstream &myfile, size_t &lineCount)
             m_errorPage.insert(std::pair<std::string, std::string>(token[1], token[2]));
         else if (token[0] == "listen" && size == 2 && lineCount++ && isServer && m_port == -1)
             m_port =  atoi(token[1].c_str());
-        else if (token[0] == "server_name" && size == 2 && lineCount++ && isServer && m_serverName == "localhost")
+        else if (token[0] == "server_name" && size == 2 && lineCount++ && isServer && m_serverName == "")
             m_serverName = token[1];
         else if (token[0] == "root" && size == 2 && lineCount++ && isServer && m_root == "")
             m_root  = token[1];
@@ -145,7 +145,7 @@ Server::Server()
 {
     m_port = -1;
     m_autoIndex = 0;
-    m_serverName = "localhost";
+    m_serverName = "";
     m_root = "";
     m_index = "";
     m_cgiExtension = "";
