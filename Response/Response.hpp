@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:33 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/20 20:42:16 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/22 02:17:40 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 # define SENDING_DONE 0
 # define SENDING_HEADERS 1
 # define SENDING_BODY 2
-
+# define RES_BUFFER_SIZE 4096
 // environ
 extern char **environ;
 
@@ -26,18 +26,19 @@ class Response
 		std::string							m_headers;
 		std::map<std::string, std::string>	m_headersMap;
 		std::string							m_filePath;
-		std::FILE*							m_bodyFile;
+		std::fstream						m_file;
+		std::string							m_buffer;
+		char								m_smolBuffer[RES_BUFFER_SIZE];
 		Request								m_request;
-		bool								m_headersSent;
-		bool								m_bodySent;
-		int									m_bodyCursor;
+		bool								m_done;
+		int									m_cursor;
 		int									m_bodySize;
-		int									m_headersCursor;
+		long								m_lastSent;
 
 	public:
 		std::string							getExtention();
 		std::string							getCodeString();
-		FILE								*generateAutoIndex();
+		std::string							generateAutoIndex();
 		bool								handleGetFile(off_t filesize);
 		bool								handleGet();
 		bool								handlePost();
@@ -46,11 +47,8 @@ class Response
 		void								setErrorPage();
 		std::string							getHeader(std::string key);
 		int									getSd();
-		void								moveHeaderCursor(int cursor);
-		void								moveBodyCursor(int cursor);
-		bool								peekHeaders(char *buf, long *sendSize);
-		bool								peekBody(char *buf, long *sendSize);
-		int									peek(char *buf, long *sendSize);
+		std::string							peek(bool &done);
+		void								setLastSent(long sent);
 		void								setCgiEnv();
 		void								buildHeaders();
 											Response(const Request &request);

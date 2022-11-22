@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cgi.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:39 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/20 20:43:59 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/22 01:53:46 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,8 +72,9 @@ bool	Response::handleCgi()
 			exit (1);
 		if (m_request.getMethod() == "POST")
 		{
-			if (m_bodyFile != NULL)
-				dup2(fileno(m_bodyFile), 0);
+			FILE *reqbody = m_request.getBody();
+			if (reqbody != NULL)
+				dup2(fileno(reqbody), 0);
 		}
 		char *args[3];
 		args[0] = (char *)m_request.getServer().getCgiPath().c_str();
@@ -147,12 +148,8 @@ bool	Response::handleCgi()
 	}
 	char buf[BUFFER_SIZE];
 	while ((read = fread(buf, 1, BUFFER_SIZE, tempfile)) > 0)
-		fwrite(buf, 1, read, tempfile2);
-	fclose(tempfile);
-	fseek(tempfile2, 0L, SEEK_END);
-	m_bodySize = ftell(tempfile2);
-	rewind(tempfile2);
-	m_bodyFile = tempfile2;
+		m_buffer += std::string(buf);
+	m_done = true;
 	std::string statusHeader = getHeader("Status");
 	if (!statusHeader.empty())
 		m_statusCode = statusHeader.substr(0, 3);

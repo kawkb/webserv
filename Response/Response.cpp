@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/20 20:43:27 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/22 04:11:34 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,7 +71,7 @@ std::string	Response::getCodeString()
 	return "Unknown";
 }
 
-FILE		*Response::generateAutoIndex()
+std::string	Response::generateAutoIndex()
 {
 	std::vector<std::string> files;
 	std::vector<std::string> dirs;
@@ -120,15 +120,8 @@ FILE		*Response::generateAutoIndex()
 	}
 	autoindexHtml += "</table>\n<hr>\n</body>\n</html>";
 	autoindexHtml += "<style>\nbody {\nfont-family: sans-serif;\n}\n\nh1 {\nfont-size: 1.5em;\n}\n\nhr {\nmargin: 1em 0;\n}\n\ntable {\nborder-collapse: collapse;\nwidth: 100%;\n}\n\ntd, th {\nborder: 1px solid #ccc;\npadding: 0.5em;\n}\n\nth {\nbackground: #eee;\n}\n\ntr:nth-child(even) {\nbackground: #f8f8f8;\n}\n</style>";
-	// write to file
-	FILE *ret = tmpfile();
-	if (ret == NULL)
-		return NULL;
-	fwrite(autoindexHtml.c_str(), 1, autoindexHtml.size(), ret);
-	rewind(ret);
-	// set body size
 	m_bodySize = autoindexHtml.size();
-	return ret;
+	return autoindexHtml;
 }
 
 std::string	getContentType(std::string filename)
@@ -201,6 +194,7 @@ void		Response::buildHeaders()
 	for (i = m_headersMap.begin(); i != m_headersMap.end(); i++)
 		headers += i->first + ": " + i->second + "\r\n";
 	headers += "\r\n";
+	m_buffer = headers;
 }
 
 bool		Response::handleGetFile(off_t filesize)
@@ -214,8 +208,8 @@ bool		Response::handleGetFile(off_t filesize)
 		m_bodySize = filesize;
 		m_headersMap["Content-Type"] = getContentType(m_filePath);
 		m_headersMap["Content-Length"] = toString(m_bodySize);
-		m_bodyFile = fopen(m_filePath.c_str(), "r");
-		if (!m_bodyFile)
+		m_file.open(m_filePath.c_str(), std::ios::in);
+		if (!m_file.is_open())
 		{
 			m_statusCode = "500";
 			return false;
@@ -299,7 +293,8 @@ bool		Response::handleGet()
 		}
 		else if (location.getAutoIndex())
 		{
-			m_bodyFile = generateAutoIndex();
+			m_buffer = generateAutoIndex();
+			m_done = true;
 			m_headersMap["Content-Type"] = "text/html";
 			m_statusCode = "200";
 			return true;
@@ -321,15 +316,15 @@ bool		Response::handleGet()
 
 bool		Response::handlePost()
 {
-	std::string uploadPath = m_request.getLocation().getUploadPath();
-	if (!uploadPath.empty())
-	{
-		std::string uri = m_request.getUri();
-		std::string path = m_request.getLocation().getPath();
-		std::string filePath = uploadPath + uri.substr(path.size());
-		std::string absolute = getAbsolutePath(filePath);
+	// std::string uploadPath = m_request.getLocation().getUploadPath();
+	// if (!uploadPath.empty())
+	// {
+	// 	std::string uri = m_request.getUri();
+	// 	std::string path = m_request.getLocation().getPath();
+	// 	std::string filePath = uploadPath + uri.substr(path.size());
+	// 	std::string absolute = getAbsolutePath(filePath);
 
-	}
+	// }
 }
 
 void		Response::setErrorPage()
@@ -349,71 +344,41 @@ void		Response::setErrorPage()
 		}
 		errorPage += errorString + "</h1>\n</div></body></html>";
 		errorPage += "<style>body {\n  background-color: #23307e;\n}\nbody .base {\n  background-color: #23307e;\n  width: 100%;\n  height: 100vh;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-direction: column;\n  position: relative;\n}\nbody .base .point {\n  font-family: \"Ubuntu\", sans-serif;\n  font-size: 10vw;\n  position: absolute;\n  top: 2vh;\n  color: #f2e9df;\n  left: 10vw;\n}\nbody .base .point:after {\n  content: \"_\";\n  animation: sparkle 0.5s infinite;\n  position: absolute;\n}\nbody .base h1 {\n  color: #ff3d57;\n  font-family: \"Ubuntu\", sans-serif;\n  text-transform: uppercase;\n  font-size: 6vw;\n  position: absolute;\n  top: 20vh;\n  left: 10vw;\n  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);\n}\n@media only screen and (max-width: 992px) {\n  body .base h1 {\n    font-size: 10vw;\n  }\n}\nbody .base h1.glitch {\n  animation: clap 0.1s 5 forwards;\n}\n\n@keyframes sparkle {\n  0%, 100% {\n    opacity: 0;\n  }\n  50% {\n    opacity: 1;\n  }\n}\n@keyframes clap {\n  0%, 100% {\n    opacity: 1;\n  }\n  30% {\n    left: 11vw;\n    color: #f2e9df;\n  }\n  70% {\n    opacity: 0;\n  }\n}</style>";
-		// write to tmp file
-		FILE *tmpFile = tmpfile();
-		fwrite(errorPage.c_str(), 1, errorPage.size(), tmpFile);
-		rewind(tmpFile);
-		m_bodyFile = tmpFile;
+		
 		m_bodySize = errorPage.size();
 	}
 	else
 	{
-		FILE *errorFile = fopen(errorPagePath.c_str(), "r");
-		fseek(errorFile, 0, SEEK_END);
-		m_bodySize = ftell(errorFile);
-		rewind(errorFile);
-		m_bodyFile = errorFile;
+		m_file.open(errorPagePath.c_str(), std::ios::in);
 		m_headersMap["Content-Type"] = getContentType(errorPagePath);
 	}
 }
 
-void		Response::moveHeaderCursor(int cursor)
+void		Response::setLastSent(long sent)
 {
-	m_headersCursor += cursor;
+	m_lastSent = sent;
 }
 
-void		Response::moveBodyCursor(int cursor)
+std::string 		Response::peek(bool &done)
 {
-	m_bodyCursor += cursor;
-}
-
-bool		Response::peekHeaders(char *buf, long *sendSize)
-{
-	if (m_headersCursor == m_headers.size())
-		return false;
-	std::string tmp = m_headers.substr(m_headersCursor);
-	if (tmp.size() > BUFFER_SIZE)
+	m_cursor += m_lastSent;
+	m_lastSent = 0;
+	if (m_cursor >= m_buffer.size())
 	{
-		tmp = tmp.substr(0, BUFFER_SIZE);
-		*sendSize = BUFFER_SIZE;
+		if (m_done)
+		{
+			done = true;
+			return ("");
+		}
+		std::string ret;
+		m_file.read(m_smolBuffer, RES_BUFFER_SIZE);
+		ret.assign(m_smolBuffer, m_file.gcount());
+		if (m_file.eof())
+			m_done = true;
+		return ret;
 	}
 	else
-	{
-		*sendSize = tmp.size();
-	}
-	memcpy(buf, tmp.c_str(), *sendSize);
-	return true;
-}
-
-bool		Response::peekBody(char *buf, long *sendSize)
-{
-	if (m_bodySize == 0)
-		return false;
-	*sendSize = min(BUFFER_SIZE, m_bodySize - m_bodyCursor);
-	if (*sendSize == 0)
-		return false;
-	fseek(m_bodyFile, m_bodyCursor, SEEK_SET);
-	fread(buf, 1, *sendSize, m_bodyFile);
-}
-
-int 		Response::peek(char *buf, long *sendSize)
-{
-	if (peekHeaders(buf, sendSize))
-		return SENDING_HEADERS;
-	else if (peekBody(buf, sendSize))
-		return SENDING_BODY;
-	else
-		return SENDING_DONE;
+		return m_buffer.substr(m_cursor, m_buffer.size() - m_cursor);
 }
 
 int			Response::getSd()
@@ -423,13 +388,13 @@ int			Response::getSd()
 
 Response::Response(const Request &request)
 {
-	m_headersSent = false;
-	m_headersCursor = 0;
+	m_statusCode = "200";
 	m_request = request;
-	m_bodySent = false;
-	m_bodyCursor = 0;
+	m_cursor = 0;
 	m_bodySize = 0;
-	m_bodyFile = NULL;
+	m_done = false;
+	m_lastSent = 0;
+	m_file = std::fstream();
 
 	bool pass = true;
 	if ((m_statusCode = request.getError()) != "200")
@@ -447,8 +412,8 @@ Response::Response(const Request &request)
 
 Response::~Response() 
 {
-	if (m_bodyFile)
-		fclose(m_bodyFile);
+	if (m_file.is_open())
+		m_file.close();
 }
 
 Response::Response() {}

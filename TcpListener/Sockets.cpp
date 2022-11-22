@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Sockets.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/25 17:52:09 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/21 00:43:23 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/22 02:21:48 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,41 +97,37 @@ void		handle_requests(const std::vector<Server> &servers, fd_set &read_set, std:
 	}
 }
 
-// void	handle_responses(fd_set &write_set, std::vector<Request> &requests, std::vector<Response> &responses)
-// {
-// 	for (std::vector<Request>::iterator i = requests.begin(); i != requests.end(); ++i)
-// 	{	
-// 		if (i->getStatus() != "")
-// 		{
-// 			responses.push_back(Response(*i));
-// 			requests.erase(i);
-// 		}
-// 	}
-// 	for(std::vector<Response>::iterator i = responses.begin(); i != responses.end(); ++i)
-// 	{
-// 		if (FD_ISSET(i->getSd(), &write_set))
-// 		{
-// 			char buf[BUFFER_SIZE];
-// 			long sendsize = BUFFER_SIZE;
-// 			int sending_status = i->peek(buf, &sendsize);
-// 			if (sending_status != SENDING_DONE)
-// 			{
-// 				ssize_t sent = send(i->getSd(), buf, sendsize, 0);
-// 				if (sent < 0)
-// 					exit_failure("FATAL : Failed to send response. errno: ");
-// 				if (sending_status == SENDING_BODY)
-// 					i->moveBodyCursor(sent);
-// 				else
-// 					i->moveHeaderCursor(sent);
-// 			}
-// 			else
-// 			{
-// 				close(i->getSd());
-// 				responses.erase(i);
-// 			}
-// 		}
-// 	}
-// }
+void	handle_responses(fd_set &write_set, std::vector<Request> &requests, std::vector<Response> &responses)
+{
+	for (std::vector<Request>::iterator i = requests.begin(); i != requests.end(); ++i)
+	{	
+		if (i->getStatus() != "")
+		{
+			responses.push_back(Response(*i));
+			requests.erase(i);
+		}
+	}
+	for(std::vector<Response>::iterator i = responses.begin(); i != responses.end(); ++i)
+	{
+		if (FD_ISSET(i->getSd(), &write_set))
+		{
+			bool done = false;
+			std::string to_send = i->peek(done);
+			if (!done)
+			{
+				ssize_t sent = send(i->getSd(), to_send.c_str(), to_send.size(), 0);
+				if (sent < 0)
+					exit_failure("FATAL : Failed to send response. errno: ");
+				i->setLastSent(sent);
+			}
+			else
+			{
+				close(i->getSd());
+				responses.erase(i);
+			}
+		}
+	}
+}
 
 void     run_server(std::vector<Server> &servers, std::vector<TcpListener> &tcplisteners)
 {
