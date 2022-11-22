@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/25 17:52:09 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/22 06:59:54 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/22 21:55:22 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 void	exit_failure(std::string str)
 {
+	perror(strerror(errno));
 	std::cout << "\033[1;31m" << str << "\033[0m" << std::endl;
 	exit(EXIT_FAILURE);
 }
@@ -35,7 +36,7 @@ int		initiate_master_sockets(std::vector<Server> &server, std::vector<TcpListene
 	return(0); 
 }
 
-void	accept_connections(std::vector<TcpListener> &tcplisteners, fd_set &read_set, std::vector<Request> &requests, int &max_sd)
+void	accept_connections(std::vector<TcpListener> &tcplisteners, fd_set &read_set, std::vector<Request> &requests)
 {
 	int		connection;
 	for (std::vector<TcpListener>::iterator i = tcplisteners.begin(); i != tcplisteners.end(); ++i)
@@ -45,9 +46,13 @@ void	accept_connections(std::vector<TcpListener> &tcplisteners, fd_set &read_set
 			if ((connection = accept(i->getMaster(), NULL, NULL)) < 0)
 				exit_failure("Failed to accept connection. errno: ");
 			else
+			{
+				// make non blocking
+				int flags = fcntl(connection, F_GETFL, 0);
+				flags |= O_NONBLOCK;
+				fcntl(connection, F_SETFL, flags);
 				requests.push_back(Request(connection));
-			if (connection > max_sd)
-				max_sd = connection; 
+			}
 		}
 	}
 }
@@ -85,17 +90,15 @@ void	set_clients_sockets(std::vector<Request> &requests, std::vector<Response> &
 
 void		handle_requests(const std::vector<Server> &servers, fd_set &read_set, std::vector<Request> &requests)
 {
-	char buf[1024]; 
+	char buf[4096]; 
 	for (std::vector<Request>::iterator i = requests.begin(); i != requests.end(); ++i)
 	{
 		if (FD_ISSET(i->getSd(), &read_set))
 		{
-			int rec = recv(i->getSd(), &buf, 1024, 0);
+			int rec = recv(i->getSd(), &buf, 4096, 0);
 			i->parse(servers, buf, rec);
-			// if (i->getStatus() != "")
-			// 	std::cout << *i << std::endl;
 		}
-	}
+	}	
 }
 
 void	handle_responses(fd_set &write_set, std::vector<Request> &requests, std::vector<Response> &responses)
@@ -126,16 +129,10 @@ void	handle_responses(fd_set &write_set, std::vector<Request> &requests, std::ve
 					exit_failure("FATAL : Failed to send response. errno: ");
 				i->setLastSent(sent);
 			}
-			// std::cout << "sent: " << done << std::endl;
 			else
 			{
 				tmp2.push_back(i);
 			}
-			// else
-			// {
-			// 	close(i->getSd());
-			// 	responses.erase(i);
-			// }
 		}
 	}
 	for (std::vector<std::vector<Response>::iterator>::iterator i = tmp2.begin(); i != tmp2.end(); ++i)
@@ -143,6 +140,7 @@ void	handle_responses(fd_set &write_set, std::vector<Request> &requests, std::ve
 		int tmp = (*i)->getSd();
 		responses.erase(*i);
 		close(tmp);
+		FD_CLR(tmp, &write_set);
 	}
 }
 
@@ -164,7 +162,7 @@ void     run_server(std::vector<Server> &servers, std::vector<TcpListener> &tcpl
 		set_clients_sockets(requests, responses, read_set, write_set, max_sd);
 		if ((select(max_sd + 1, &read_set, &write_set, NULL, NULL) < 0))
 			exit_failure("select error");
-		accept_connections(tcplisteners, read_set, requests, max_sd);
+		accept_connections(tcplisteners, read_set, requests);
 		handle_requests(servers, read_set, requests);
 		handle_responses(write_set, requests, responses);
 	}

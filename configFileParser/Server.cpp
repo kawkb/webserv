@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/21 22:37:07 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/22 23:28:43 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,7 +137,7 @@ std::string                 Server::getName(void) const{return(m_serverName);}
 std::string                 Server::getRoot(void) const{return(m_root);}
 std::string                 Server::getIndex(void) const{return(m_index);} 
 std::string                 Server::getCgiExtention(void) const{return(m_cgiExtension);}
-std::string                 Server::getCgiPath(void) const{return (m_cgiPath);}
+std::string         		Server::getCgiPath(void) const{return (m_cgiPath);}
 std::vector<std::string>    Server::getMethod(void) const{return(m_method);}
 std::vector<Location>       Server::getLocation(void) const{return(m_location);}
 

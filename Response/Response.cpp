@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/22 06:57:11 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/22 22:47:18 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,6 +130,7 @@ std::string	Response::generateAutoIndex()
 	autoindexHtml += "</table>\n<hr>\n</body>\n</html>";
 	autoindexHtml += "<style>\nbody {\nfont-family: sans-serif;\n}\n\nh1 {\nfont-size: 1.5em;\n}\n\nhr {\nmargin: 1em 0;\n}\n\ntable {\nborder-collapse: collapse;\nwidth: 100%;\n}\n\ntd, th {\nborder: 1px solid #ccc;\npadding: 0.5em;\n}\n\nth {\nbackground: #eee;\n}\n\ntr:nth-child(even) {\nbackground: #f8f8f8;\n}\n</style>";
 	m_bodySize = autoindexHtml.size();
+
 	return autoindexHtml;
 }
 
@@ -199,7 +200,9 @@ std::string	getContentType(std::string filename)
 void		Response::buildHeaders()
 {
 	std::string headers = "HTTP/1.1 " + m_statusCode + " " + getCodeString() + "\r\n";
-	headers += "Content-Length: " + toString(m_bodySize) + "\r\n";
+	std::cout << "Headers: " << headers << std::endl;
+	if (m_bodySize > 0)
+		headers += "Content-Length: " + toString(m_bodySize) + "\r\n";
 	std::map<std::string, std::string>::iterator i;
 	for (i = m_headersMap.begin(); i != m_headersMap.end(); i++)
 		headers += i->first + ": " + i->second + "\r\n";
@@ -315,8 +318,11 @@ bool		Response::handleGetFile(off_t filesize)
 {
 	Server server = m_request.getServer();
 	std::string extension = m_filePath.substr(m_filePath.find_last_of(".") + 1);
+	std::cout << "extention : " << extension << std::endl;
 	if (extension == server.getCgiExtention())
+	{
 		return handleCgi();
+	}
 	else
 	{
 		m_bodySize = filesize;
@@ -327,6 +333,7 @@ bool		Response::handleGetFile(off_t filesize)
 			m_statusCode = "500";
 			return false;
 		}
+		buildHeaders();
 		return true;
 	}
 }
@@ -339,21 +346,31 @@ bool		Response::handleGet()
 	std::string path = location.getPath();
 	std::string root = location.getRoot();
 	std::string uri = m_request.getUri();
+	// std::cout << "path: " << path << std::endl;
+	// std::cout << "root: " << root << std::endl;
+	// std::cout << "uri: " << uri << std::endl;
+	m_filePath = root + uri.substr(path.size());
 	// parse request path
-	m_filePath = root + uri.substr(path.size() + 1);
+	if (uri == path || uri == path + "/")
+		m_filePath = root + location.getIndex();
+	else
+		m_filePath = root + uri.substr(path.size() + 1);
+	// std::cout << "file path: " << m_filePath << std::endl;
 	// resolve path
 	std::string absolute = getAbsolutePath(m_filePath);
-	std::cout << "absolute: " << absolute << std::endl;
-	std::cout << "root: " << root << std::endl;
 	if (!startsWith(absolute + "/", root))
 	{
 		m_statusCode = "403";
 		return false;
 	}
+	// std::cout << "absolute: " << absolute << std::endl;
 	if (absolute != m_filePath)
 	{
+		const std::string host = m_request.getServer().getName() + ":" + toString(m_request.getServer().getPort());
+		const std::string redirect = "http://" + host +  path + absolute.substr(root.size() - 1) + m_request.getQueryString();
 		m_statusCode = "301";
-		m_headersMap["Location"] = path + absolute.substr(root.size()) + m_request.getQueryString();
+		m_headersMap["Location"] = redirect;
+		buildHeaders();
 		return true;
 	}
 
@@ -374,44 +391,18 @@ bool		Response::handleGet()
 		if (m_filePath[m_filePath.size() - 1] != '/')
 		{
 			m_statusCode = "301";
+			const std::string host = m_request.getServer().getName() + ":" + toString(m_request.getServer().getPort());
+			const std::string redirect = "http://" + host +  uri + "/" + m_request.getQueryString();
 			m_headersMap["Location"] = uri + "/";
-			return false;
-		}
-		std::string index = location.getIndex();
-		if (!index.empty())
-		{
-			struct stat indexStat;
-			m_filePath += index;
-			if (stat(m_filePath.c_str(), &indexStat) != 0)
-			{
-				if (errno == EACCES)
-					m_statusCode = "403";
-				else if (errno == ENOENT)
-					m_statusCode = "404";
-				else
-					m_statusCode = "500";
-				return false;
-			}
-			if (S_ISDIR(indexStat.st_mode))
-			{
-				m_statusCode = "301";
-				m_headersMap["Location"] = uri + index + "/?" + m_request.getQueryString();
-				return false;
-			}
-			else if (S_ISREG(indexStat.st_mode))
-				return handleGetFile(indexStat.st_size);
-			else
-			{
-				m_statusCode = "403";
-				return false;
-			}
+			buildHeaders();
+			return true;
 		}
 		else if (location.getAutoIndex())
 		{
-			m_buffer = generateAutoIndex();
-			m_done = true;
 			m_headersMap["Content-Type"] = "text/html";
 			m_statusCode = "200";
+			buildHeaders();
+			m_buffer += generateAutoIndex();
 			return true;
 		}
 		else
@@ -497,6 +488,7 @@ std::string 		Response::peek(bool &done)
 	{
 		// flush buffer
 		m_buffer.clear();
+		m_cursor = 0;
 		if (m_done)
 		{
 			done = true;
@@ -506,16 +498,25 @@ std::string 		Response::peek(bool &done)
 		{
 			std::string ret;
 			size_t read = fread(m_smolBuffer,1, RES_BUFFER_SIZE, m_file);
+			if (ferror(m_file))
+			{
+				perror("fread");
+			}
+			std::cout << "read: " << read << std::endl;
 			if (read > 0)
 				ret.assign(m_smolBuffer, read);
 			else
 				m_done = true;
 			return ret;
 		}
+		else
+			done = true;
 		return ("");
 	}
 	else
+	{
 		return m_buffer.substr(m_cursor, m_buffer.size() - m_cursor);
+	}
 }
 
 int			Response::getSd()
@@ -544,8 +545,6 @@ Response::Response(const Request &request)
 	// 	pass = handleDelete();
 	if (pass == false)
 		setErrorPage();
-	else
-		buildHeaders();
 }
 
 Response::~Response() 
@@ -571,7 +570,13 @@ Response &Response::operator=(const Response &other)
 		m_bodySize = other.m_bodySize;
 		m_done = other.m_done;
 		m_lastSent = other.m_lastSent;
-		m_file = other.m_file;
+		m_filePath = other.m_filePath;
+		// m_file = other.m_file;
+		// deep copy file
+		if (other.m_file)
+			m_file = fopen(m_filePath.c_str(), "r");
+		else
+			m_file = NULL;
 	}
 	return *this;
 }

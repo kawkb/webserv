@@ -8,11 +8,11 @@ server
     root            ./var/www/static_websites/
     index           index.html
     autoindex       off 
-
+	cgi php /Users/moerradi/.brew/bin/php-cgi
 	location /pato
 	{
-		root                /Users/moerradi/webserv
-		autoindex           off
+		root                /Users/moerradi/webserv/
+		autoindex           on
 		index               index.html
 		allow_methods       GET
 	}

@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/20 20:48:34 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/22 05:15:51 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/22 21:15:54 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,10 +64,12 @@ std::string getAbsolutePath(std::string path)
 	{
 		ans += "/" + *i;
 	}
+	if (path[path.length() - 1] == '.')
+		ans += "/";
 	if (ans == "")
 		return "/";
 
-	return ans;
+	return path[path.length() - 1] == '/' ? ans + "/" : ans;
 }
 
 std::string stringToUpper(std::string str)
