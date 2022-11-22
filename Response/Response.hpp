@@ -6,12 +6,13 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:33 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/22 02:17:40 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/22 06:43:46 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 #include "../webserv.hpp"
+// #include <iostream>
 # define SENDING_DONE 0
 # define SENDING_HEADERS 1
 # define SENDING_BODY 2
@@ -26,7 +27,7 @@ class Response
 		std::string							m_headers;
 		std::map<std::string, std::string>	m_headersMap;
 		std::string							m_filePath;
-		std::fstream						m_file;
+		FILE								*m_file;
 		std::string							m_buffer;
 		char								m_smolBuffer[RES_BUFFER_SIZE];
 		Request								m_request;
@@ -45,13 +46,17 @@ class Response
 		bool								handleDelete();
 		bool								handleCgi();
 		void								setErrorPage();
-		std::string							getHeader(std::string key);
+		std::string							getHeader(std::string key) const;
 		int									getSd();
 		std::string							peek(bool &done);
 		void								setLastSent(long sent);
 		void								setCgiEnv();
 		void								buildHeaders();
 											Response(const Request &request);
+											Response(const Response &src);
 											Response();
 											~Response();
+		Response							&operator=(const Response &rhs);
+		
+		friend std::ostream& operator<<(std::ostream& out, const Response& response);
 };

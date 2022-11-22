@@ -6,9 +6,11 @@ SRCS = TcpListener/TcpListener.cpp \
 		configFileParser/configParser.cpp \
 		Request/Request.cpp \
 		main.cpp \
-		# Response/Response.cpp \
+		Response/Response.cpp \
+		Response/cgi.cpp \
+		utils/utils.cpp
 
-FLAGS = -Wall -Wextra -Werror  -std=c++98 -fsanitize=address 
+FLAGS = -Wall -Wextra -Werror  -std=c++98 -fsanitize=address  -g3
 
 all: $(NAME)
 

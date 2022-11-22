@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:39 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/22 01:53:46 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/22 05:06:11 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,7 @@ bool	Response::handleCgi()
 	FILE *tempfile = tmpfile();
 	if (tempfile == NULL)
 	{
-		m_statusCode = 500;
+		m_statusCode = "500";
 		return false;
 	}
 
@@ -91,7 +91,7 @@ bool	Response::handleCgi()
 			usleep(1000);
 			if (val == -1)
 			{
-				m_statusCode = 500;
+				m_statusCode = "500";
 				return false;
 			}
 			if (val != 0)
@@ -143,7 +143,7 @@ bool	Response::handleCgi()
 	FILE *tempfile2 = tmpfile();
 	if (tempfile2 == NULL)
 	{
-		m_statusCode = 500;
+		m_statusCode = "500";
 		return false;
 	}
 	char buf[BUFFER_SIZE];

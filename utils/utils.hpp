@@ -2,8 +2,8 @@
 
 #include "../webserv.hpp"
 
-template <class T>
-std::string	toString(const T &value);
+std::string	toString(const int &value);
+std::string	toString(const long long &value);
 int			max(int a, int b);
 int			min(int a, int b);
 std::string	getAbsolutePath(std::string path);

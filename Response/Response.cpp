@@ -6,15 +6,24 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/22 04:11:34 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/22 06:57:11 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../webserv.hpp"
 
-std::string	Response::getHeader(std::string key)
+std::string Response::getExtention()
 {
-	std::map<std::string, std::string>::iterator it = m_headersMap.find(key);
+	size_t pos = m_filePath.find_last_of(".");
+	std::string extenstion = "";
+	if (pos != std::string::npos)
+		extenstion = m_filePath.substr(pos + 1);
+	return extenstion;
+}
+
+std::string	Response::getHeader(std::string key) const
+{
+	std::map<std::string, std::string>::const_iterator it = m_headersMap.find(key);
 	if (it != m_headersMap.end())
 		return (it->second);
 	return ("");
@@ -190,11 +199,116 @@ std::string	getContentType(std::string filename)
 void		Response::buildHeaders()
 {
 	std::string headers = "HTTP/1.1 " + m_statusCode + " " + getCodeString() + "\r\n";
+	headers += "Content-Length: " + toString(m_bodySize) + "\r\n";
 	std::map<std::string, std::string>::iterator i;
 	for (i = m_headersMap.begin(); i != m_headersMap.end(); i++)
 		headers += i->first + ": " + i->second + "\r\n";
 	headers += "\r\n";
 	m_buffer = headers;
+}
+
+int remove_directory(const std::string path)
+{
+	DIR *d = opendir(path.c_str());
+	int r = -1;
+	if (d)
+	{
+		struct dirent *p;
+		r = 0;
+		while (!r && (p = readdir(d)))
+		{
+			int r2 = -1;
+			std::string filename(p->d_name);
+			if (filename == "." || filename == "..")
+				continue;
+			const std::string filepath = path + "/" + filename;
+			struct stat statbuf;
+			if (!stat(filepath.c_str(), &statbuf))
+			{
+				if (S_ISDIR(statbuf.st_mode))
+					r2 = remove_directory(filepath);
+				else
+					r2 = unlink(filepath.c_str());
+			}
+			r = r2;
+		}
+		closedir(d);
+	}
+	if (!r)
+	  r = rmdir(path.c_str());
+	return r;
+}
+
+bool Response::handleDelete()
+{
+	// location path should never end with a slash except if it is literally /
+	// root path should always end with a slash
+	Location location = m_request.getLocation();
+	Server server = m_request.getServer();
+	std::string path = location.getPath();
+	std::string root = location.getRoot();
+	std::string uri = m_request.getUri();
+	// parse request path
+	m_filePath = root + uri.substr(path.size());
+	// resolve path
+	std::string absolute = getAbsolutePath(m_filePath);
+	if (!startsWith(absolute + "/", root))
+	{
+		m_statusCode = "403";
+		return false;
+	}
+	struct stat fileStat;
+	if (stat(m_filePath.c_str(), &fileStat) != 0)
+	{
+		if (errno == EACCES)
+			m_statusCode = "403";
+		else if (errno == ENOENT)
+			m_statusCode = "404";
+		else
+			m_statusCode = "500";
+		return false;
+	}
+	if (S_ISDIR(fileStat.st_mode))
+	{
+		if (m_filePath[m_filePath.size() - 1] != '/')
+		{
+			m_statusCode = "409";
+			return false;
+		}
+		if (remove_directory(m_filePath) != 0)
+		{
+			if (errno == EACCES)
+				m_statusCode = "403";
+			else if (errno == ENOENT)
+				m_statusCode = "404";
+			else
+				m_statusCode = "500";			
+			return false;
+		}
+	}
+	else if (S_ISREG(fileStat.st_mode))
+	{
+		std::string ext = getExtention();
+		if (ext == server.getCgiExtention() && ext != "")
+		
+		if (unlink(m_filePath.c_str()) != 0)
+		{
+			if (errno == EACCES)
+				m_statusCode = "403";
+			else if (errno == ENOENT)
+				m_statusCode = "404";
+			else
+				m_statusCode = "500";
+			return false;
+		}
+	}
+	else
+	{
+		m_statusCode = "403";
+		return false;
+	}
+	m_statusCode = "204";
+	return true;
 }
 
 bool		Response::handleGetFile(off_t filesize)
@@ -207,9 +321,8 @@ bool		Response::handleGetFile(off_t filesize)
 	{
 		m_bodySize = filesize;
 		m_headersMap["Content-Type"] = getContentType(m_filePath);
-		m_headersMap["Content-Length"] = toString(m_bodySize);
-		m_file.open(m_filePath.c_str(), std::ios::in);
-		if (!m_file.is_open())
+		m_file = fopen(m_filePath.c_str(), "r");
+		if (!m_file)
 		{
 			m_statusCode = "500";
 			return false;
@@ -227,9 +340,11 @@ bool		Response::handleGet()
 	std::string root = location.getRoot();
 	std::string uri = m_request.getUri();
 	// parse request path
-	m_filePath = root + uri.substr(path.size());
+	m_filePath = root + uri.substr(path.size() + 1);
 	// resolve path
 	std::string absolute = getAbsolutePath(m_filePath);
+	std::cout << "absolute: " << absolute << std::endl;
+	std::cout << "root: " << root << std::endl;
 	if (!startsWith(absolute + "/", root))
 	{
 		m_statusCode = "403";
@@ -325,6 +440,7 @@ bool		Response::handlePost()
 	// 	std::string absolute = getAbsolutePath(filePath);
 
 	// }
+	return true;
 }
 
 void		Response::setErrorPage()
@@ -344,13 +460,24 @@ void		Response::setErrorPage()
 		}
 		errorPage += errorString + "</h1>\n</div></body></html>";
 		errorPage += "<style>body {\n  background-color: #23307e;\n}\nbody .base {\n  background-color: #23307e;\n  width: 100%;\n  height: 100vh;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-direction: column;\n  position: relative;\n}\nbody .base .point {\n  font-family: \"Ubuntu\", sans-serif;\n  font-size: 10vw;\n  position: absolute;\n  top: 2vh;\n  color: #f2e9df;\n  left: 10vw;\n}\nbody .base .point:after {\n  content: \"_\";\n  animation: sparkle 0.5s infinite;\n  position: absolute;\n}\nbody .base h1 {\n  color: #ff3d57;\n  font-family: \"Ubuntu\", sans-serif;\n  text-transform: uppercase;\n  font-size: 6vw;\n  position: absolute;\n  top: 20vh;\n  left: 10vw;\n  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);\n}\n@media only screen and (max-width: 992px) {\n  body .base h1 {\n    font-size: 10vw;\n  }\n}\nbody .base h1.glitch {\n  animation: clap 0.1s 5 forwards;\n}\n\n@keyframes sparkle {\n  0%, 100% {\n    opacity: 0;\n  }\n  50% {\n    opacity: 1;\n  }\n}\n@keyframes clap {\n  0%, 100% {\n    opacity: 1;\n  }\n  30% {\n    left: 11vw;\n    color: #f2e9df;\n  }\n  70% {\n    opacity: 0;\n  }\n}</style>";
-		
 		m_bodySize = errorPage.size();
+		buildHeaders();
+		m_buffer += errorPage;
+		m_done = true;
 	}
 	else
 	{
-		m_file.open(errorPagePath.c_str(), std::ios::in);
+		m_file = fopen(errorPagePath.c_str(), "r");
 		m_headersMap["Content-Type"] = getContentType(errorPagePath);
+		struct stat fileStat;
+		if (stat(errorPagePath.c_str(), &fileStat) != 0)
+		{
+			m_statusCode = "500";
+			return;
+		}
+		m_bodySize = fileStat.st_size;
+		buildHeaders();
+		m_done = true;
 	}
 }
 
@@ -361,21 +488,31 @@ void		Response::setLastSent(long sent)
 
 std::string 		Response::peek(bool &done)
 {
+	// std::cout << "last sent: " << m_lastSent << std::endl;
 	m_cursor += m_lastSent;
 	m_lastSent = 0;
-	if (m_cursor >= m_buffer.size())
+	// std::cout << "cursor: " << m_cursor << std::endl;
+	// std::cout << "buffer size: " << m_buffer.size() << std::endl;
+	if (m_cursor >= (int)m_buffer.size())
 	{
+		// flush buffer
+		m_buffer.clear();
 		if (m_done)
 		{
 			done = true;
 			return ("");
 		}
-		std::string ret;
-		m_file.read(m_smolBuffer, RES_BUFFER_SIZE);
-		ret.assign(m_smolBuffer, m_file.gcount());
-		if (m_file.eof())
-			m_done = true;
-		return ret;
+		if (m_file)
+		{
+			std::string ret;
+			size_t read = fread(m_smolBuffer,1, RES_BUFFER_SIZE, m_file);
+			if (read > 0)
+				ret.assign(m_smolBuffer, read);
+			else
+				m_done = true;
+			return ret;
+		}
+		return ("");
 	}
 	else
 		return m_buffer.substr(m_cursor, m_buffer.size() - m_cursor);
@@ -394,7 +531,7 @@ Response::Response(const Request &request)
 	m_bodySize = 0;
 	m_done = false;
 	m_lastSent = 0;
-	m_file = std::fstream();
+	m_file = NULL;
 
 	bool pass = true;
 	if ((m_statusCode = request.getError()) != "200")
@@ -403,17 +540,55 @@ Response::Response(const Request &request)
 		pass = handleGet();
 	else if (request.getMethod() == "POST")
 		pass = handlePost();
-	else if (request.getMethod() == "DELETE")
-		pass = handleDelete();
+	// else if (request.getMethod() == "DELETE")
+	// 	pass = handleDelete();
 	if (pass == false)
 		setErrorPage();
-	buildHeaders();
+	else
+		buildHeaders();
 }
 
 Response::~Response() 
 {
-	if (m_file.is_open())
-		m_file.close();
+	if (m_file)
+		fclose(m_file);
+}
+
+Response::Response(const Response &other)
+{
+	*this = other;
+}
+
+Response &Response::operator=(const Response &other)
+{
+	if (this != &other)
+	{
+		m_statusCode = other.m_statusCode;
+		m_request = other.m_request;
+		m_headersMap = other.m_headersMap;
+		m_buffer = other.m_buffer;
+		m_cursor = other.m_cursor;
+		m_bodySize = other.m_bodySize;
+		m_done = other.m_done;
+		m_lastSent = other.m_lastSent;
+		m_file = other.m_file;
+	}
+	return *this;
 }
 
 Response::Response() {}
+
+std::ostream& operator<<(std::ostream& out, const Response& response)
+{
+	out << "Status_code" << response.m_statusCode << std::endl;
+	out << "content-length" << response.getHeader("Content-Lenght") << std::endl;
+	// out << response.m_headersMap.size() << std::endl;
+	// for (std::map<std::string, std::string>::const_iterator it = response.m_headersMap.begin(); it != response.m_headersMap.end(); it++)
+	// {
+	// 	out << it->first << std::endl;
+	// 	out << it->second << std::endl;
+	// }
+	// out << response.m_bodySize << std::endl;
+	// out << response.m_buffer << std::endl;
+	return out;
+}

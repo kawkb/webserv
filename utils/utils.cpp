@@ -3,17 +3,23 @@
 /*                                                        :::      ::::::::   */
 /*   utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/20 20:48:34 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/22 04:13:26 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/22 05:15:51 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../webserv.hpp"
 
-template <class T>
-std::string toString(const T &value)
+std::string toString(const int &value)
+{
+	std::ostringstream oss;
+	oss << value;
+	return oss.str();
+}
+
+std::string toString(const long long &value)
 {
 	std::ostringstream oss;
 	oss << value;
@@ -35,7 +41,7 @@ std::string getAbsolutePath(std::string path)
 	std::vector<std::string> v;
 	size_t n = path.length();
 	std::string ans;
-	for (int i = 0; i < n; i++)
+	for (size_t i = 0; i < n; i++)
 	{
 		std::string dir = "";
 		while (i < n && path[i] != '/')

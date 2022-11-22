@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/22 04:20:07 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/22 06:31:40 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -269,7 +269,7 @@ void    Request::fillChunked(void)
                 m_chunckLen = std::stoul(std::string(temp.begin(), temp.end()), nullptr, 16);
                 if (m_chunckLen == 0)
                 {
-                    m_status = "ok";
+                    m_status = "500";
                     rewind(m_body);
                     return;
                 }
@@ -289,7 +289,7 @@ void    Request::fillContentLength(size_t contentLength)
     {
         fwrite(m_requestBuffer.data(), sizeof(char), contentLength - m_bodyLength, m_body);
         rewind(m_body);
-        m_status = "ok";
+        m_status = "500";
         return;
     }
     m_bodyLength += m_requestBuffer.size();
@@ -298,7 +298,7 @@ void    Request::fillContentLength(size_t contentLength)
     if (m_bodyLength >= contentLength)
     {
         rewind(m_body);
-        m_status = "ok";
+        m_status = "500";
     }
     return;
 }
@@ -308,8 +308,9 @@ void    Request::fillBody(void)
     size_t contentLength = atoi(getHeader("Content-Length").c_str());
     if (getHeader("Transfer-Encoding") == "chunked")
         fillChunked();
-    else if (m_bodyLength < contentLength)
+    else if (m_bodyLength <= contentLength)
         fillContentLength(contentLength);
+	
 }
 
 void    Request::parse(const std::vector<Server> &servers, const char *buf, int bufSize)

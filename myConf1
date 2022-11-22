@@ -1,6 +1,5 @@
 server
 {
-
 	listen         	8080
 	server_name     localhost
 	allow_methods   GET 
@@ -10,18 +9,11 @@ server
     index           index.html
     autoindex       off 
 
-	location /PATH01/ 
+	location /pato
 	{
-		root                ./var/www/static_websites/roxy/ 
+		root                /Users/moerradi/webserv
 		autoindex           off
 		index               index.html
-		allow_methods       GET
-	}
-	location /PATH02
-	{
-		root                ./var/www/static_websites/the7/
-		autoindex           off
-		index               invalid_index
 		allow_methods       GET
 	}
 }
