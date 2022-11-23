@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: zmeribaa <zmeribaa@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/23 08:21:21 by zmeribaa         ###   ########.fr       */
+/*   Updated: 2022/11/23 19:47:10 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,13 +15,13 @@
 Request::Request(){}
     
 Request::~Request(){
-    if (m_body)
-        fclose(m_body);
+
 }
 
 Request::Request(int sd)
 {
-    m_body = tmpfile();
+    m_filePath = "";
+    m_body = createTmpFile(m_filePath);
     m_sd = sd;
     m_method = "";
     m_uri = "";
@@ -32,7 +32,6 @@ Request::Request(int sd)
     m_status = "";
     m_chunckLen = 0;
     m_queryString = "";
-    m_filePath = "";
 }
 
 Request::Request(const Request &cp)

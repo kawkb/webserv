@@ -8,15 +8,19 @@ server
     root            /var/
     index           index.html
     autoindex       off 
-	cgi php /Users/zmeribaa/.brew/bin/php-cgi
 
-	location /
+	cgi php /Users/moerradi/.brew/bin/php-cgi
+	location /upload
 	{
-		root /Users/moerradi/webserv/tests/
-		index index.html
-		autoindex off
-		allow_methods GET
+		upload_path /Users/moerradi/webserv/upload/
 	}
 
+	location /og
+	{
+		root /Users/moerradi/webserv/tests/
+		index index.php
+		autoindex on
+		allow_methods GET POST
+	}
 
 }

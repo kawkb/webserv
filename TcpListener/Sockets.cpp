@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/25 17:52:09 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/23 11:51:50 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/23 19:40:26 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,46 +84,54 @@ void	set_clients_sockets(std::vector<Request> &requests, std::vector<Response> &
 	}
 }
 
-void        handle_requests(const std::vector<Server> &m_servers, fd_set &m_readSet,fd_set & m_writeSet, std::vector<Request> &m_requests)
-{
-    char buf[4096];
-    std::vector<Request>::iterator it = m_requests.begin();
-
-    while(it != m_requests.end())
-    {
-        if(FD_ISSET(it->getSd(), &m_readSet))
-        {
-            int rec = recv(it->getSd(), &buf, 4096, 0);
-			std::cout << "rec: " << rec << std::endl;
-            if (rec == 0)
-			{
-				close(it->getSd());
-				FD_CLR(it->getSd(), &m_writeSet);
-                it = m_requests.erase(it);
-			}
-            if (rec == -1)
-			{
-                exit_failure("recv error");
-			}
-            else
-                it->parse(m_servers, buf, rec);
-        }
-    	it++;
-    }
-}
-
-// void		handle_requests(const std::vector<Server> &servers, fd_set &read_set, std::vector<Request> &requests)
+// void        handle_requests(const std::vector<Server> &m_servers, fd_set &m_readSet,fd_set & m_writeSet, std::vector<Request> &m_requests)
 // {
-// 	char buf[4096]; 
-// 	for (std::vector<Request>::iterator i = requests.begin(); i != requests.end(); ++i)
-// 	{
-// 		if (FD_ISSET(i->getSd(), &read_set))
-// 		{
-// 			int rec = recv(i->getSd(), &buf, 4096, 0);
-// 			i->parse(servers, buf, rec);
-// 		}
-// 	}	
+//     char buf[4096];
+//     std::vector<Request>::iterator it = m_requests.begin();
+
+//     while(it != m_requests.end())
+//     {
+//         if(FD_ISSET(it->getSd(), &m_readSet))
+//         {
+//             int rec = recv(it->getSd(), &buf, 4096, 0);
+// 			std::cout << "rec: " << rec << std::endl;
+//             if (rec == 0)
+// 			{
+// 				close(it->getSd());
+// 				FD_CLR(it->getSd(), &m_writeSet);
+//                 it = m_requests.erase(it);
+// 			}
+//             if (rec == -1)
+// 			{
+//                 exit_failure("recv error");
+// 			}
+//             else
+//                 it->parse(m_servers, buf, rec);
+//         }
+//     	it++;
+//     }
 // }
+
+void		handle_requests(const std::vector<Server> &servers, fd_set &read_set, std::vector<Request> &requests)
+{
+	char buf[3000]; 
+	for (std::vector<Request>::iterator i = requests.begin(); i != requests.end(); ++i)
+	{
+		if (FD_ISSET(i->getSd(), &read_set))
+		{
+			int rec = recv(i->getSd(), &buf, 3000, 0);
+			// apparently what you do here is an inifnite loop
+			if (rec == 0)
+			{
+				// FD_CLR(i->getSd(), &read_set);
+				// fclose((*i).getBody());
+				// std::cout << (*i).getFilePath().c_str() << std::endl;
+				// unlink();
+			}
+			i->parse(servers, buf, rec);
+		}
+	}	
+}
 
 void	handle_responses(fd_set &write_set, std::vector<Request> &requests, std::vector<Response> &responses)
 {
@@ -161,6 +169,9 @@ void	handle_responses(fd_set &write_set, std::vector<Request> &requests, std::ve
 	for (std::vector<std::vector<Response>::iterator>::iterator i = tmp2.begin(); i != tmp2.end(); ++i)
 	{
 		int tmp = (*i)->getSd();
+		Request req = (*i)->getRequest();
+		// fclose(req.getBody());
+		unlink(req.getFilePath().c_str());
 		responses.erase(*i);
 		close(tmp);
 		// FD_CLR(tmp, &write_set);
@@ -186,7 +197,7 @@ void     run_server(std::vector<Server> &servers, std::vector<TcpListener> &tcpl
 		if ((select(max_sd + 1, &read_set, &write_set, NULL, NULL) < 0))
 			exit_failure("select error");
 		accept_connections(tcplisteners, read_set, requests);
-		handle_requests(servers, read_set, write_set, requests);
+		handle_requests(servers, read_set, requests);
 		handle_responses(write_set, requests, responses);
 	}
 }

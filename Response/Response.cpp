@@ -6,13 +6,27 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/23 11:49:07 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/23 19:44:43 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../webserv.hpp"
 
-std::string Response::getExtention()
+
+void	printFile(FILE *fp)
+{
+	char buf[1024];
+	while (fgets(buf, 1024, fp))
+	{
+		std::cout << buf;
+	}
+}
+
+const Request &Response::getRequest()
+{
+	return (this->m_request);
+}
+std::string 	Response::getExtention()
 {
 	size_t pos = m_filePath.find_last_of(".");
 	std::string extenstion = "";
@@ -21,7 +35,7 @@ std::string Response::getExtention()
 	return extenstion;
 }
 
-std::string	Response::getHeader(std::string key) const
+std::string		Response::getHeader(std::string key) const
 {
 	std::map<std::string, std::string>::const_iterator it = m_headersMap.find(key);
 	if (it != m_headersMap.end())
@@ -29,7 +43,7 @@ std::string	Response::getHeader(std::string key) const
 	return ("");
 }
 
-std::string	Response::getCodeString()
+std::string		Response::getCodeString()
 {
 	if (m_statusCode == "200")
 		return "OK";
@@ -80,7 +94,7 @@ std::string	Response::getCodeString()
 	return "Unknown";
 }
 
-std::string	Response::generateAutoIndex()
+std::string		Response::generateAutoIndex()
 {
 	std::vector<std::string> files;
 	std::vector<std::string> dirs;
@@ -134,7 +148,7 @@ std::string	Response::generateAutoIndex()
 	return autoindexHtml;
 }
 
-std::string	getContentType(std::string filename)
+std::string		getContentType(std::string filename)
 {
 	std::string extension = filename.substr(filename.find_last_of(".") + 1);
 	if (extension == "html" || extension == "htm")
@@ -205,7 +219,7 @@ std::string	getContentType(std::string filename)
 		return "application/octet-stream";
 }
 
-void		Response::buildHeaders()
+void			Response::buildHeaders()
 {
 	if (m_statusCode == "")
 		m_statusCode = "200";
@@ -221,7 +235,7 @@ void		Response::buildHeaders()
 	m_buffer = headers;
 }
 
-int remove_directory(const std::string path)
+int				remove_directory(const std::string path)
 {
 	DIR *d = opendir(path.c_str());
 	int r = -1;
@@ -253,79 +267,7 @@ int remove_directory(const std::string path)
 	return r;
 }
 
-bool Response::handleDelete()
-{
-	// location path should never end with a slash except if it is literally /
-	// root path should always end with a slash
-	Location location = m_request.getLocation();
-	Server server = m_request.getServer();
-	std::string path = location.getPath();
-	std::string root = location.getRoot();
-	std::string uri = m_request.getUri();
-	// parse request path
-	m_filePath = root + uri.substr(path.size());
-	// resolve path
-	std::string absolute = getAbsolutePath(m_filePath);
-	if (!startsWith(absolute + "/", root))
-	{
-		m_statusCode = "403";
-		return false;
-	}
-	struct stat fileStat;
-	if (stat(m_filePath.c_str(), &fileStat) != 0)
-	{
-		if (errno == EACCES)
-			m_statusCode = "403";
-		else if (errno == ENOENT)
-			m_statusCode = "404";
-		else
-			m_statusCode = "500";
-		return false;
-	}
-	if (S_ISDIR(fileStat.st_mode))
-	{
-		if (m_filePath[m_filePath.size() - 1] != '/')
-		{
-			m_statusCode = "409";
-			return false;
-		}
-		if (remove_directory(m_filePath) != 0)
-		{
-			if (errno == EACCES)
-				m_statusCode = "403";
-			else if (errno == ENOENT)
-				m_statusCode = "404";
-			else
-				m_statusCode = "500";			
-			return false;
-		}
-	}
-	else if (S_ISREG(fileStat.st_mode))
-	{
-		std::string ext = getExtention();
-		if (ext == server.getCgiExtention() && ext != "")
-		
-		if (unlink(m_filePath.c_str()) != 0)
-		{
-			if (errno == EACCES)
-				m_statusCode = "403";
-			else if (errno == ENOENT)
-				m_statusCode = "404";
-			else
-				m_statusCode = "500";
-			return false;
-		}
-	}
-	else
-	{
-		m_statusCode = "403";
-		return false;
-	}
-	m_statusCode = "204";
-	return true;
-}
-
-bool		Response::handleGetFile(off_t filesize)
+bool			Response::handleGetFile()
 {
 	Server server = m_request.getServer();
 	std::string extension = m_filePath.substr(m_filePath.find_last_of(".") + 1);
@@ -336,7 +278,6 @@ bool		Response::handleGetFile(off_t filesize)
 	}
 	else
 	{
-		m_bodySize = filesize;
 		m_headersMap["Content-Type"] = getContentType(m_filePath);
 		m_file = fopen(m_filePath.c_str(), "r");
 		if (!m_file)
@@ -349,7 +290,7 @@ bool		Response::handleGetFile(off_t filesize)
 	}
 }
 
-bool		Response::handleGet()
+bool			Response::handleGet()
 {
 	// location path should never end with a slash except if it is literally /
 	// root path should always end with a slash
@@ -429,7 +370,10 @@ bool		Response::handleGet()
 		}
 	}
 	else if (S_ISREG(fileStat.st_mode))
-		return handleGetFile(fileStat.st_size);
+	{
+		m_bodySize = fileStat.st_size;
+		return handleGetFile();
+	}
 	else
 	{
 		m_statusCode = "403";
@@ -437,35 +381,202 @@ bool		Response::handleGet()
 	}
 }
 
-bool		Response::handlePost()
+bool			Response::handlePost()
 {
 	std::string uploadPath = m_request.getLocation().getUploadPath();
 	if (!uploadPath.empty())
 	{
+		std::cout << "..............." << std::endl;
 		Location location = m_request.getLocation();
 		std::string path = location.getPath();
 		std::string uri = m_request.getUri();
+		std::cout << "path: " << path << std::endl;
+		std::cout << "uri: " << uri << std::endl;
 
-		m_filePath = uploadPath + uri.substr(path.size());
-		if (uri == path || uri == path + "/")
-			m_filePath = uploadPath + location.getIndex();
+		// parse request path
+
+		if(path == "/")
+			m_filePath = uploadPath + uri.substr(path.size());
 		else
+			m_filePath = uploadPath + uri.substr(path.size() + 1);
+		
+		std::cout << "file path: " << m_filePath << std::endl;
+		// resolve path
+		std::string absolute = getAbsolutePath(m_filePath);
+		std::cout << "absolute: " << absolute << std::endl;
+		if (!startsWith(absolute + "/", uploadPath))
 		{
-			if(uploadPath == "/")
-				m_filePath = uploadPath + uri.substr(path.size());
-			else
-				m_filePath = uploadPath + uri.substr(path.size() + 1);
+			m_statusCode = "403";
+			return false;
 		}
+		// get file
+		std::string filename = m_request.getFilePath();
+		std::cout << "filename: " << filename << std::endl;
+		std::cout << "..............." << std::endl;
+		int i = rename(filename.c_str(), m_filePath.c_str());
+		if (i == -1)
+		{
+			perror("rename");
+			m_statusCode = "500";
+		}
+		m_statusCode = "201";
+		buildHeaders();
+		return true;
 	}
 	else
 	{
-		
+		Location location = m_request.getLocation();
+		std::string path = location.getPath();
+		std::string root = location.getRoot();
+		std::string uri = m_request.getUri();
+		std::cout << "path: " << path << std::endl;
+		std::cout << "root: " << root << std::endl;
+		std::cout << "uri: " << uri << std::endl;
+		std::cout << "uri size: " << uri.substr(path.size()) << std::endl;
+		m_filePath = root + uri.substr(path.size());
+		// parse request path
+		if (uri == path || uri == path + "/")
+			m_filePath = root + location.getIndex();
+		else
+		{
+			if(path == "/")
+				m_filePath = root + uri.substr(path.size());
+			else
+				m_filePath = root + uri.substr(path.size() + 1);
+		}
+		std::cout << "file path: " << m_filePath << std::endl;
+		// resolve path
+		std::string absolute = getAbsolutePath(m_filePath);
+		if (!startsWith(absolute + "/", root))
+		{
+			m_statusCode = "403";
+			return false;
+		}
+			struct stat fileStat;
+		if (stat(m_filePath.c_str(), &fileStat) != 0)
+		{
+			if (errno == EACCES)
+				m_statusCode = "403";
+			else if (errno == ENOENT)
+			{
+				m_statusCode = "404";
+			}
+			else
+				m_statusCode = "500";
+			return false;
+		}
+		if (S_ISDIR(fileStat.st_mode))
+		{
+			if (m_filePath[m_filePath.size() - 1] != '/')
+			{
+				m_statusCode = "301";
+				const std::string host = m_request.getServer().getName() + ":" + toString(m_request.getServer().getPort());
+				const std::string redirect = "http://" + host +  uri + "/" + m_request.getQueryString();
+				m_headersMap["Location"] = uri + "/";
+				buildHeaders();
+				return true;
+			}
+			else
+			{
+				m_statusCode = "403";
+				return false;
+			}
+		}
+		else if (S_ISREG(fileStat.st_mode))
+		{
+			Server server = m_request.getServer();
+			std::string extension = m_filePath.substr(m_filePath.find_last_of(".") + 1);
+			if (extension == server.getCgiExtention())
+				return handleCgi();
+			else
+			{
+				m_statusCode = "403";
+				return false;
+			}
+		}
+		else
+		{
+			m_statusCode = "403";
+			return false;
+		}
 	}
 	
 	return true;
 }
 
-void		Response::setErrorPage()
+bool			Response::handleDelete()
+{
+	// location path should never end with a slash except if it is literally /
+	// root path should always end with a slash
+	Location location = m_request.getLocation();
+	Server server = m_request.getServer();
+	std::string path = location.getPath();
+	std::string root = location.getRoot();
+	std::string uri = m_request.getUri();
+	// parse request path
+	m_filePath = root + uri.substr(path.size());
+	// resolve path
+	std::string absolute = getAbsolutePath(m_filePath);
+	if (!startsWith(absolute + "/", root))
+	{
+		m_statusCode = "403";
+		return false;
+	}
+	struct stat fileStat;
+	if (stat(m_filePath.c_str(), &fileStat) != 0)
+	{
+		if (errno == EACCES)
+			m_statusCode = "403";
+		else if (errno == ENOENT)
+			m_statusCode = "404";
+		else
+			m_statusCode = "500";
+		return false;
+	}
+	if (S_ISDIR(fileStat.st_mode))
+	{
+		if (m_filePath[m_filePath.size() - 1] != '/')
+		{
+			m_statusCode = "409";
+			return false;
+		}
+		if (remove_directory(m_filePath) != 0)
+		{
+			if (errno == EACCES)
+				m_statusCode = "403";
+			else if (errno == ENOENT)
+				m_statusCode = "404";
+			else
+				m_statusCode = "500";			
+			return false;
+		}
+	}
+	else if (S_ISREG(fileStat.st_mode))
+	{
+		std::string ext = getExtention();
+		if (ext == server.getCgiExtention() && ext != "")
+		
+		if (unlink(m_filePath.c_str()) != 0)
+		{
+			if (errno == EACCES)
+				m_statusCode = "403";
+			else if (errno == ENOENT)
+				m_statusCode = "404";
+			else
+				m_statusCode = "500";
+			return false;
+		}
+	}
+	else
+	{
+		m_statusCode = "403";
+		return false;
+	}
+	m_statusCode = "204";
+	return true;
+}
+
+void			Response::setErrorPage()
 {
 	std::string errorPagePath = m_request.getServer().getErrorPage(m_statusCode);
 	std::string errorPage;
@@ -503,12 +614,12 @@ void		Response::setErrorPage()
 	}
 }
 
-void		Response::setLastSent(long sent)
+void			Response::setLastSent(long sent)
 {
 	m_lastSent = sent;
 }
 
-std::string 		Response::peek(bool &done)
+std::string		Response::peek(bool &done)
 {
 	// std::cout << "l/ast sent: " << m_lastSent << std::endl;
 	m_cursor += m_lastSent;
@@ -556,7 +667,7 @@ std::string 		Response::peek(bool &done)
 	}
 }
 
-int			Response::getSd()
+int				Response::getSd()
 {
 	int sd = m_request.getSd();
 	return sd;
