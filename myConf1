@@ -5,15 +5,12 @@ server
 	allow_methods   GET 
 
 
-    root            ./var/www/static_websites/
+    root            /var/
     index           index.html
     autoindex       off 
 
 	location /pato
 	{
-		root                /Users/moerradi/webserv
-		autoindex           off
-		index               index.html
-		allow_methods       GET
+		upload_path 		.
 	}
 }

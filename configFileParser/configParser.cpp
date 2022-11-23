@@ -6,11 +6,12 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/20 22:02:44 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/22 02:14:50 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/23 04:07:34 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../webserv.hpp"
+
 
 std::vector<std::string>    tokenize(std::string line)
 {
@@ -20,35 +21,40 @@ std::vector<std::string>    tokenize(std::string line)
         tokens.push_back(line);
     return(tokens);
 }
-
-std::string resolvePath(std::string path)
+void	check_server_errors(Server &server)
 {
-    char *absolutePath = realpath(path.c_str(), NULL);
-    if (absolutePath == NULL)
-        return "";
-    std::string result(absolutePath);
-    free(absolutePath);
-    return result;
+		if (server.getPort() < 0 || server.getPort() > 65536)
+			exit_failure("\033[1;31mConfig File Error: Port out of range. \033[0m");
+		if(server.getName() == "")
+			exit_failure("\033[1;31mConfig File Error: Missing server name. \033[0m");
+		if(server.getMethod().empty())
+			server.setMethod("GET");
+		if(checkPath(server.getRoot()) != "")
+			exit_failure("\033[1;31mConfig File Error: "+ checkPath(server.getRoot()) +" \033[0m");
+		std::vector<Location> location = server.getLocation();
+		for (std::vector<Location>::iterator it = location.begin(); it != location.end(); it++)
+		{
+			if(!it->getUploadPath().empty() && (!it->getRoot().empty() || !it->getIndex().empty() || !it->getMethod().empty()))
+				exit_failure("\033[1;31mConfig File Error: Upload Path is specified in location no other directives allowed.\033[0m");
+			if(!it->getUploadPath().empty() && !checkPath(it->getUploadPath()).empty())
+				exit_failure("\033[1;31mConfig File Error: "+ checkPath(it->getRoot()) +" \033[0m");
+			if(!it->getUploadPath().empty())
+				it->setMethod("POST");
+			if(it->getMethod().empty() && it->getUploadPath().empty())
+				it->setMethod("GET");
+			if(!it->getRoot().empty() && checkPath(it->getRoot()) != "")
+				exit_failure("\033[1;31mConfig File Error: "+ checkPath(it->getRoot()) +" \033[0m");
+		}
 }
-
 int     check_server(std::vector<Server> &server)
 {
 	for (std::vector<Server>::iterator i = server.begin(); i !=server.end();i++)
 	{
 		std::vector<Server>::iterator k = i + 1;
-		// if (i->getPort() < 0 || i->getPort() > 65536 || i->getName() == "" || i->getRoot() == "" || i->getMethod().empty() || resolvePath(i->getRoot()) == )
-		// 	exit_failure("\033[1;31mERROR: somthing missing in Config File. \033[0m");
-		// for (std::vector<Location>::iterator j = i->getLocation().begin(); j != i->getLocation().end(); j++)
-		// {
-		// 	if()
-		// 	{
-				
-		// 	}
-		// } 	 		
-		// // server name, root, allowmethods; root always ends with /
-		//location no / at the end; if upload path and somthing else error ; allormthods + root (ends wiwth /) always absolute;
+		check_server_errors(*i);
 		for (std::vector<Server>::iterator j = i + 1; j != server.end(); j++)
 		{
+			check_server_errors(*j);
 			if (i->getPort() == j->getPort())
 			{
 				if (i->getName() == j->getName())

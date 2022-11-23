@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/16 11:01:45 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/21 03:38:28 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/23 02:06:07 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,7 @@ class Server
 		int                                 getMaxBodySize(void) const;
 		std::vector<Location>               getLocation(void) const;
 		std::string  						getErrorPage(std::string errorcode) const;
+		void                        		setMethod(std::string method);
 		Server& 							operator=(const Server &cp);
 };
 

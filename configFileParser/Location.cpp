@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/09 19:04:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/21 06:52:43 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/23 02:47:17 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,11 +42,19 @@ int     Location::parse(std::ifstream &myfile, size_t &lineCount)
 		else if (token[0] == "redirection" && size == 2 && lineCount++ && isLocation && m_redirection== "")
             m_redirection = token[1];
 		else if (token[0] == "root" && size == 2 && lineCount++ && isLocation && m_root == "")
-			m_root = token[1];
+		{
+			m_root  = token[1];
+            if(*m_root.rbegin() != '/')
+		        m_root.append("/");
+		}
 		else if (token[0] == "index" && size == 2 && lineCount++ && isLocation && m_index == "")
 			m_index = token[1];
 		else if (token[0] == "upload_path" && size == 2 && lineCount++ && isLocation && m_uploadPath == "")
-            m_uploadPath = token[1];
+		{
+			m_uploadPath  = token[1];
+            if(*m_uploadPath.rbegin() != '/')
+		        m_uploadPath.append("/");
+		}
 		else if (token[0] == "autoindex" && size == 2 && lineCount++ && isLocation && m_autoIndex == 0)
 			m_autoIndex = token[1] == "on" ? 1 : 0;
 		else if (token[0] == "}" && size == 1 && isLocation && lineCount++)
@@ -86,6 +94,7 @@ std::string 				Location::getUploadPath(void) const{return(m_uploadPath);}
 std::vector<std::string>	Location::getMethod(void) const{return(m_method);}
 std::string     			Location::getRoot(void) const{return(m_root);}
 std::string     			Location::getIndex(void) const{return(m_index);}
+void                        Location::setMethod(std::string method){m_method.push_back(method);}
 
 Location::Location()
 {
