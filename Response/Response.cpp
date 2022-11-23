@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/22 22:47:18 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/23 05:44:05 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -521,7 +521,8 @@ std::string 		Response::peek(bool &done)
 
 int			Response::getSd()
 {
-	return m_request.getSd();
+	int sd = m_request.getSd();
+	return sd;
 }
 
 Response::Response(const Request &request)

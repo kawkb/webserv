@@ -11,7 +11,7 @@ server
 	cgi php /Users/moerradi/.brew/bin/php-cgi
 	location /pato
 	{
-		root                /Users/moerradi/webserv/
+		root                /Users/moerradi/
 		autoindex           on
 		index               index.html
 		allow_methods       GET
