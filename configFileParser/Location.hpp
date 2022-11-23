@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/09 19:05:05 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/21 03:54:25 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/23 02:08:22 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@ class Location
 		std::string                         	getUploadPath(void) const;
 		void									setPath(std::string path);
 		int										parse(std::ifstream &myfile, size_t &lineCount);
+		void                        			setMethod(std::string method);
 		Location& 								operator=(const Location &cp);
 };
 std::ostream& operator<<(std::ostream& out, Location location);

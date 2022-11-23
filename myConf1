@@ -5,7 +5,7 @@ server
 	allow_methods   GET 
 
 
-    root            ./var/www/static_websites/
+    root            /var/
     index           index.html
     autoindex       off 
 	cgi php /Users/moerradi/.brew/bin/php-cgi

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Sockets.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/25 17:52:09 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/22 21:55:22 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/23 04:10:42 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,7 +119,6 @@ void	handle_responses(fd_set &write_set, std::vector<Request> &requests, std::ve
 	{
 		if (FD_ISSET(i->getSd(), &write_set))
 		{
-			// std::cout << *i << std::endl;
 			bool done = false;
 			std::string to_send = i->peek(done);
 			if (!done)
@@ -166,5 +165,4 @@ void     run_server(std::vector<Server> &servers, std::vector<TcpListener> &tcpl
 		handle_requests(servers, read_set, requests);
 		handle_responses(write_set, requests, responses);
 	}
-	// return (0);
 }

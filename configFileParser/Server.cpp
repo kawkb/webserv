@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/22 23:28:43 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/23 04:10:07 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,11 @@ int     Server::parse(std::ifstream &myfile, size_t &lineCount)
         else if (token[0] == "server_name" && size == 2 && lineCount++ && isServer && m_serverName == "")
             m_serverName = token[1];
         else if (token[0] == "root" && size == 2 && lineCount++ && isServer && m_root == "")
+        {
             m_root  = token[1];
+            if(*m_root.rbegin() != '/')
+		        m_root.append("/");
+        }
         else if (token[0] == "index" && size == 2 && lineCount++ && isServer && m_index == "")
             m_index = token[1];
 		else if (token[0] == "autoindex" && size == 2 && lineCount++ && isServer && m_autoIndex == 0)
@@ -140,6 +144,7 @@ std::string                 Server::getCgiExtention(void) const{return(m_cgiExte
 std::string         		Server::getCgiPath(void) const{return (m_cgiPath);}
 std::vector<std::string>    Server::getMethod(void) const{return(m_method);}
 std::vector<Location>       Server::getLocation(void) const{return(m_location);}
+void                        Server::setMethod(std::string method){m_method.push_back(method);}
 
 Server::Server()
 {

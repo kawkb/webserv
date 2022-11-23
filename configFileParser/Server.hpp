@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/16 11:01:45 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/22 23:28:52 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/23 04:10:06 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,7 @@ class Server
 		int                                 getMaxBodySize(void) const;
 		std::vector<Location>               getLocation(void) const;
 		std::string  						getErrorPage(std::string errorcode) const;
+		void                        		setMethod(std::string method);
 		Server& 							operator=(const Server &cp);
 };
 

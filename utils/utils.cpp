@@ -3,10 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/20 20:48:34 by kdrissi-          #+#    #+#             */
+<<<<<<< HEAD
 /*   Updated: 2022/11/23 02:18:16 by moerradi         ###   ########.fr       */
+=======
+/*   Updated: 2022/11/23 04:09:52 by kdrissi-         ###   ########.fr       */
+>>>>>>> d385155ee357d3976a141ad8fbba0e5081333440
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -144,4 +148,30 @@ std::vector<std::string> split(std::string str, std::string sep)
 	}
 	ret.push_back(str);
 	return ret;
+}
+std::string resolvePath(std::string path)
+{
+    char *absolutePath = realpath(path.c_str(), NULL);
+    if (absolutePath == NULL)
+        return "";
+    std::string result(absolutePath);
+    free(absolutePath);
+    return result;
+}
+
+std::string	checkPath(std::string path)
+{
+	struct stat s;
+	if(resolvePath(path) == "")
+		return("Wrong path: " + path);
+	if(stat(path.c_str(),&s) == 0)
+	{
+		if( s.st_mode & S_IFDIR)
+			return("");
+		else
+			return("Path not a Directory" + path);
+	}
+	else
+		exit_failure("stat error");
+	return("");
 }
