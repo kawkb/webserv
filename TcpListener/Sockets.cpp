@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/25 17:52:09 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/23 19:40:26 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/23 22:40:07 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,7 +125,7 @@ void		handle_requests(const std::vector<Server> &servers, fd_set &read_set, std:
 			{
 				// FD_CLR(i->getSd(), &read_set);
 				// fclose((*i).getBody());
-				// std::cout << (*i).getFilePath().c_str() << std::endl;
+				std::cout << (*i).getFilePath().c_str() << std::endl;
 				// unlink();
 			}
 			i->parse(servers, buf, rec);
@@ -191,6 +191,7 @@ void     run_server(std::vector<Server> &servers, std::vector<TcpListener> &tcpl
 	while (TRUE)
 	{
 		FD_ZERO(&write_set);
+		FD_ZERO(&read_set);
 		read_set = read_set_backup;
 		max_sd = max_sd_backup;
 		set_clients_sockets(requests, responses, read_set, write_set, max_sd);

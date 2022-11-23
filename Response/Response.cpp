@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/23 19:44:43 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/23 22:09:05 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -302,7 +302,6 @@ bool			Response::handleGet()
 	std::cout << "root: " << root << std::endl;
 	std::cout << "uri: " << uri << std::endl;
 	std::cout << "uri size: " << uri.substr(path.size()) << std::endl;
-	m_filePath = root + uri.substr(path.size());
 	// parse request path
 	if (uri == path || uri == path + "/")
 		m_filePath = root + location.getIndex();
@@ -433,7 +432,6 @@ bool			Response::handlePost()
 		std::cout << "root: " << root << std::endl;
 		std::cout << "uri: " << uri << std::endl;
 		std::cout << "uri size: " << uri.substr(path.size()) << std::endl;
-		m_filePath = root + uri.substr(path.size());
 		// parse request path
 		if (uri == path || uri == path + "/")
 			m_filePath = root + location.getIndex();
@@ -508,72 +506,84 @@ bool			Response::handleDelete()
 {
 	// location path should never end with a slash except if it is literally /
 	// root path should always end with a slash
-	Location location = m_request.getLocation();
-	Server server = m_request.getServer();
-	std::string path = location.getPath();
-	std::string root = location.getRoot();
-	std::string uri = m_request.getUri();
-	// parse request path
-	m_filePath = root + uri.substr(path.size());
-	// resolve path
-	std::string absolute = getAbsolutePath(m_filePath);
-	if (!startsWith(absolute + "/", root))
-	{
-		m_statusCode = "403";
-		return false;
-	}
-	struct stat fileStat;
-	if (stat(m_filePath.c_str(), &fileStat) != 0)
-	{
-		if (errno == EACCES)
-			m_statusCode = "403";
-		else if (errno == ENOENT)
-			m_statusCode = "404";
-		else
-			m_statusCode = "500";
-		return false;
-	}
-	if (S_ISDIR(fileStat.st_mode))
-	{
-		if (m_filePath[m_filePath.size() - 1] != '/')
-		{
-			m_statusCode = "409";
-			return false;
-		}
-		if (remove_directory(m_filePath) != 0)
-		{
-			if (errno == EACCES)
-				m_statusCode = "403";
-			else if (errno == ENOENT)
-				m_statusCode = "404";
-			else
-				m_statusCode = "500";			
-			return false;
-		}
-	}
-	else if (S_ISREG(fileStat.st_mode))
-	{
-		std::string ext = getExtention();
-		if (ext == server.getCgiExtention() && ext != "")
+	// Location location = m_request.getLocation();
+	// std::string path = location.getPath();
+	// std::string root = location.getRoot();
+	// std::string uri = m_request.getUri();
+	// std::cout << "path: " << path << std::endl;
+	// std::cout << "root: " << root << std::endl;
+	// std::cout << "uri: " << uri << std::endl;
+	// std::cout << "uri size: " << uri.substr(path.size()) << std::endl;
+	// // parse request path
+	// if (uri == path || uri == path + "/")
+	// 	m_filePath = root + location.getIndex();
+	// else
+	// {
+	// 	if(path == "/")
+	// 		m_filePath = root + uri.substr(path.size());
+	// 	else
+	// 		m_filePath = root + uri.substr(path.size() + 1);
+	// }
+	// std::cout << "file path: " << m_filePath << std::endl;
+	// // resolve path
+	// std::string absolute = getAbsolutePath(m_filePath);
+	// if (!startsWith(absolute + "/", root))
+	// {
+	// 	m_statusCode = "403";
+	// 	return false;
+	// }
+	// Location server = m_request.getLocation();
+	// struct stat fileStat;
+	// if (stat(m_filePath.c_str(), &fileStat) != 0)
+	// {
+	// 	if (errno == EACCES)
+	// 		m_statusCode = "403";
+	// 	else if (errno == ENOENT)
+	// 	{
+	// 		m_statusCode = "404";
+	// 	}
+	// 	else
+	// 		m_statusCode = "500";
+	// 	return false;
+	// }
+	// if (S_ISDIR(fileStat.st_mode))
+	// {
+	// 	if (m_filePath[m_filePath.size() - 1] != '/')
+	// 	{
+	// 		// conflict
+	// 		m_statusCode = "409";
+	// 		return false;
+	// 	}
 		
-		if (unlink(m_filePath.c_str()) != 0)
-		{
-			if (errno == EACCES)
-				m_statusCode = "403";
-			else if (errno == ENOENT)
-				m_statusCode = "404";
-			else
-				m_statusCode = "500";
-			return false;
-		}
-	}
-	else
-	{
-		m_statusCode = "403";
-		return false;
-	}
-	m_statusCode = "204";
-	return true;
+	// 	if (getExtention() == location.())
+	// 	{
+	// 		m_statusCode = "403";
+	// 		return false;
+	// 	}
+	// 	else
+	// 	{
+	// 		m_statusCode = "403";
+	// 		return false;
+	// 	}
+	// }
+	// else if (S_ISREG(fileStat.st_mode))
+	// {
+	// 	Server server = m_request.getServer();
+	// 	std::string extension = m_filePath.substr(m_filePath.find_last_of(".") + 1);
+	// 	if (extension == server.getCgiExtention())
+	// 		return handleCgi();
+	// 	else
+	// 	{
+	// 		m_statusCode = "403";
+	// 		return false;
+	// 	}
+	// }
+	// else
+	// {
+	// 	m_statusCode = "403";
+	// 	return false;
+	// }
+	return false;
 }
 
 void			Response::setErrorPage()

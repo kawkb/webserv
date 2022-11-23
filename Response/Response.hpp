@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:33 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/23 18:31:48 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/23 22:13:25 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 # define SENDING_DONE 0
 # define SENDING_HEADERS 1
 # define SENDING_BODY 2
-# define RES_BUFFER_SIZE 4096
+# define RES_BUFFER_SIZE 10000
 // environ
 extern char **environ;
 
