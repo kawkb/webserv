@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   TcpListener.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/20 14:27:33 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/04 01:08:40 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/22 07:51:48 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,10 +32,10 @@ TcpListener::TcpListener(int port): m_port(port)
 		exit_failure("Failed to bind to port. errno: ");
 	if (listen(m_master, 1024) < 0)
 		exit_failure("Failed to listen on socket. errno: ");
-	// int flags = fcntl(m_master, F_GETFL, 0);
-	// flags |= O_NONBLOCK;
+	int flags = fcntl(m_master, F_GETFL, 0);
+	flags |= O_NONBLOCK;
 	//TODO: implement further error handling for fcntl
-	// fcntl(m_master, F_SETFL, flags);
+	fcntl(m_master, F_SETFL, flags);
 	// m_server.push_back(server);
 }
 

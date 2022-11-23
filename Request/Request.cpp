@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/22 06:31:40 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/23 00:23:47 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,25 +109,7 @@ std::ostream& operator<<(std::ostream& out, Request request)
 	return out;
 }
 
-std::vector<std::string> split(std::string str, std::string sep)
-{
-	std::vector<std::string> ret;
-	std::string token;
-	size_t pos = str.find(sep);
-	if (pos == std::string::npos)
-	{
-		ret.push_back(str);
-		return ret;
-	}
-	while ((pos = str.find(sep)) != std::string::npos)
-	{
-		token = str.substr(0, pos);
-		ret.push_back(token);
-		str.erase(0, pos + sep.length());
-	}
-	ret.push_back(str);
-	return ret;
-}
+
 
 bool Request::methodAllowed(void)
 {
@@ -147,10 +129,11 @@ bool Request::matchLocation(void)
 		if (i->getPath() == sub)
 		{
 			m_location = *i;
-			break;
+			return (true);
 		}
 	}
-    return(true);
+    m_status = "404";
+    return(false);
 }
 
 bool Request::matchServer(const std::vector<Server> &servers)
@@ -252,6 +235,7 @@ void    Request::addHeader(std::string line)
     if(found != std::string::npos)
         m_headers.insert(std::pair<std::string, std::string>(line.substr(0, found), line.substr(found + 2)));
 }
+
 void    Request::fillChunked(void)
 {
     std::vector<char> temp;
@@ -269,7 +253,7 @@ void    Request::fillChunked(void)
                 m_chunckLen = std::stoul(std::string(temp.begin(), temp.end()), nullptr, 16);
                 if (m_chunckLen == 0)
                 {
-                    m_status = "500";
+                    m_status = "200";
                     rewind(m_body);
                     return;
                 }
@@ -289,7 +273,7 @@ void    Request::fillContentLength(size_t contentLength)
     {
         fwrite(m_requestBuffer.data(), sizeof(char), contentLength - m_bodyLength, m_body);
         rewind(m_body);
-        m_status = "500";
+        m_status = "200";
         return;
     }
     m_bodyLength += m_requestBuffer.size();
@@ -298,7 +282,7 @@ void    Request::fillContentLength(size_t contentLength)
     if (m_bodyLength >= contentLength)
     {
         rewind(m_body);
-        m_status = "500";
+        m_status = "200";
     }
     return;
 }

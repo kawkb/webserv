@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:39 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/22 05:06:11 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/23 00:20:12 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 void	Response::setCgiEnv()
 {
 	setenv("REQUEST_URI", m_request.getUri().substr(0, m_request.getUri().find_last_of("/")).c_str(), true);
+	setenv("REDIRECT_STATUS", "200", true);
 	std::string document_uri = m_request.getUri() + "?" + m_request.getQueryString();
     setenv("DOCUMENT_URI", document_uri.c_str(), true);
     setenv("SCRIPT_NAME",  m_request.getUri().c_str(), true);
@@ -42,33 +43,48 @@ void	Response::setCgiEnv()
 		setenv("CONTENT_LENGTH", content_length.c_str(), true);
 	else
 		setenv("CONTENT_LENGTH", "0", true);
-	std::map<std::string, std::string>::iterator i;
-	for (i= m_request.getHeaders().begin();i != m_request.getHeaders().end();i++)
+		// needs further investigation segfaults when uncommented
+	// std::map<std::string, std::string>::iterator i;
+	// for (i= m_request.getHeaders().begin();i != m_request.getHeaders().end();i++)
+	// {
+	// 	std::string key = "HTTP_" + i->first;
+	// 	std::replace(key.begin(), key.end(), '-', '_');
+	// 	key = stringToUpper(key);
+	// 	setenv(key.c_str(), i->second.c_str(), true);
+	// }
+}
+
+void	printFile(FILE *fp)
+{
+	char buf[1024];
+	while (fgets(buf, 1024, fp))
 	{
-		std::string key = "HTTP_" + i->first;
-		std::replace(key.begin(), key.end(), '-', '_');
-		key = stringToUpper(key);
-		setenv(key.c_str(), i->second.c_str(), true);
+		std::cout << buf;
 	}
 }
 
 bool	Response::handleCgi()
 {
 	setCgiEnv();
-	bool timeout = true;
-	FILE *tempfile = tmpfile();
-	if (tempfile == NULL)
+	std::string cgi_path = m_request.getServer().getCgiPath();
+	int pipefds[2];
+	if (pipe(pipefds) == -1)
 	{
 		m_statusCode = "500";
 		return false;
 	}
-
+	bool timeout = true;
 	pid_t pid;
 	pid = fork();
+	if (pid == -1)
+	{
+		m_statusCode = "500";
+		return false;
+	}
 	int status = 0;
 	if (pid == 0)
 	{
-		if (dup2(fileno(tempfile), 1) == -1)
+		if (dup2(pipefds[1], STDOUT_FILENO) == -1)
 			exit (1);
 		if (m_request.getMethod() == "POST")
 		{
@@ -76,11 +92,8 @@ bool	Response::handleCgi()
 			if (reqbody != NULL)
 				dup2(fileno(reqbody), 0);
 		}
-		char *args[3];
-		args[0] = (char *)m_request.getServer().getCgiPath().c_str();
-		args[1] = (char *)m_filePath.c_str();
-		args[2] = NULL;
-		execve(args[0], args, environ);
+        const char *argv[] = {cgi_path.c_str(), m_filePath.c_str(), NULL};
+		execve(argv[0], (char **)argv, environ);
 	}
 	else
 	{
@@ -88,7 +101,7 @@ bool	Response::handleCgi()
 		while (time(NULL) - t < 5)
 		{
 			pid_t val = waitpid(pid, &status, WNOHANG);
-			usleep(1000);
+			usleep(10000);
 			if (val == -1)
 			{
 				m_statusCode = "500";
@@ -101,10 +114,14 @@ bool	Response::handleCgi()
 			}
 		}
 		if (timeout)
-			kill(pid, SIGTERM);
+		{
+			close(pipefds[1]);
+			kill(pid, SIGKILL);
+		}
 	}
 	if (WIFEXITED(status))
 	{
+		std::cout << "exit status: " << WEXITSTATUS(status) << std::endl;
 		if (WEXITSTATUS(status) == 143)
 		{
 			m_statusCode = "408";
@@ -115,50 +132,61 @@ bool	Response::handleCgi()
 			m_statusCode = "500";
 			return false;
 		}
+		close(pipefds[1]);
 	}
+	std::string cgi_response;
+	char buf[1024];
+	// use normal read
+	while (read(pipefds[0], buf, 1024) > 0)
+	{
+		cgi_response += buf;
+	}
+	close(pipefds[0]);
+	std::cout << "cgi response: " << cgi_response << std::endl;
 	// read response headers from tempfile
-	char *line = NULL;
-	size_t len = 0;
-	ssize_t read;
-	while ((read = getline(&line, &len, tempfile)) != -1)
-	{
-		if (strcmp(line, "\r\n") == 0)
-			break;
-		std::string header = line;
-		std::string key = header.substr(0, header.find(":"));
-		std::string value = header.substr(header.find(":") + 2);
-		if (value.size() > 2)
-			value = value.substr(0, value.size() - 2);
-		m_headersMap[key] = value;
-		free(line);
-		line = NULL;
-	}
-	if (errno == EINVAL || errno == ENOMEM)
-	{
-		m_statusCode = "500";
-		return false;
-	}
-	if (line)
-		free(line);
-	FILE *tempfile2 = tmpfile();
-	if (tempfile2 == NULL)
-	{
-		m_statusCode = "500";
-		return false;
-	}
-	char buf[BUFFER_SIZE];
-	while ((read = fread(buf, 1, BUFFER_SIZE, tempfile)) > 0)
-		m_buffer += std::string(buf);
-	m_done = true;
-	std::string statusHeader = getHeader("Status");
-	if (!statusHeader.empty())
-		m_statusCode = statusHeader.substr(0, 3);
-	else
-		m_statusCode = "200";
-	m_headersMap.erase("Status");
-	if (m_headersMap.find("Content-Type") == m_headersMap.end())
-		m_headersMap["Content-Type"] = "text/html";
-	m_headersMap["Content-Length"] = toString(m_bodySize);
+	// FILE *fp = fdopen(pipefds[1], "r");
+	// char *line = NULL;
+	// size_t len = 0;
+	// ssize_t read;
+	// while ((read = getline(&line, &len, fp)) != -1)
+	// {
+	// 	if (strcmp(line, "\r\n") == 0)
+	// 		break;
+	// 	std::string header = line;
+	// 	std::string key = header.substr(0, header.find(":"));
+	// 	std::string value = header.substr(header.find(":") + 2);
+	// 	if (value.size() > 2)
+	// 		value = value.substr(0, value.size() - 2);
+	// 	m_headersMap[key] = value;
+	// 	free(line);
+	// 	line = NULL;
+	// }
+	// if (errno == EINVAL || errno == ENOMEM)
+	// {
+	// 	m_statusCode = "500";
+	// 	return false;
+	// }
+	// if (line)
+	// 	free(line);
+	// FILE *tempfile2 = tmpfile();
+	// if (tempfile2 == NULL)
+	// {
+	// 	m_statusCode = "500";
+	// 	return false;
+	// }
+	// char buf[BUFFER_SIZE];
+	// while ((read = fread(buf, 1, BUFFER_SIZE, fp)) > 0)
+	// 	m_buffer += std::string(buf);
+	// m_done = true;
+	// std::string statusHeader = getHeader("Status");
+	// if (!statusHeader.empty())
+	// 	m_statusCode = statusHeader.substr(0, 3);
+	// else
+	// 	m_statusCode = "200";
+	// m_headersMap.erase("Status");
+	// if (m_headersMap.find("Content-Type") == m_headersMap.end())
+	// 	m_headersMap["Content-Type"] = "text/html";
+	buildHeaders();
 	return true;
 }
 

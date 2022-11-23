@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/23 02:44:49 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/23 04:10:07 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -141,7 +141,7 @@ std::string                 Server::getName(void) const{return(m_serverName);}
 std::string                 Server::getRoot(void) const{return(m_root);}
 std::string                 Server::getIndex(void) const{return(m_index);} 
 std::string                 Server::getCgiExtention(void) const{return(m_cgiExtension);}
-std::string                 Server::getCgiPath(void) const{return (m_cgiPath);}
+std::string         		Server::getCgiPath(void) const{return (m_cgiPath);}
 std::vector<std::string>    Server::getMethod(void) const{return(m_method);}
 std::vector<Location>       Server::getLocation(void) const{return(m_location);}
 void                        Server::setMethod(std::string method){m_method.push_back(method);}

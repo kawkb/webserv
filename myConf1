@@ -8,9 +8,12 @@ server
     root            /var/
     index           index.html
     autoindex       off 
-
+	cgi php /Users/moerradi/.brew/bin/php-cgi
 	location /pato
 	{
-		upload_path 		.
+		root                /Users/moerradi/webserv/
+		autoindex           on
+		index               index.html
+		allow_methods       GET
 	}
 }
