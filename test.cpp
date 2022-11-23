@@ -10,35 +10,20 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-std::vector<std::string> split(std::string str, std::string sep)
-{
-	std::vector<std::string> ret;
-	std::string token;
-	size_t pos = str.find(sep);
-	if (pos == std::string::npos)
-	{
-		ret.push_back(str);
-		return ret;
-	}
-	while ((pos = str.find(sep)) != std::string::npos)
-	{
-		token = str.substr(0, pos);
-		ret.push_back(token);
-		str.erase(0, pos + sep.length());
-	}
-	ret.push_back(str);
-	return ret;
-}
+extern char **environ;
 
 int main(int ac, char **av)
 {
-	int fd = open(av[1], O_RDONLY);
-	char buf[1024];
-	int r;
-	std::string ret;
-	while ((r = read(fd, buf, 1024)) > 0)
-	{
-		ret += std::string(buf, r);
-	}
-	// std::cout << ret << std::endl;
+	setenv("REDIRECT_STATUS", "200", true);
+	setenv("GETAWAY_INTERFACE","CGI/1.1", true);
+    setenv("SERVER_PROTOCOL","HTTP/1.1", true);
+    setenv("FCGI_ROLE","RESPONDER", true);
+    setenv("REQUEST_SCHEME","http", true);
+    setenv("SERVER_SOFTWARE","webserv/1.1", true);
+    setenv("REMOTE_ADDR","0.0.0.0", true);
+    setenv("REMOTE_PORT","0", true);
+    setenv("SCRIPT_FILENAME", "/Users/moerradi/webserv/serve/bab.php", true);
+
+	const char *argv[] = {"/Users/moerradi/.brew/bin/php-cgi", "/Users/moerradi/webserv/serve/bab.php", NULL};
+	execve(argv[0], (char *const *)argv, environ);
 }

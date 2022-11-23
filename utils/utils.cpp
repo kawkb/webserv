@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/20 20:48:34 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/22 21:15:54 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/23 02:18:16 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,4 +124,24 @@ FILE *createTmpFile(std::string &path)
         return NULL;
     path = tmpfile;
     return fs;
+}
+
+std::vector<std::string> split(std::string str, std::string sep)
+{
+	std::vector<std::string> ret;
+	std::string token;
+	size_t pos = str.find(sep);
+	if (pos == std::string::npos)
+	{
+		ret.push_back(str);
+		return ret;
+	}
+	while ((pos = str.find(sep)) != std::string::npos)
+	{
+		token = str.substr(0, pos);
+		ret.push_back(token);
+		str.erase(0, pos + sep.length());
+	}
+	ret.push_back(str);
+	return ret;
 }
