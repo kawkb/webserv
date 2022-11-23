@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: zmeribaa <zmeribaa@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/23 07:20:26 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/23 09:02:34 by zmeribaa         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,7 +116,7 @@ std::string	Response::generateAutoIndex()
 		if (stat(folderpath.c_str(), &attrib) < 0)
 			return NULL;
 		std::string lastModified = ctime(&attrib.st_mtime);
-		autoindexHtml += "<tr><td><a href=\"" + *i + "/\">" + *i + "/</a></td><td>" + lastModified + "</td><td></td></tr>\n";
+		autoindexHtml += "<tr><td><a href=\"" + m_request.getUri() + *i + "/\">" + *i + "/</a></td><td>" + lastModified + "</td><td></td></tr>\n";
 	}
 	for (std::vector<std::string>::iterator i = files.begin(); i != files.end(); i++)
 	{
@@ -125,7 +125,7 @@ std::string	Response::generateAutoIndex()
 		if (stat(filePath.c_str(), &fileStat) < 0)
 			return NULL;
 		std::string lastModified = ctime(&fileStat.st_mtime);
-		autoindexHtml += "<tr><td><a href=\"" + *i + "\">" + *i + "</a></td><td>" + lastModified + "</td><td>" + toString(fileStat.st_size) + "</td></tr>\n";
+		autoindexHtml += "<tr><td><a href=\"" + m_request.getUri() + *i + "\">" + *i + "</a></td><td>" + lastModified + "</td><td>" + toString(fileStat.st_size) + "</td></tr>\n";
 	}
 	autoindexHtml += "</table>\n<hr>\n</body>\n</html>";
 	autoindexHtml += "<style>\nbody {\nfont-family: sans-serif;\n}\n\nh1 {\nfont-size: 1.5em;\n}\n\nhr {\nmargin: 1em 0;\n}\n\ntable {\nborder-collapse: collapse;\nwidth: 100%;\n}\n\ntd, th {\nborder: 1px solid #ccc;\npadding: 0.5em;\n}\n\nth {\nbackground: #eee;\n}\n\ntr:nth-child(even) {\nbackground: #f8f8f8;\n}\n</style>";
@@ -169,6 +169,14 @@ std::string	getContentType(std::string filename)
 		return "text/plain";
 	else if (extension == "mp3")
 		return "audio/mpeg";
+	else if (extension == "mp4")
+		return "video/mp4";
+	else if (extension == "ogg")
+		return "application/ogg";
+	else if (extension == "mpeg")
+		return "video/mpeg";
+	else if (extension == "json")
+		return "application/json";
 	else if (extension == "wav")
 		return "audio/x-wav";
 	else if (extension == "mpeg" || extension == "mpg" || extension == "mpe")
@@ -203,7 +211,7 @@ void		Response::buildHeaders()
 		m_statusCode = "200";
 	std::string headers = "HTTP/1.1 " + m_statusCode + " " + getCodeString() + "\r\n";
 	// disable cache
-	headers += "Cache-Control: no-cache, no-store, must-revalidate\r\n";
+	// headers += "Cache-Control: no-cache, no-store, must-revalidate\r\n";
 	if (m_bodySize > 0)
 		headers += "Content-Length: " + toString(m_bodySize) + "\r\n";
 	std::map<std::string, std::string>::iterator i;
@@ -321,7 +329,7 @@ bool		Response::handleGetFile(off_t filesize)
 {
 	Server server = m_request.getServer();
 	std::string extension = m_filePath.substr(m_filePath.find_last_of(".") + 1);
-	std::cout << "extention : " << extension << std::endl;
+	// std::cout << "extention : " << extension << std::endl;
 	if (extension == server.getCgiExtention())
 	{
 		return handleCgi();
@@ -349,16 +357,22 @@ bool		Response::handleGet()
 	std::string path = location.getPath();
 	std::string root = location.getRoot();
 	std::string uri = m_request.getUri();
-	std::cout << "path: " << path << std::endl;
-	std::cout << "root: " << root << std::endl;
-	std::cout << "uri: " << uri << std::endl;
+	// std::cout << "path: " << path << std::endl;
+	// std::cout << "root: " << root << std::endl;
+	// std::cout << "uri: " << uri << std::endl;
+	// std::cout << "uri size: " << uri.substr(path.size()) << std::endl;
 	m_filePath = root + uri.substr(path.size());
 	// parse request path
 	if (uri == path || uri == path + "/")
 		m_filePath = root + location.getIndex();
 	else
-		m_filePath = root + uri.substr(path.size() + 1);
-	std::cout << "file path: " << m_filePath << std::endl;
+	{
+		if(root == "/")
+			m_filePath = root + uri.substr(path.size());
+		else
+			m_filePath = root + uri.substr(path.size() + 1);
+	}
+	// std::cout << "file path: " << m_filePath << std::endl;
 	// resolve path
 	std::string absolute = getAbsolutePath(m_filePath);
 	if (!startsWith(absolute + "/", root))
@@ -366,7 +380,7 @@ bool		Response::handleGet()
 		m_statusCode = "403";
 		return false;
 	}
-	std::cout << "absolute: " << absolute << std::endl;
+	// std::cout << "absolute: " << absolute << std::endl;
 	if (absolute != m_filePath)
 	{
 		const std::string host = m_request.getServer().getName() + ":" + toString(m_request.getServer().getPort());
@@ -534,6 +548,7 @@ int			Response::getSd()
 
 Response::Response(const Request &request)
 {
+	// std::cout << "Response constructor" << std::endl;
 	m_statusCode = "200";
 	m_request = request;
 	m_cursor = 0;
@@ -544,7 +559,10 @@ Response::Response(const Request &request)
 
 	bool pass = true;
 	if ((m_statusCode = request.getError()) != "200")
+	{
+		std::cout << "error comming from request handler : " << m_statusCode << std::endl;
 		pass = false;
+	}
 	else if (request.getMethod() == "GET")
 		pass = handleGet();
 	else if (request.getMethod() == "POST")

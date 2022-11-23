@@ -8,12 +8,12 @@ server
     root            /var/
     index           index.html
     autoindex       off 
-	cgi php /Users/moerradi/.brew/bin/php-cgi
+	cgi php /Users/zmeribaa/.brew/bin/php-cgi
+
 	location /pato
 	{
-		root                /Users/moerradi/webserv/
+		root                /Users/zmeribaa/Desktop/kawkab
 		autoindex           on
-		index               index.html
 		allow_methods       GET
 	}
 }
