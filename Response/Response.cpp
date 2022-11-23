@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/23 05:44:05 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/23 05:53:30 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -199,8 +199,11 @@ std::string	getContentType(std::string filename)
 
 void		Response::buildHeaders()
 {
+	if (m_statusCode == "")
+		m_statusCode = "200";
 	std::string headers = "HTTP/1.1 " + m_statusCode + " " + getCodeString() + "\r\n";
-	std::cout << "Headers: " << headers << std::endl;
+	// disable cache
+	headers += "Cache-Control: no-cache, no-store, must-revalidate\r\n";
 	if (m_bodySize > 0)
 		headers += "Content-Length: " + toString(m_bodySize) + "\r\n";
 	std::map<std::string, std::string>::iterator i;
@@ -346,16 +349,16 @@ bool		Response::handleGet()
 	std::string path = location.getPath();
 	std::string root = location.getRoot();
 	std::string uri = m_request.getUri();
-	// std::cout << "path: " << path << std::endl;
-	// std::cout << "root: " << root << std::endl;
-	// std::cout << "uri: " << uri << std::endl;
+	std::cout << "path: " << path << std::endl;
+	std::cout << "root: " << root << std::endl;
+	std::cout << "uri: " << uri << std::endl;
 	m_filePath = root + uri.substr(path.size());
 	// parse request path
 	if (uri == path || uri == path + "/")
 		m_filePath = root + location.getIndex();
 	else
 		m_filePath = root + uri.substr(path.size() + 1);
-	// std::cout << "file path: " << m_filePath << std::endl;
+	std::cout << "file path: " << m_filePath << std::endl;
 	// resolve path
 	std::string absolute = getAbsolutePath(m_filePath);
 	if (!startsWith(absolute + "/", root))
@@ -363,7 +366,7 @@ bool		Response::handleGet()
 		m_statusCode = "403";
 		return false;
 	}
-	// std::cout << "absolute: " << absolute << std::endl;
+	std::cout << "absolute: " << absolute << std::endl;
 	if (absolute != m_filePath)
 	{
 		const std::string host = m_request.getServer().getName() + ":" + toString(m_request.getServer().getPort());
@@ -479,7 +482,7 @@ void		Response::setLastSent(long sent)
 
 std::string 		Response::peek(bool &done)
 {
-	// std::cout << "last sent: " << m_lastSent << std::endl;
+	// std::cout << "l/ast sent: " << m_lastSent << std::endl;
 	m_cursor += m_lastSent;
 	m_lastSent = 0;
 	// std::cout << "cursor: " << m_cursor << std::endl;
@@ -502,7 +505,6 @@ std::string 		Response::peek(bool &done)
 			{
 				perror("fread");
 			}
-			std::cout << "read: " << read << std::endl;
 			if (read > 0)
 				ret.assign(m_smolBuffer, read);
 			else
@@ -550,8 +552,6 @@ Response::Response(const Request &request)
 
 Response::~Response() 
 {
-	if (m_file)
-		fclose(m_file);
 }
 
 Response::Response(const Response &other)
@@ -572,12 +572,7 @@ Response &Response::operator=(const Response &other)
 		m_done = other.m_done;
 		m_lastSent = other.m_lastSent;
 		m_filePath = other.m_filePath;
-		// m_file = other.m_file;
-		// deep copy file
-		if (other.m_file)
-			m_file = fopen(m_filePath.c_str(), "r");
-		else
-			m_file = NULL;
+		m_file = other.m_file;
 	}
 	return *this;
 }

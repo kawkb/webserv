@@ -10,14 +10,21 @@ SRCS = TcpListener/TcpListener.cpp \
 		Response/cgi.cpp \
 		utils/utils.cpp
 
+OBJS = $(SRCS:.cpp=.o)
+
 FLAGS = -Wall -Wextra -Werror  -std=c++98 -fsanitize=address  -g3
 
 all: $(NAME)
 
-$(NAME): $(SRCS)
-	c++ -g $(FLAGS) $(SRCS) -o $(NAME)
+$(NAME): $(OBJS)
+	c++ $(FLAGS) $(OBJS) -o $(NAME)
+
+%.o: %.cpp
+	c++ $(FLAGS) -c $< -o $@
+
 clean:
-	rm -rf $(NAME)
+	rm -rf $(OBJS)
+
 fclean: clean
 	rm -rf $(NAME)
 re: fclean all

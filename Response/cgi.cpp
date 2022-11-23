@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:39 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/23 00:20:12 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/23 05:22:50 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 void	Response::setCgiEnv()
 {
+	setenv("PATH_INFO", m_request.getUri().substr(0, m_request.getUri().find_last_of("/")).c_str(), true);
 	setenv("REQUEST_URI", m_request.getUri().substr(0, m_request.getUri().find_last_of("/")).c_str(), true);
 	setenv("REDIRECT_STATUS", "200", true);
 	std::string document_uri = m_request.getUri() + "?" + m_request.getQueryString();
@@ -31,8 +32,6 @@ void	Response::setCgiEnv()
     setenv("FCGI_ROLE","RESPONDER", true);
     setenv("REQUEST_SCHEME","http", true);
     setenv("SERVER_SOFTWARE","webserv/1.1", true);
-    setenv("REMOTE_ADDR","0.0.0.0", true);
-    setenv("REMOTE_PORT","0", true);
 	std::string content_type = m_request.getHeader("Content-Type");
 	if (!content_type.empty())
 		setenv("CONTENT_TYPE", content_type.c_str(), true);
@@ -43,15 +42,15 @@ void	Response::setCgiEnv()
 		setenv("CONTENT_LENGTH", content_length.c_str(), true);
 	else
 		setenv("CONTENT_LENGTH", "0", true);
-		// needs further investigation segfaults when uncommented
-	// std::map<std::string, std::string>::iterator i;
-	// for (i= m_request.getHeaders().begin();i != m_request.getHeaders().end();i++)
-	// {
-	// 	std::string key = "HTTP_" + i->first;
-	// 	std::replace(key.begin(), key.end(), '-', '_');
-	// 	key = stringToUpper(key);
-	// 	setenv(key.c_str(), i->second.c_str(), true);
-	// }
+	const std::map<std::string, std::string> headers = m_request.getHeaders();
+	std::map<std::string, std::string>::const_iterator i;
+	for (i = headers.begin();i != headers.end();i++)
+	{
+		std::string key = "HTTP_" + i->first;
+		std::replace(key.begin(), key.end(), '-', '_');
+		key = stringToUpper(key);
+		setenv(key.c_str(), i->second.c_str(), true);
+	}
 }
 
 void	printFile(FILE *fp)
@@ -67,12 +66,7 @@ bool	Response::handleCgi()
 {
 	setCgiEnv();
 	std::string cgi_path = m_request.getServer().getCgiPath();
-	int pipefds[2];
-	if (pipe(pipefds) == -1)
-	{
-		m_statusCode = "500";
-		return false;
-	}
+	FILE *tmpfi = tmpfile();
 	bool timeout = true;
 	pid_t pid;
 	pid = fork();
@@ -84,7 +78,8 @@ bool	Response::handleCgi()
 	int status = 0;
 	if (pid == 0)
 	{
-		if (dup2(pipefds[1], STDOUT_FILENO) == -1)
+        const char *argv[] = {cgi_path.c_str(), m_filePath.c_str(), NULL};
+		if (dup2(fileno(tmpfi), STDOUT_FILENO) == -1)
 			exit (1);
 		if (m_request.getMethod() == "POST")
 		{
@@ -92,11 +87,12 @@ bool	Response::handleCgi()
 			if (reqbody != NULL)
 				dup2(fileno(reqbody), 0);
 		}
-        const char *argv[] = {cgi_path.c_str(), m_filePath.c_str(), NULL};
 		execve(argv[0], (char **)argv, environ);
 	}
 	else
 	{
+		// tempory normal waitpid
+		// waitpid(pid, &status, 0);
 		time_t t = time(NULL);
 		while (time(NULL) - t < 5)
 		{
@@ -115,14 +111,14 @@ bool	Response::handleCgi()
 		}
 		if (timeout)
 		{
-			close(pipefds[1]);
+			// close(pipefds[1]);
 			kill(pid, SIGKILL);
 		}
 	}
 	if (WIFEXITED(status))
 	{
 		std::cout << "exit status: " << WEXITSTATUS(status) << std::endl;
-		if (WEXITSTATUS(status) == 143)
+		if (timeout)
 		{
 			m_statusCode = "408";
 			return false;
@@ -132,60 +128,59 @@ bool	Response::handleCgi()
 			m_statusCode = "500";
 			return false;
 		}
-		close(pipefds[1]);
+		// close(pipefds[1]);
 	}
+	rewind(tmpfi);
 	std::string cgi_response;
 	char buf[1024];
+	int ret = 0;
 	// use normal read
-	while (read(pipefds[0], buf, 1024) > 0)
+	while ((ret = fread(buf,1 , 1024, tmpfi)) > 0)
 	{
-		cgi_response += buf;
+		cgi_response += std::string(buf, ret);
+		// stop reading if the response contains \r\n\r\n
+		if (cgi_response.find("\r\n\r\n") != std::string::npos)
+			break;
 	}
-	close(pipefds[0]);
-	std::cout << "cgi response: " << cgi_response << std::endl;
-	// read response headers from tempfile
-	// FILE *fp = fdopen(pipefds[1], "r");
-	// char *line = NULL;
-	// size_t len = 0;
-	// ssize_t read;
-	// while ((read = getline(&line, &len, fp)) != -1)
-	// {
-	// 	if (strcmp(line, "\r\n") == 0)
-	// 		break;
-	// 	std::string header = line;
-	// 	std::string key = header.substr(0, header.find(":"));
-	// 	std::string value = header.substr(header.find(":") + 2);
-	// 	if (value.size() > 2)
-	// 		value = value.substr(0, value.size() - 2);
-	// 	m_headersMap[key] = value;
-	// 	free(line);
-	// 	line = NULL;
-	// }
-	// if (errno == EINVAL || errno == ENOMEM)
-	// {
-	// 	m_statusCode = "500";
-	// 	return false;
-	// }
-	// if (line)
-	// 	free(line);
-	// FILE *tempfile2 = tmpfile();
-	// if (tempfile2 == NULL)
-	// {
-	// 	m_statusCode = "500";
-	// 	return false;
-	// }
-	// char buf[BUFFER_SIZE];
-	// while ((read = fread(buf, 1, BUFFER_SIZE, fp)) > 0)
-	// 	m_buffer += std::string(buf);
-	// m_done = true;
-	// std::string statusHeader = getHeader("Status");
-	// if (!statusHeader.empty())
-	// 	m_statusCode = statusHeader.substr(0, 3);
-	// else
-	// 	m_statusCode = "200";
-	// m_headersMap.erase("Status");
-	// if (m_headersMap.find("Content-Type") == m_headersMap.end())
-	// 	m_headersMap["Content-Type"] = "text/html";
+	
+	// find the end of the header
+	size_t header_end = cgi_response.find("\r\n\r\n");
+	// rewind by what's lest after the header
+	fseek(tmpfi, header_end + 4, SEEK_SET);
+	// printFile(tmpfi);
+	m_file = tmpfi;
+
+	if (header_end == std::string::npos)
+	{
+		m_statusCode = "400";
+		return false;
+	}
+	std::string headers = cgi_response.substr(0, header_end);
+	std::vector<std::string> headerlines = split(headers, "\r\n");
+	for (std::vector<std::string>::iterator i = headerlines.begin(); i != headerlines.end(); ++i)
+	{
+		size_t pos = i->find(":");
+		if (pos == std::string::npos)
+			m_headersMap[*i] = "";
+		else
+		{
+			std::string key = i->substr(0, pos);
+			std::string value = i->substr(pos + 2);
+			m_headersMap[key] = value;
+		}
+	}
+	std::string statusHeader = getHeader("Status");
+	if (!statusHeader.empty())
+		m_statusCode = statusHeader.substr(0, 3);
+	else
+		m_statusCode = "200";
+	//calculate content lenght
+	fseek(tmpfi, 0, SEEK_END);
+	m_bodySize = ftell(tmpfi) - header_end - 4;
+	fseek(tmpfi, header_end + 4, SEEK_SET);
+	m_headersMap.erase("Status");
+	if (m_headersMap.find("Content-Type") == m_headersMap.end())
+		m_headersMap["Content-Type"] = "text/html";
 	buildHeaders();
 	return true;
 }

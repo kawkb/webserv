@@ -6,7 +6,11 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/20 20:48:34 by kdrissi-          #+#    #+#             */
+<<<<<<< HEAD
+/*   Updated: 2022/11/23 02:18:16 by moerradi         ###   ########.fr       */
+=======
 /*   Updated: 2022/11/23 04:09:52 by kdrissi-         ###   ########.fr       */
+>>>>>>> d385155ee357d3976a141ad8fbba0e5081333440
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -126,6 +130,25 @@ FILE *createTmpFile(std::string &path)
     return fs;
 }
 
+std::vector<std::string> split(std::string str, std::string sep)
+{
+	std::vector<std::string> ret;
+	std::string token;
+	size_t pos = str.find(sep);
+	if (pos == std::string::npos)
+	{
+		ret.push_back(str);
+		return ret;
+	}
+	while ((pos = str.find(sep)) != std::string::npos)
+	{
+		token = str.substr(0, pos);
+		ret.push_back(token);
+		str.erase(0, pos + sep.length());
+	}
+	ret.push_back(str);
+	return ret;
+}
 std::string resolvePath(std::string path)
 {
     char *absolutePath = realpath(path.c_str(), NULL);
