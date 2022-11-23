@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: zmeribaa <zmeribaa@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/23 09:02:34 by zmeribaa         ###   ########.fr       */
+/*   Updated: 2022/11/23 11:49:07 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -357,22 +357,22 @@ bool		Response::handleGet()
 	std::string path = location.getPath();
 	std::string root = location.getRoot();
 	std::string uri = m_request.getUri();
-	// std::cout << "path: " << path << std::endl;
-	// std::cout << "root: " << root << std::endl;
-	// std::cout << "uri: " << uri << std::endl;
-	// std::cout << "uri size: " << uri.substr(path.size()) << std::endl;
+	std::cout << "path: " << path << std::endl;
+	std::cout << "root: " << root << std::endl;
+	std::cout << "uri: " << uri << std::endl;
+	std::cout << "uri size: " << uri.substr(path.size()) << std::endl;
 	m_filePath = root + uri.substr(path.size());
 	// parse request path
 	if (uri == path || uri == path + "/")
 		m_filePath = root + location.getIndex();
 	else
 	{
-		if(root == "/")
+		if(path == "/")
 			m_filePath = root + uri.substr(path.size());
 		else
 			m_filePath = root + uri.substr(path.size() + 1);
 	}
-	// std::cout << "file path: " << m_filePath << std::endl;
+	std::cout << "file path: " << m_filePath << std::endl;
 	// resolve path
 	std::string absolute = getAbsolutePath(m_filePath);
 	if (!startsWith(absolute + "/", root))
@@ -380,7 +380,7 @@ bool		Response::handleGet()
 		m_statusCode = "403";
 		return false;
 	}
-	// std::cout << "absolute: " << absolute << std::endl;
+	std::cout << "absolute: " << absolute << std::endl;
 	if (absolute != m_filePath)
 	{
 		const std::string host = m_request.getServer().getName() + ":" + toString(m_request.getServer().getPort());
@@ -439,15 +439,29 @@ bool		Response::handleGet()
 
 bool		Response::handlePost()
 {
-	// std::string uploadPath = m_request.getLocation().getUploadPath();
-	// if (!uploadPath.empty())
-	// {
-	// 	std::string uri = m_request.getUri();
-	// 	std::string path = m_request.getLocation().getPath();
-	// 	std::string filePath = uploadPath + uri.substr(path.size());
-	// 	std::string absolute = getAbsolutePath(filePath);
+	std::string uploadPath = m_request.getLocation().getUploadPath();
+	if (!uploadPath.empty())
+	{
+		Location location = m_request.getLocation();
+		std::string path = location.getPath();
+		std::string uri = m_request.getUri();
 
-	// }
+		m_filePath = uploadPath + uri.substr(path.size());
+		if (uri == path || uri == path + "/")
+			m_filePath = uploadPath + location.getIndex();
+		else
+		{
+			if(uploadPath == "/")
+				m_filePath = uploadPath + uri.substr(path.size());
+			else
+				m_filePath = uploadPath + uri.substr(path.size() + 1);
+		}
+	}
+	else
+	{
+		
+	}
+	
 	return true;
 }
 
@@ -536,6 +550,8 @@ std::string 		Response::peek(bool &done)
 	}
 	else
 	{
+		std::cout << "cursor: " << m_cursor << std::endl;
+		std::cout << "...................." << std::endl;
 		return m_buffer.substr(m_cursor, m_buffer.size() - m_cursor);
 	}
 }

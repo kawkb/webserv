@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:39 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/23 05:22:50 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/23 11:00:05 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,7 +111,6 @@ bool	Response::handleCgi()
 		}
 		if (timeout)
 		{
-			// close(pipefds[1]);
 			kill(pid, SIGKILL);
 		}
 	}

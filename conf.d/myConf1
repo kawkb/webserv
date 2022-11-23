@@ -10,10 +10,13 @@ server
     autoindex       off 
 	cgi php /Users/zmeribaa/.brew/bin/php-cgi
 
-	location /pato
+	location /
 	{
-		root                /Users/zmeribaa/Desktop/kawkab
-		autoindex           on
-		allow_methods       GET
+		root /Users/moerradi/webserv/tests/
+		index index.html
+		autoindex off
+		allow_methods GET
 	}
+
+
 }

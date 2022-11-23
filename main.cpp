@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/16 15:14:24 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/23 04:11:39 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/23 11:39:38 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 int     main(int ac, char **av)
 {
+	signal(SIGPIPE, SIG_IGN);
 	if (ac != 2)
 		exit_failure("Error: Bad Arguments!");
 	std::vector<Server>			servers;
