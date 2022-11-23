@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/23 05:53:30 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/23 07:20:26 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -504,9 +504,14 @@ std::string 		Response::peek(bool &done)
 			if (ferror(m_file))
 			{
 				perror("fread");
+				done = true;
+				return ("");
 			}
 			if (read > 0)
+			{
 				ret.assign(m_smolBuffer, read);
+				m_buffer = ret;
+			}
 			else
 				m_done = true;
 			return ret;

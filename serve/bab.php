@@ -1,6 +1,8 @@
 
 <?php
 	// phpinfo();
-	echo "Hello World";
+	// echo "Hello World";
+	// redirect to google
+	header("Location: http://www.google.com");
 
 ?>
