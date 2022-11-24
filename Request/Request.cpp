@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 09:10:11 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 12:13:01 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,18 +107,22 @@ std::ostream& operator<<(std::ostream& out, Request request)
 	return out;
 }
 
-
-
 bool Request::methodAllowed(void)
 {
-	for (std::vector<std::string>::iterator i = m_location.getMethod().begin(); i != m_location.getMethod().end(); i++)
+    std::vector<std::string> method = m_location.getMethod();
+	for (std::vector<std::string>::iterator i = method.begin(); i != method.end(); i++)
+    {
+        std::cout << "=============////// "<< m_location.getPath() << std::endl;
+        std::cout << "============= "<< *i << std::endl;
+        std::cout << "=============++ "<< m_method << std::endl;
 		if (*i == m_method)
 			return (true);
+    }
     m_status = "405";
 	return (false);
 }
 
-bool Request::matchLocation(void)
+void Request::matchLocation(void)
 {
 	std::vector<Location> locations = m_server.getLocation();
 	for (std::vector<Location>::iterator i = locations.begin(); i != locations.end(); i++)
@@ -127,12 +131,10 @@ bool Request::matchLocation(void)
 		if (i->getPath() == sub)
 		{
 			m_location = *i;
-			return (true);
+			return;
 		}
 	}
     m_location = Location(m_server);
-    m_status = "404";
-    return(false);
 }
 
 bool Request::matchServer(const std::vector<Server> &servers)
@@ -195,8 +197,7 @@ void    Request::checkErrors(const std::vector<Server> &servers)
         return;
     if (!matchServer(servers))
         return;
-    if (!matchLocation())
-        return;
+    matchLocation();
     if (!methodAllowed())
         return;
     m_bodyStart = true;

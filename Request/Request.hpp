@@ -31,7 +31,7 @@ class Request
 		bool								isWellFormed(void);
 		void								checkErrors(const std::vector<Server> &servers);
 		bool								methodAllowed(void);
-		bool								matchLocation(void);
+		void								matchLocation(void);
 		bool								matchServer(const std::vector<Server> &servers);
 		void    							fillChunked(void);
 		void    							fillContentLength(size_t contentLength);
@@ -60,32 +60,3 @@ class Request
 };
 
 std::ostream& operator<<(std::ostream& os, Request request);
-
-//make location;
-//config file errors;
-//sockets;
-
-// 4\r\n        (bytes to send)
-// Wiki\r\n     (data)
-// 6\r\n        (bytes to send)
-// pedia \r\n   (data)
-// E\r\n        (bytes to send)
-// in \r\n
-// \r\n
-// chunks.\r\n  (data)
-// 0\r\n        (final byte - 0)
-// \r\n         (end message)
-
-// 10
-
-// GET / HTTP/1.1
-// Host: localhost:8080
-// Transfer-Encoding: chunked
-// Content-Type: text/plain
-// Content-Length: 53
-
-// FDASDKLFJASD;FJKADS
-// ASDFKLAJSDF;ASDFKLAJSDFDFAKLSDFA
-
-
-// /test/hello /test/hello/ root +  alo/karma

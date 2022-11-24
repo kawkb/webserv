@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:33 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/24 08:39:31 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 12:09:28 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ class Response
 		int									m_bodySize;
 		long								m_lastSent;
 		int									m_sd;
+		std::string							m_cgiPath;
 
 	public:
 		const Request 						&getRequest();

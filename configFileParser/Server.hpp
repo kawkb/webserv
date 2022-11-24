@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/16 11:01:45 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 09:28:25 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 12:19:28 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,12 +38,11 @@ class Server
 		std::string                         getRoot(void) const;
 		std::string                         getIndex(void) const;
 		int                                 getAutoIndex(void) const;
-		std::string							getCgiPath(void) const;
-		std::string							getCgiExtention(void) const;
+
 		int                                 getMaxBodySize(void) const;
 		std::vector<Location>               getLocation(void) const;
 		std::string  						getErrorPage(std::string errorcode) const;
-		
+		std::map<std::string, std::string>  getCgi(void) const;
 		void                        		setMethod(std::string method);
 		// methods:
 		void								checkError(std::ifstream &myfile);

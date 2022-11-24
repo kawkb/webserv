@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cgi.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:39 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/23 20:17:26 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/24 12:34:19 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,6 @@ void	Response::setCgiEnv()
 bool	Response::handleCgi()
 {
 	setCgiEnv();
-	std::string cgi_path = m_request.getServer().getCgiPath();
 	FILE *tmpfi = tmpfile();
 	bool timeout = true;
 	pid_t pid;
@@ -70,11 +69,11 @@ bool	Response::handleCgi()
 	if (pid == 0)
 	{
 		struct stat st;
-		if (stat(cgi_path.c_str(), &st) == -1)
+		if (stat(m_cgiPath.c_str(), &st) == -1)
 			exit(69);
 		if (S_ISDIR(st.st_mode))
 			exit(69);
-        const char *argv[] = {cgi_path.c_str(), m_filePath.c_str(), NULL};
+        const char *argv[] = {m_cgiPath.c_str(), m_filePath.c_str(), NULL};
 		std::cout << "argv[0] = " << argv[0] << std::endl;
 		std::cout << "argv[1] = " << argv[1] << std::endl;
 		if (dup2(fileno(tmpfi), STDOUT_FILENO) == -1)

@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 08:51:40 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 12:21:43 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,6 +95,8 @@ Server::Server(std::ifstream &myfile, size_t &lineCount)
             Location    holder;
             holder.setPath(token[1]);
             holder.parse(myfile, lineCount);
+            if (holder.getRoot().empty())
+                holder.setRoot(m_root);
             m_location.push_back(holder);
         }
         else if(token[0] == "}" && size == 1 && isServer && lineCount++)
@@ -147,7 +149,7 @@ void	Server::checkError(std::ifstream &myfile)
         if(checkPath(it->second) != "")
         {
             myfile.close();
-	    	exit_failure("\033[1;31mConfig File Error: "+ checkPath(m_root) +" \033[0m");
+	    	exit_failure("\033[1;31mConfig File Error: "+ checkPath(it->second) +" \033[0m");
         }   
     }
 }
@@ -160,15 +162,16 @@ std::string   Server::getErrorPage(std::string errorcode) const
 		return (i->second);
 	return ("");
 }
-int                         Server::getPort(void) const{return(m_port);}
-int                         Server::getAutoIndex(void) const{return(m_autoIndex);}
-int                         Server::getMaxBodySize(void) const{return(m_maxBodySize);}
-void                        Server::setMethod(std::string method){m_method.push_back(method);}
-std::string                 Server::getName(void) const{return(m_serverName);}
-std::string                 Server::getRoot(void) const{return(m_root);}
-std::string                 Server::getIndex(void) const{return(m_index);} 
-std::vector<std::string>    Server::getMethod(void) const{return(m_method);}
-std::vector<Location>       Server::getLocation(void) const{return(m_location);}
+int                                 Server::getPort(void) const{return(m_port);}
+int                                 Server::getAutoIndex(void) const{return(m_autoIndex);}
+int                                 Server::getMaxBodySize(void) const{return(m_maxBodySize);}
+void                                Server::setMethod(std::string method){m_method.push_back(method);}
+std::string                         Server::getName(void) const{return(m_serverName);}
+std::string                         Server::getRoot(void) const{return(m_root);}
+std::string                         Server::getIndex(void) const{return(m_index);} 
+std::vector<std::string>            Server::getMethod(void) const{return(m_method);}
+std::vector<Location>               Server::getLocation(void) const{return(m_location);}
+std::map<std::string, std::string>  Server::getCgi(void) const{return(m_cgi);}
 
 Server::Server()
 {

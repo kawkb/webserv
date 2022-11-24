@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/09 19:04:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 09:18:43 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 12:10:45 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,7 +87,7 @@ void		Location::checkError(std::ifstream &myfile)
 	if(!m_uploadPath.empty() && !checkPath(m_uploadPath).empty())
 	{
         myfile.close();
-		exit_failure("\033[1;31mConfig File Error: "+ checkPath(m_root) +" \033[0m");
+		exit_failure("\033[1;31mConfig File Error: "+ checkPath(m_uploadPath) +" \033[0m");
 	}
 	if(!m_uploadPath.empty())
 		m_method.push_back("POST");
@@ -117,6 +117,7 @@ void		Location::checkError(std::ifstream &myfile)
 // }
 
 void        				Location::setPath(std::string path){m_path = path;}
+void        				Location::setRoot(std::string root){m_root = root;}
 std::string 				Location::getRedirection(void) const{return(m_redirection);}
 std::string     			Location::getPath(void) const{return(m_path);}
 int							Location::getAutoIndex(void) const{return(m_autoIndex);}

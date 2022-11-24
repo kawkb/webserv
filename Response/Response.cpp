@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 08:40:06 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 12:07:23 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -272,22 +272,24 @@ bool			Response::handleGetFile()
 	Server server = m_request.getServer();
 	std::string extension = m_filePath.substr(m_filePath.find_last_of(".") + 1);
 	// std::cout << "extention : " << extension << std::endl;
-	if (extension == server.getCgiExtention())
+	std::map<std::string, std::string> cgis = server.getCgi();
+	for(std::map<std::string, std::string>::iterator it = cgis.begin(); it != cgis.end(); it++)
 	{
-		return handleCgi();
-	}
-	else
-	{
-		m_headersMap["Content-Type"] = getContentType(m_filePath);
-		m_file = fopen(m_filePath.c_str(), "r");
-		if (!m_file)
+		if (extension == it->first)
 		{
-			m_statusCode = "500";
-			return false;
+			m_cgiPath = it->second;
+			return handleCgi();
 		}
-		buildHeaders();
-		return true;
 	}
+	m_headersMap["Content-Type"] = getContentType(m_filePath);
+	m_file = fopen(m_filePath.c_str(), "r");
+	if (!m_file)
+	{
+		m_statusCode = "500";
+		return false;
+	}
+	buildHeaders();
+	return true;
 }
 
 bool			Response::handleGet()
@@ -483,13 +485,17 @@ bool			Response::handlePost()
 		{
 			Server server = m_request.getServer();
 			std::string extension = m_filePath.substr(m_filePath.find_last_of(".") + 1);
-			if (extension == server.getCgiExtention())
-				return handleCgi();
-			else
+			std::map<std::string, std::string> cgis = server.getCgi();
+			for(std::map<std::string, std::string>::iterator it = cgis.begin(); it != cgis.end(); it++)
 			{
-				m_statusCode = "403";
-				return false;
+				if (extension == it->first)
+				{
+					m_cgiPath = it->second;
+					return handleCgi();
+				}
 			}
+			m_statusCode = "403";
+			return false;
 		}
 		else
 		{
@@ -567,15 +573,19 @@ bool			Response::handleDelete()
 	// }
 	// else if (S_ISREG(fileStat.st_mode))
 	// {
-	// 	Server server = m_request.getServer();
-	// 	std::string extension = m_filePath.substr(m_filePath.find_last_of(".") + 1);
-	// 	if (extension == server.getCgiExtention())
-	// 		return handleCgi();
-	// 	else
-	// 	{
-	// 		m_statusCode = "403";
-	// 		return false;
-	// 	}
+		// Server server = m_request.getServer();
+		// std::string extension = m_filePath.substr(m_filePath.find_last_of(".") + 1);
+		// std::map<std::string, std::string> cgis = server.getCgi();
+		// for(std::map<std::string, std::string>::iterator it = cgis.begin(); it != cgis.end(); it++)
+		// {
+		// 	if (extension == it->first)
+		// 	{
+			// m_cgiPath = it->second;
+		// 		return handleCgi();
+		// 	}
+		// }
+		// m_statusCode = "403";
+		// return false;
 	// }
 	// else
 	// {
