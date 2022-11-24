@@ -1,0 +1,26 @@
+server
+{
+	listen         	8080
+	server_name     localhost
+	allow_methods   GET 
+
+
+    root            /var/
+    index           index.html
+    autoindex       off 
+
+	cgi php /Users/moerradi/.brew/bin/php-cgi
+	location /upload
+	{
+		upload_path /Users/moerradi/webserv/upload/
+	}
+
+	location /og
+	{
+		root /Users/moerradi/webserv/tests/
+		index index.php
+		autoindex on
+		allow_methods GET POST
+	}
+
+}

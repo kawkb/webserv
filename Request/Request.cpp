@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 01:40:04 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 08:38:29 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,13 +15,13 @@
 Request::Request(){}
     
 Request::~Request(){
-    if (m_body)
-        fclose(m_body);
+
 }
 
 Request::Request(int sd)
 {
-    m_body = tmpfile();
+    m_filePath = "";
+    m_body = createTmpFile(m_filePath);
     m_sd = sd;
     m_method = "";
     m_uri = "";
@@ -32,7 +32,6 @@ Request::Request(int sd)
     m_status = "";
     m_chunckLen = 0;
     m_queryString = "";
-    m_filePath = "";
 }
 
 Request::Request(const Request &cp)
@@ -180,7 +179,7 @@ bool   Request::isWellFormed(void)
 		m_status = "501";
 	if (m_method == "POST" && getHeader("Transfer-Encoding").empty() && getHeader("Content-Length").empty())
 		m_status = "400";
-	if (m_uri.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ._~:/?#[]@!$&'()*+,;=%") != std::string::npos)
+	if (m_uri.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ._~:-/?#[]@!$&'()*+,;=%") != std::string::npos)
 		m_status = "400";
 	if (m_uri.length() > 2048)
 		m_status = "414";

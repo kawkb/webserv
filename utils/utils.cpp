@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/20 20:48:34 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 04:22:26 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 08:39:21 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,7 +117,7 @@ bool startsWith(std::string str, std::string start)
 
 FILE *createTmpFile(std::string &path)
 {
-    std::string tmpdir = P_tmpdir;
+    std::string tmpdir = getenv("TMPDIR");
     // generat unique string
     static const char alphanum[] =
         "0123456789"
@@ -135,7 +135,7 @@ FILE *createTmpFile(std::string &path)
     if (stat(tmpfile.c_str(), &buffer) == 0)
         return createTmpFile(path);
     // create file
-    FILE *fs = fopen(tmpfile.c_str(), "w");
+    FILE *fs = fopen(tmpfile.c_str(), "w+");
     if (fs == NULL)
         return NULL;
     path = tmpfile;

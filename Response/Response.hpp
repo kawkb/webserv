@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:33 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/23 05:59:12 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 08:39:31 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 # define SENDING_DONE 0
 # define SENDING_HEADERS 1
 # define SENDING_BODY 2
-# define RES_BUFFER_SIZE 4096
+# define RES_BUFFER_SIZE 10000
 // environ
 extern char **environ;
 
@@ -38,10 +38,11 @@ class Response
 		int									m_sd;
 
 	public:
+		const Request 						&getRequest();
 		std::string							getExtention();
 		std::string							getCodeString();
 		std::string							generateAutoIndex();
-		bool								handleGetFile(off_t filesize);
+		bool								handleGetFile();
 		bool								handleGet();
 		bool								handlePost();
 		bool								handleDelete();

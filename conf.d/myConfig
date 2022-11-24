@@ -1,0 +1,17 @@
+server
+{
+	listen          8080
+	server_name		server1
+	allow_methods	GET
+}
+server
+{
+	listen          8081
+	server_name		server2
+}
+server
+{
+	listen         8080
+	server_name		server3
+}
+
