@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/23 07:27:18 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 15:10:13 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/24 18:41:48 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ void    Webserv::multiplex(void)
 {
     if ((select(m_maxSd + 1, &m_readSet, &m_writeSet, NULL, NULL) < 0))
 		exit_failure("select error");
+	std::cout << "select returned" << std::endl;
 }
 
 void    Webserv::acceptConnection(void)
@@ -75,8 +76,11 @@ void		Webserv::handleRequest(void)
 		if(FD_ISSET(it->getSd(), &m_readSet))
 		{
 			int rec = recv(it->getSd(), &buf, 4096, 0);
-			if (rec == 0)
-				it = m_requests.erase(it);
+			// if (rec == 0)
+			// {
+			// 	close(it->getSd());
+			// 	it = m_requests.erase(it);
+			// }
 			// if (rec == -1)
 			// 	exit_failure("recv error");
 			// else
@@ -94,6 +98,9 @@ void	Webserv::handleResponse(void)
 		if(it->getStatus() != "")
 		{
 			m_responses.push_back(Response(*it));
+			FILE*	body = it->getBody();
+			if (body)
+				fclose(body);
 			it = m_requests.erase(it);
 		}
 		else 
@@ -109,7 +116,7 @@ void	Webserv::handleResponse(void)
 			if (!done)
 			{
 				ssize_t sent = send(i->getSd(), to_send.c_str(), to_send.size(), 0);
-				if (sent <= 0)
+				if (sent < 0)
 					goto erase;
 				i->setLastSent(sent);
 				++i;
@@ -118,6 +125,7 @@ void	Webserv::handleResponse(void)
 			{
 				erase:
 					close(i->getSd());
+					fclose(i->getFile());
 					i = m_responses.erase(i);
 			}
 		}
@@ -128,37 +136,42 @@ void	Webserv::handleResponse(void)
 
 void    Webserv::run(void)
 {
+	std::cout << "max fd : " << m_maxSd << std::endl;
+	// print all request sds
+	std::cout << "request fds : " ;
+	for (std::vector<Request>::iterator i = m_requests.begin(); i != m_requests.end(); ++i)
+		std::cout << "request sd: " << i->getSd() << "-";
+	std::cout << std::endl;
+	// print all response sds
+	std::cout << "response fds : ";
+	for (std::vector<Response>::iterator i = m_responses.begin(); i != m_responses.end(); ++i)
+		std::cout << "response sd: " << i->getSd() << "-";
+	std::cout << std::endl;
+	std::cout << "----------------------------------------" << std::endl;
     setFds();
+	std::cout << "select hangs" << std::endl;
 	multiplex();
+
 	acceptConnection();
+
 	handleRequest();
+
 	handleResponse();
-	// std::cout << "----------------------------------------" << std::endl;
-	// std::cout << "sd" << m_maxSd << std::endl;
-	// std::cout << "sdbackup" << m_maxSdBackup << std::endl;
-	// // print all request sds
-	// for (std::vector<Request>::iterator i = m_requests.begin(); i != m_requests.end(); ++i)
-	// 	std::cout << "request sd: " << i->getSd() << std::endl;
-	// // print all response sds
-	// for (std::vector<Response>::iterator i = m_responses.begin(); i != m_responses.end(); ++i)
-	// 	std::cout << "response sd: " << i->getSd() << std::endl;
-	// std::cout << "----------------------------------------" << std::endl;
 }
 
 void	Webserv::setFds()
 {
+	// problem is here
 	FD_ZERO(&m_readSet);
     FD_ZERO(&m_writeSet);
 	m_readSet = m_readSetBackup;
 	m_maxSd = m_maxSdBackup;
-	std::cout << m_requests.size() << std::endl;
 	for (std::vector<Request>::iterator i = m_requests.begin(); i != m_requests.end(); ++i)
 	{
 		FD_SET(i->getSd(), &m_readSet);
 		if (i->getSd() > m_maxSd)
 			m_maxSd = i->getSd();
 	}
-	std::cout << m_responses.size() << std::endl;
 	for (std::vector<Response>::iterator i = m_responses.begin(); i != m_responses.end(); ++i)
 	{
 		FD_SET(i->getSd(), &m_writeSet);
@@ -167,7 +180,7 @@ void	Webserv::setFds()
 	}
 }
 
-Webserv::Webserv(std::vector<Server> &servers)
+Webserv::Webserv(std::vector<Server> servers)
 {
     m_servers = servers;
     initiateMasterSockets();

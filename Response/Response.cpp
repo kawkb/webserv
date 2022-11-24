@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 12:07:23 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 18:16:43 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -290,6 +290,11 @@ bool			Response::handleGetFile()
 	}
 	buildHeaders();
 	return true;
+}
+
+FILE*			Response::getFile(void)
+{
+	return m_file;
 }
 
 bool			Response::handleGet()
@@ -680,8 +685,8 @@ std::string		Response::peek(bool &done)
 	}
 	else
 	{
-		std::cout << "cursor: " << m_cursor << std::endl;
-		std::cout << "...................." << std::endl;
+		// std::cout << "cursor: " << m_cursor << std::endl;
+		// std::cout << "...................." << std::endl;
 		return m_buffer.substr(m_cursor, m_buffer.size() - m_cursor);
 	}
 }

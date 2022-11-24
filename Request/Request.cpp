@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 14:34:29 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/24 18:15:41 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,9 +112,9 @@ bool Request::methodAllowed(void)
     std::vector<std::string> method = m_location.getMethod();
 	for (std::vector<std::string>::iterator i = method.begin(); i != method.end(); i++)
     {
-        std::cout << "=============////// "<< m_location.getPath() << std::endl;
-        std::cout << "============= "<< *i << std::endl;
-        std::cout << "=============++ "<< m_method << std::endl;
+        // std::cout << "=============////// "<< m_location.getPath() << std::endl;
+        // std::cout << "============= "<< *i << std::endl;
+        // std::cout << "=============++ "<< m_method << std::endl;
 		if (*i == m_method)
 			return (true);
     }
@@ -325,6 +325,7 @@ void    Request::parse(const std::vector<Server> &servers, const char *buf, int 
             m_requestBuffer.erase(m_requestBuffer.begin(), found + 4);
         }
     }
+	std::cout << "request parsing blocks " << std::endl;
 	std::string conlen = getHeader("Content-Length");
     if (m_method == "POST" && m_bodyStart && conlen != "" && conlen != "0" && m_status == "")
 	{

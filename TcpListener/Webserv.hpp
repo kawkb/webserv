@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/23 07:23:56 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 15:07:59 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/24 16:59:06 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,6 @@ class Webserv
         int                         m_maxSdBackup;
         std::vector<Server>         m_servers;
         std::vector<TcpListener>    m_tcplisteners;
-		std::vector<int>			m_connections;
     public:
         void                         initiateMasterSockets(void);
         void	                    setMasterSockets(void);
@@ -38,6 +37,6 @@ class Webserv
         
         void                        run(void);
                                     Webserv(void);
-                                    Webserv(std::vector<Server> &server);
+                                    Webserv(std::vector<Server> server);
                                     ~Webserv(void);
 };
