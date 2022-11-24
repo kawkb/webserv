@@ -23,3 +23,12 @@ server
 		allow_methods GET POST
 	}
 }
+
+server
+{
+	listen		 	8080
+	server_name     e2r1p7.1337.ma
+	root 			/Users/moerradi/webserv/hello/
+	index 			index.html
+	autoindex 		on
+}

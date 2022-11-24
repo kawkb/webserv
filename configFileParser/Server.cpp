@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 14:21:20 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/24 22:18:22 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,7 +79,10 @@ Server::Server(std::ifstream &myfile, size_t &lineCount)
             }
         }
         else if (token[0] == "cgi" && size == 3 && lineCount++ && isServer)
-            m_cgi.insert(std::pair<std::string, std::string>(token[1], token[2]));
+		{
+			m_cgi[token[1]] = token[2];
+			// std::cout << token[1] << " " << token[2] << std::endl;
+		}
         else if (token[0] == "max_body_size" && size == 2 && lineCount++ && isServer && m_maxBodySize == 1000)
         {
             if (token[1].find_first_not_of("0123456789") == std::string::npos)
@@ -146,6 +149,7 @@ void	Server::checkError(std::ifstream &myfile)
     }
     for(std::map<std::string, std::string>::iterator it = m_cgi.begin(); it != m_cgi.end(); it++)
     {
+		std::cout << it->first << " --da-- " << it->second << std::endl;
 		struct stat buffer;
 		if (stat(it->second.c_str(), &buffer) != 0)
 		{
@@ -176,6 +180,15 @@ std::string   Server::getErrorPage(std::string errorcode) const
 		return (i->second);
 	return ("");
 }
+
+std::string						 	Server::getCgiPath(std::string extention) const
+{
+	std::map<std::string,std::string>::const_iterator i = m_cgi.find(extention);
+	if (i != m_cgi.end())
+		return (i->second);
+	return ("");
+}
+
 int                                 Server::getPort(void) const{return(m_port);}
 int                                 Server::getAutoIndex(void) const{return(m_autoIndex);}
 int                                 Server::getMaxBodySize(void) const{return(m_maxBodySize);}
@@ -205,6 +218,7 @@ Server & Server::operator=(const Server &cp)
 	m_index = cp.m_index;
 	m_maxBodySize = cp.m_maxBodySize;
 	m_method = cp.m_method;
+	m_cgi = cp.m_cgi;
 	m_location = cp.m_location;
 	m_errorPage = cp.m_errorPage;
     return (*this);

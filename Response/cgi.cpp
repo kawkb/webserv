@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cgi.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:39 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/24 12:34:19 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 21:22:06 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -150,6 +150,9 @@ bool	Response::handleCgi()
 		m_statusCode = "200";
 		rewind(tmpfi);
 		m_file = tmpfi;
+		FILE*	body = m_request.getBody();
+		if (body)
+			fclose(body);
 		buildHeaders();
 		return true;
 	}
@@ -165,12 +168,12 @@ bool	Response::handleCgi()
 	{
 		size_t pos = i->find(":");
 		if (pos == std::string::npos)
-			m_headersMap[*i] = "";
+			m_resHeaders[*i] = "";
 		else
 		{
 			std::string key = i->substr(0, pos);
 			std::string value = i->substr(pos + 2);
-			m_headersMap[key] = value;
+			m_resHeaders[key] = value;
 		}
 	}
 	std::string statusHeader = getHeader("Status");
@@ -182,10 +185,12 @@ bool	Response::handleCgi()
 	fseek(tmpfi, 0, SEEK_END);
 	m_bodySize = ftell(tmpfi) - header_end - 4;
 	fseek(tmpfi, header_end + 4, SEEK_SET);
-	m_headersMap.erase("Status");
-	if (m_headersMap.find("Content-type") == m_headersMap.end())
-		m_headersMap["Content-Type"] = "text/html";
+	m_resHeaders.erase("Status");
+	if (m_resHeaders.find("Content-type") == m_resHeaders.end())
+		m_resHeaders["Content-Type"] = "text/html";
+	FILE*	body = m_request.getBody();
+	if (body)
+		fclose(body);
 	buildHeaders();
 	return true;
 }
-

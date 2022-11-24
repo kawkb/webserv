@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/16 11:01:45 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 12:19:28 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 20:58:36 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,7 @@ class Server
 		std::string                         getRoot(void) const;
 		std::string                         getIndex(void) const;
 		int                                 getAutoIndex(void) const;
+		std::string						 	getCgiPath(std::string extention) const;
 
 		int                                 getMaxBodySize(void) const;
 		std::vector<Location>               getLocation(void) const;

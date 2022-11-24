@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/23 07:27:18 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 18:41:48 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/25 00:40:05 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,8 +33,8 @@ void		Webserv::setMasterSockets(void)
 	for (std::vector<TcpListener>::iterator i = m_tcplisteners.begin(); i != m_tcplisteners.end(); ++i)
 	{
 		FD_SET(i->getMaster(), &m_readSetBackup);
-		if (i->getMaster() > m_maxSdBackup)
-			m_maxSdBackup = i->getMaster();
+		if (i->getMaster() > m_maxMasterSd)
+			m_maxMasterSd = i->getMaster();
 	}
 }
 
@@ -60,6 +60,8 @@ void    Webserv::acceptConnection(void)
 				int flags = fcntl(connection, F_GETFL, 0);
 				flags |= O_NONBLOCK;
 				fcntl(connection, F_SETFL, flags);
+				FD_SET(connection, &m_readSetBackup);
+				m_sds.push_back(connection);
 				m_requests.push_back(Request(connection));
 			}
 		}
@@ -98,9 +100,8 @@ void	Webserv::handleResponse(void)
 		if(it->getStatus() != "")
 		{
 			m_responses.push_back(Response(*it));
-			FILE*	body = it->getBody();
-			if (body)
-				fclose(body);
+			FD_CLR(it->getSd(), &m_readSetBackup);
+			FD_SET(it->getSd(), &m_writeSetBackup);
 			it = m_requests.erase(it);
 		}
 		else 
@@ -124,8 +125,13 @@ void	Webserv::handleResponse(void)
 			else
 			{
 				erase:
-					close(i->getSd());
 					fclose(i->getFile());
+					FD_CLR(i->getSd(), &m_writeSetBackup);
+					// if (i->getKeepAlive())
+					// 	FD_SET(i->getSd(), &m_readSetBackup);
+					// else
+						close(i->getSd());
+					m_sds.erase(std::find(m_sds.begin(), m_sds.end(), i->getSd()));
 					i = m_responses.erase(i);
 			}
 		}
@@ -136,59 +142,39 @@ void	Webserv::handleResponse(void)
 
 void    Webserv::run(void)
 {
-	std::cout << "max fd : " << m_maxSd << std::endl;
-	// print all request sds
-	std::cout << "request fds : " ;
-	for (std::vector<Request>::iterator i = m_requests.begin(); i != m_requests.end(); ++i)
-		std::cout << "request sd: " << i->getSd() << "-";
-	std::cout << std::endl;
-	// print all response sds
-	std::cout << "response fds : ";
-	for (std::vector<Response>::iterator i = m_responses.begin(); i != m_responses.end(); ++i)
-		std::cout << "response sd: " << i->getSd() << "-";
-	std::cout << std::endl;
-	std::cout << "----------------------------------------" << std::endl;
     setFds();
-	std::cout << "select hangs" << std::endl;
 	multiplex();
-
 	acceptConnection();
-
 	handleRequest();
-
 	handleResponse();
 }
 
 void	Webserv::setFds()
 {
 	// problem is here
-	FD_ZERO(&m_readSet);
-    FD_ZERO(&m_writeSet);
+	// FD_ZERO(&m_readSet);
+    // FD_ZERO(&m_writeSet);
 	m_readSet = m_readSetBackup;
-	m_maxSd = m_maxSdBackup;
-	for (std::vector<Request>::iterator i = m_requests.begin(); i != m_requests.end(); ++i)
+	m_writeSet = m_writeSetBackup;
+	m_maxSd = m_maxMasterSd;
+	for(std::vector<int>::iterator i = m_sds.begin(); i != m_sds.end(); ++i)
 	{
-		FD_SET(i->getSd(), &m_readSet);
-		if (i->getSd() > m_maxSd)
-			m_maxSd = i->getSd();
-	}
-	for (std::vector<Response>::iterator i = m_responses.begin(); i != m_responses.end(); ++i)
-	{
-		FD_SET(i->getSd(), &m_writeSet);
-		if (i->getSd() > m_maxSd)
-			m_maxSd = i->getSd();
+		if (*i > m_maxSd)
+			m_maxSd = *i;
 	}
 }
 
-Webserv::Webserv(std::vector<Server> servers)
+Webserv::Webserv(std::vector<Server> &servers)
 {
     m_servers = servers;
     initiateMasterSockets();
-	m_maxSdBackup = -1;
+	m_maxMasterSd = -1;
     FD_ZERO(&m_readSet);
     FD_ZERO(&m_writeSet);
     FD_ZERO(&m_readSetBackup);
+	FD_ZERO(&m_writeSetBackup);
 	setMasterSockets();
+	m_maxSd = m_maxMasterSd;
 }
 
 Webserv::~Webserv(){}

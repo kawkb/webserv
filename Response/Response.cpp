@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 18:16:43 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/24 23:37:08 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,8 +37,8 @@ std::string 	Response::getExtention()
 
 std::string		Response::getHeader(std::string key) const
 {
-	std::map<std::string, std::string>::const_iterator it = m_headersMap.find(key);
-	if (it != m_headersMap.end())
+	std::map<std::string, std::string>::const_iterator it = m_resHeaders.find(key);
+	if (it != m_resHeaders.end())
 		return (it->second);
 	return ("");
 }
@@ -216,7 +216,7 @@ std::string		getContentType(std::string filename)
 	else if (extension == "wmlsc")
 		return "application/vnd.wap.wmlscriptc";
 	else
-		return "application/octet-stream";
+		return "text/plain";
 }
 
 void			Response::buildHeaders()
@@ -224,12 +224,16 @@ void			Response::buildHeaders()
 	if (m_statusCode == "")
 		m_statusCode = "200";
 	std::string headers = "HTTP/1.1 " + m_statusCode + " " + getCodeString() + "\r\n";
+	if (getKeepAlive())
+		headers += "Connection: keep-alive\r\n";
+	else
+		headers += "Connection: close\r\n";
 	// disable cache
 	// headers += "Cache-Control: no-cache, no-store, must-revalidate\r\n";
 	if (m_bodySize > 0)
 		headers += "Content-Length: " + toString(m_bodySize) + "\r\n";
 	std::map<std::string, std::string>::iterator i;
-	for (i = m_headersMap.begin(); i != m_headersMap.end(); i++)
+	for (i = m_resHeaders.begin(); i != m_resHeaders.end(); i++)
 		headers += i->first + ": " + i->second + "\r\n";
 	headers += "\r\n";
 	m_buffer = headers;
@@ -271,17 +275,15 @@ bool			Response::handleGetFile()
 {
 	Server server = m_request.getServer();
 	std::string extension = m_filePath.substr(m_filePath.find_last_of(".") + 1);
-	// std::cout << "extention : " << extension << std::endl;
+	std::cout << "extension: " << extension << std::endl;
+	// print all cgis
 	std::map<std::string, std::string> cgis = server.getCgi();
-	for(std::map<std::string, std::string>::iterator it = cgis.begin(); it != cgis.end(); it++)
-	{
-		if (extension == it->first)
-		{
-			m_cgiPath = it->second;
-			return handleCgi();
-		}
-	}
-	m_headersMap["Content-Type"] = getContentType(m_filePath);
+	std::map<std::string, std::string>::iterator cgi;
+
+	m_cgiPath = server.getCgiPath(extension);
+	if (m_cgiPath != "")
+		return handleCgi();
+	m_resHeaders["Content-Type"] = getContentType(m_filePath);
 	m_file = fopen(m_filePath.c_str(), "r");
 	if (!m_file)
 	{
@@ -292,6 +294,48 @@ bool			Response::handleGetFile()
 	return true;
 }
 
+bool			Response::setFilePath()
+{
+	Location location = m_request.getLocation();
+	std::string uploadPath = location.getUploadPath();
+	std::string path = location.getPath();
+	std::string uri = m_request.getUri();
+	std::string root = location.getRoot();
+	if (uploadPath.empty())
+	{
+		if (uri == path || uri == path + "/")
+			m_filePath = root + location.getIndex();
+		else
+		{
+			if(path == "/")
+				m_filePath = root + uri.substr(path.size());
+			else
+				m_filePath = root + uri.substr(path.size() + 1);
+		}
+		m_absolutePath = getAbsolutePath(m_filePath);
+		if (!startsWith(m_absolutePath + "/", root))
+		{
+			m_statusCode = "403";
+			return false;
+		}
+	}
+	else
+	{
+		if(path == "/")
+			m_filePath = uploadPath + uri.substr(path.size());
+		else
+			m_filePath = uploadPath + uri.substr(path.size() + 1);
+		m_absolutePath = getAbsolutePath(m_filePath);
+		if (!startsWith(m_absolutePath + "/", uploadPath))
+		{
+			m_statusCode = "403";
+			return false;
+		}
+	}
+	std::cout << "file path: " << m_filePath << std::endl;
+	return true;
+}
+
 FILE*			Response::getFile(void)
 {
 	return m_file;
@@ -299,40 +343,17 @@ FILE*			Response::getFile(void)
 
 bool			Response::handleGet()
 {
-	// location path should never end with a slash except if it is literally /
-	// root path should always end with a slash
 	Location location = m_request.getLocation();
-	std::string path = location.getPath();
 	std::string root = location.getRoot();
+	std::string path = location.getPath();
 	std::string uri = m_request.getUri();
-	std::cout << "path: " << path << std::endl;
-	std::cout << "root: " << root << std::endl;
-	std::cout << "uri: " << uri << std::endl;
-	std::cout << "uri size: " << uri.substr(path.size()) << std::endl;
-	// parse request path
-	if (uri == path || uri == path + "/")
-		m_filePath = root + location.getIndex();
-	else
-	{
-		if(path == "/")
-			m_filePath = root + uri.substr(path.size());
-		else
-			m_filePath = root + uri.substr(path.size() + 1);
-	}
-	std::cout << "file path: " << m_filePath << std::endl;
-	// resolve path
-	std::string absolute = getAbsolutePath(m_filePath);
-	if (!startsWith(absolute + "/", root))
-	{
-		m_statusCode = "403";
-		return false;
-	}
-	if (absolute != m_filePath)
+
+	if (m_absolutePath != m_filePath)
 	{
 		const std::string host = m_request.getServer().getName() + ":" + toString(m_request.getServer().getPort());
-		const std::string redirect = "http://" + host +  path + absolute.substr(root.size() - 1) + m_request.getQueryString();
+		const std::string redirect = "http://" + host +  path + m_absolutePath.substr(root.size() - 1) + m_request.getQueryString();
 		m_statusCode = "301";
-		m_headersMap["Location"] = redirect;
+		m_resHeaders["Location"] = redirect;
 		buildHeaders();
 		return true;
 	}
@@ -356,13 +377,13 @@ bool			Response::handleGet()
 			m_statusCode = "301";
 			const std::string host = m_request.getServer().getName() + ":" + toString(m_request.getServer().getPort());
 			const std::string redirect = "http://" + host +  uri + "/" + m_request.getQueryString();
-			m_headersMap["Location"] = uri + "/";
+			m_resHeaders["Location"] = uri + "/";
 			buildHeaders();
 			return true;
 		}
 		else if (location.getAutoIndex())
 		{
-			m_headersMap["Content-Type"] = "text/html";
+			m_resHeaders["Content-Type"] = "text/html";
 			m_statusCode = "200";
 			buildHeaders();
 			m_buffer += generateAutoIndex();
@@ -391,72 +412,24 @@ bool			Response::handlePost()
 	std::string uploadPath = m_request.getLocation().getUploadPath();
 	if (!uploadPath.empty())
 	{
-		std::cout << "..............." << std::endl;
-		Location location = m_request.getLocation();
-		std::string path = location.getPath();
-		std::string uri = m_request.getUri();
-		std::cout << "path: " << path << std::endl;
-		std::cout << "uri: " << uri << std::endl;
-
-		// parse request path
-
-		if(path == "/")
-			m_filePath = uploadPath + uri.substr(path.size());
-		else
-			m_filePath = uploadPath + uri.substr(path.size() + 1);
-		
-		std::cout << "file path: " << m_filePath << std::endl;
-		// resolve path
-		std::string absolute = getAbsolutePath(m_filePath);
-		std::cout << "absolute: " << absolute << std::endl;
-		if (!startsWith(absolute + "/", uploadPath))
+		std::string filename = m_request.getFilePath();
+		int ren = rename(filename.c_str(), m_filePath.c_str());
+		if (ren == -1)
 		{
-			m_statusCode = "403";
+			m_statusCode = "500";
 			return false;
 		}
-		// get file
-		std::string filename = m_request.getFilePath();
-		std::cout << "filename: " << filename << std::endl;
-		std::cout << "..............." << std::endl;
-		int i = rename(filename.c_str(), m_filePath.c_str());
-		if (i == -1)
-		{
-			perror("rename");
-			m_statusCode = "500";
-		}
 		m_statusCode = "201";
+		FILE*	body = m_request.getBody();
+		if (body)
+			fclose(body);
 		buildHeaders();
 		return true;
 	}
 	else
 	{
-		Location location = m_request.getLocation();
-		std::string path = location.getPath();
-		std::string root = location.getRoot();
 		std::string uri = m_request.getUri();
-		std::cout << "path: " << path << std::endl;
-		std::cout << "root: " << root << std::endl;
-		std::cout << "uri: " << uri << std::endl;
-		std::cout << "uri size: " << uri.substr(path.size()) << std::endl;
-		// parse request path
-		if (uri == path || uri == path + "/")
-			m_filePath = root + location.getIndex();
-		else
-		{
-			if(path == "/")
-				m_filePath = root + uri.substr(path.size());
-			else
-				m_filePath = root + uri.substr(path.size() + 1);
-		}
-		std::cout << "file path: " << m_filePath << std::endl;
-		// resolve path
-		std::string absolute = getAbsolutePath(m_filePath);
-		if (!startsWith(absolute + "/", root))
-		{
-			m_statusCode = "403";
-			return false;
-		}
-			struct stat fileStat;
+		struct stat fileStat;
 		if (stat(m_filePath.c_str(), &fileStat) != 0)
 		{
 			if (errno == EACCES)
@@ -476,7 +449,7 @@ bool			Response::handlePost()
 				m_statusCode = "301";
 				const std::string host = m_request.getServer().getName() + ":" + toString(m_request.getServer().getPort());
 				const std::string redirect = "http://" + host +  uri + "/" + m_request.getQueryString();
-				m_headersMap["Location"] = uri + "/";
+				m_resHeaders["Location"] = uri + "/";
 				buildHeaders();
 				return true;
 			}
@@ -490,17 +463,14 @@ bool			Response::handlePost()
 		{
 			Server server = m_request.getServer();
 			std::string extension = m_filePath.substr(m_filePath.find_last_of(".") + 1);
-			std::map<std::string, std::string> cgis = server.getCgi();
-			for(std::map<std::string, std::string>::iterator it = cgis.begin(); it != cgis.end(); it++)
+			m_cgiPath = server.getCgiPath(extension);
+			if (m_cgiPath != "")
+				return handleCgi();
+			else
 			{
-				if (extension == it->first)
-				{
-					m_cgiPath = it->second;
-					return handleCgi();
-				}
+				m_statusCode = "403";
+				return false;
 			}
-			m_statusCode = "403";
-			return false;
 		}
 		else
 		{
@@ -602,11 +572,14 @@ bool			Response::handleDelete()
 
 void			Response::setErrorPage()
 {
+	FILE*	body = m_request.getBody();
+	if (body)
+		fclose(body);
 	std::string errorPagePath = m_request.getServer().getErrorPage(m_statusCode);
 	std::string errorPage;
 	if (errorPagePath.empty())
 	{
-		m_headersMap["Content-Type"] = "text/html";
+		m_resHeaders["Content-Type"] = "text/html";
 		errorPage = "<html><head><title>" + m_statusCode + " " + getCodeString() + "</title></head><body>";
 		errorPage += "<div class=\"base\">\n\t<div class=\"point\">></div>\n\t<h1><i>Http Error " + m_statusCode + ":</i> <br>";
 		std::string errorString = getCodeString();
@@ -625,7 +598,7 @@ void			Response::setErrorPage()
 	else
 	{
 		m_file = fopen(errorPagePath.c_str(), "r");
-		m_headersMap["Content-Type"] = getContentType(errorPagePath);
+		m_resHeaders["Content-Type"] = getContentType(errorPagePath);
 		struct stat fileStat;
 		if (stat(errorPagePath.c_str(), &fileStat) != 0)
 		{
@@ -696,6 +669,15 @@ int				Response::getSd()
 	return m_sd;
 }
 
+bool			Response::getKeepAlive()
+{
+	std::string connection = m_request.getHeader("Connection");
+	if (connection == "keep-alive" || connection.empty())
+		return true;
+	return false;
+	
+}
+
 Response::Response(const Request &request)
 {
 	// std::cout << "Response constructor" << std::endl;
@@ -707,13 +689,16 @@ Response::Response(const Request &request)
 	m_done = false;
 	m_lastSent = 0;
 	m_file = NULL;
-
+	m_absolutePath = "";
 	bool pass = true;
+
 	if ((m_statusCode = request.getError()) != "200")
 	{
 		std::cout << "error comming from request handler : " << m_statusCode << std::endl;
 		pass = false;
 	}
+	else if (!setFilePath())
+		pass = false;
 	else if (request.getMethod() == "GET")
 		pass = handleGet();
 	else if (request.getMethod() == "POST")
@@ -740,7 +725,7 @@ Response &Response::operator=(const Response &other)
 		m_sd = other.m_sd;
 		m_statusCode = other.m_statusCode;
 		m_request = other.m_request;
-		m_headersMap = other.m_headersMap;
+		m_resHeaders = other.m_resHeaders;
 		m_buffer = other.m_buffer;
 		m_cursor = other.m_cursor;
 		m_bodySize = other.m_bodySize;
@@ -758,8 +743,8 @@ std::ostream& operator<<(std::ostream& out, const Response& response)
 {
 	out << "Status_code" << response.m_statusCode << std::endl;
 	out << "content-length" << response.getHeader("Content-Lenght") << std::endl;
-	// out << response.m_headersMap.size() << std::endl;
-	// for (std::map<std::string, std::string>::const_iterator it = response.m_headersMap.begin(); it != response.m_headersMap.end(); it++)
+	// out << response.m_resHeaders.size() << std::endl;
+	// for (std::map<std::string, std::string>::const_iterator it = response.m_resHeaders.begin(); it != response.m_resHeaders.end(); it++)
 	// {
 	// 	out << it->first << std::endl;
 	// 	out << it->second << std::endl;

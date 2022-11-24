@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:33 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/24 16:44:59 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/24 23:30:58 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ class Response
 	private:
 		std::string							m_statusCode;
 		std::string							m_headers;
-		std::map<std::string, std::string>	m_headersMap;
+		std::map<std::string, std::string>	m_resHeaders;
 		std::string							m_filePath;
 		FILE								*m_file;
 		std::string							m_buffer;
@@ -37,9 +37,15 @@ class Response
 		long								m_lastSent;
 		int									m_sd;
 		std::string							m_cgiPath;
+		std::string							m_absolutePath;
+		Location							m_location;
+		Server								m_server;
+		
 
 	public:
+		bool								getKeepAlive();
 		FILE*								getFile(void);
+		bool								setFilePath();
 		const Request 						&getRequest();
 		std::string							getExtention();
 		std::string							getCodeString();

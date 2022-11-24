@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/23 07:23:56 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 16:59:06 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/24 23:25:41 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,12 +22,14 @@ class Webserv
         fd_set					    m_readSet;
         fd_set                      m_writeSet;
         fd_set                      m_readSetBackup;
+		fd_set                      m_writeSetBackup;
+		std::vector<int>			m_sds;
     	int						    m_maxSd;
-        int                         m_maxSdBackup;
+        int                         m_maxMasterSd;
         std::vector<Server>         m_servers;
         std::vector<TcpListener>    m_tcplisteners;
     public:
-        void                         initiateMasterSockets(void);
+        void                        initiateMasterSockets(void);
         void	                    setMasterSockets(void);
         void                        setFds();
         void                        multiplex(void);
@@ -37,6 +39,6 @@ class Webserv
         
         void                        run(void);
                                     Webserv(void);
-                                    Webserv(std::vector<Server> server);
+                                    Webserv(std::vector<Server> &server);
                                     ~Webserv(void);
 };
