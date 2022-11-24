@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/23 07:23:56 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/23 23:35:57 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 15:07:59 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ class Webserv
         int                         m_maxSdBackup;
         std::vector<Server>         m_servers;
         std::vector<TcpListener>    m_tcplisteners;
+		std::vector<int>			m_connections;
     public:
         void                         initiateMasterSockets(void);
         void	                    setMasterSockets(void);

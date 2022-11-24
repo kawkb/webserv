@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 12:13:01 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 14:34:29 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ Request::~Request(){
 Request::Request(int sd)
 {
     m_filePath = "";
-    m_body = createTmpFile(m_filePath);
+    m_body = NULL;
     m_sd = sd;
     m_method = "";
     m_uri = "";
@@ -325,6 +325,12 @@ void    Request::parse(const std::vector<Server> &servers, const char *buf, int 
             m_requestBuffer.erase(m_requestBuffer.begin(), found + 4);
         }
     }
-    if (m_bodyStart)
+	std::string conlen = getHeader("Content-Length");
+    if (m_method == "POST" && m_bodyStart && conlen != "" && conlen != "0" && m_status == "")
+	{
+		m_body = createTmpFile(m_filePath);
         fillBody();
+	}
+	else
+		m_status = "200";
 }

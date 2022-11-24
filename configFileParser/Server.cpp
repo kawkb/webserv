@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 12:21:43 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 14:21:20 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -146,11 +146,25 @@ void	Server::checkError(std::ifstream &myfile)
     }
     for(std::map<std::string, std::string>::iterator it = m_cgi.begin(); it != m_cgi.end(); it++)
     {
-        if(checkPath(it->second) != "")
-        {
-            myfile.close();
-	    	exit_failure("\033[1;31mConfig File Error: "+ checkPath(it->second) +" \033[0m");
-        }   
+		struct stat buffer;
+		if (stat(it->second.c_str(), &buffer) != 0)
+		{
+			if (errno == ENOENT)
+			{
+				myfile.close();
+				exit_failure("\033[1;31mConfig File Error: "+ it->second +" does not exist \033[0m");
+			}
+			else if (errno == EACCES)
+			{
+				myfile.close();
+				exit_failure("\033[1;31mConfig File Error: "+ it->second +" is not accessible \033[0m");
+			}
+			else
+			{
+				myfile.close();
+				exit_failure("\033[1;31mConfig File Error: "+ it->second +" is not a file \033[0m");
+			}
+		}
     }
 }
 

@@ -18,7 +18,7 @@ server
 	location /og
 	{
 		root /Users/moerradi/webserv/tests/
-		index index.php
+		index index.html
 		autoindex on
 		allow_methods GET POST
 	}

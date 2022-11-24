@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Webserv.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/23 07:27:18 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 09:30:46 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 15:10:13 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,6 +55,7 @@ void    Webserv::acceptConnection(void)
 				exit_failure("Failed to accept connection. errno: ");
 			else
 			{
+				std::cout << "connection : " << connection << std::endl;
 				int flags = fcntl(connection, F_GETFL, 0);
 				flags |= O_NONBLOCK;
 				fcntl(connection, F_SETFL, flags);
@@ -74,8 +75,8 @@ void		Webserv::handleRequest(void)
 		if(FD_ISSET(it->getSd(), &m_readSet))
 		{
 			int rec = recv(it->getSd(), &buf, 4096, 0);
-			// if (rec == 0)
-			// 	it = m_requests.erase(it);
+			if (rec == 0)
+				it = m_requests.erase(it);
 			// if (rec == -1)
 			// 	exit_failure("recv error");
 			// else
@@ -108,15 +109,16 @@ void	Webserv::handleResponse(void)
 			if (!done)
 			{
 				ssize_t sent = send(i->getSd(), to_send.c_str(), to_send.size(), 0);
-				if (sent < 0)
-					exit_failure("FATAL : Failed to send response. errno: ");
+				if (sent <= 0)
+					goto erase;
 				i->setLastSent(sent);
 				++i;
 			}
 			else
 			{
-				close(i->getSd());
-				i = m_responses.erase(i);
+				erase:
+					close(i->getSd());
+					i = m_responses.erase(i);
 			}
 		}
 		else 
@@ -131,6 +133,16 @@ void    Webserv::run(void)
 	acceptConnection();
 	handleRequest();
 	handleResponse();
+	// std::cout << "----------------------------------------" << std::endl;
+	// std::cout << "sd" << m_maxSd << std::endl;
+	// std::cout << "sdbackup" << m_maxSdBackup << std::endl;
+	// // print all request sds
+	// for (std::vector<Request>::iterator i = m_requests.begin(); i != m_requests.end(); ++i)
+	// 	std::cout << "request sd: " << i->getSd() << std::endl;
+	// // print all response sds
+	// for (std::vector<Response>::iterator i = m_responses.begin(); i != m_responses.end(); ++i)
+	// 	std::cout << "response sd: " << i->getSd() << std::endl;
+	// std::cout << "----------------------------------------" << std::endl;
 }
 
 void	Webserv::setFds()
@@ -139,12 +151,14 @@ void	Webserv::setFds()
     FD_ZERO(&m_writeSet);
 	m_readSet = m_readSetBackup;
 	m_maxSd = m_maxSdBackup;
+	std::cout << m_requests.size() << std::endl;
 	for (std::vector<Request>::iterator i = m_requests.begin(); i != m_requests.end(); ++i)
 	{
 		FD_SET(i->getSd(), &m_readSet);
 		if (i->getSd() > m_maxSd)
 			m_maxSd = i->getSd();
 	}
+	std::cout << m_responses.size() << std::endl;
 	for (std::vector<Response>::iterator i = m_responses.begin(); i != m_responses.end(); ++i)
 	{
 		FD_SET(i->getSd(), &m_writeSet);
