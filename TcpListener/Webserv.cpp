@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/23 07:27:18 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 03:43:16 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 09:30:46 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,8 +37,6 @@ void		Webserv::setMasterSockets(void)
 			m_maxSdBackup = i->getMaster();
 	}
 }
-
-
 
 void    Webserv::multiplex(void)
 {
@@ -168,8 +166,5 @@ Webserv::Webserv(std::vector<Server> &servers)
 
 Webserv::~Webserv(){}
 
-//fix config file
-//fix request file
 //add the keep alive feature;
 // add the timeout 
-// add the / location;

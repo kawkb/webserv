@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 08:38:29 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 09:10:11 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,7 @@ Request&    Request::operator= (const Request &cp)
     m_filePath = cp.m_filePath;
     return (*this);
 }
-int                           Request::getSd(void) const{return(m_sd);}
+int                                 Request::getSd(void) const{return(m_sd);}
 std::string                         Request::getUri(void) const{return(m_uri);}
 std::string							Request::getQueryString(void) const {return(m_queryString);}
 std::string                         Request::getVersion(void) const{return(m_version);}
@@ -130,6 +130,7 @@ bool Request::matchLocation(void)
 			return (true);
 		}
 	}
+    m_location = Location(m_server);
     m_status = "404";
     return(false);
 }
@@ -196,8 +197,8 @@ void    Request::checkErrors(const std::vector<Server> &servers)
         return;
     if (!matchLocation())
         return;
-    // if (!methodAllowed())
-    //     return;
+    if (!methodAllowed())
+        return;
     m_bodyStart = true;
 }
 

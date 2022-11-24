@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/09 19:04:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 08:17:00 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 09:18:43 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,7 +135,14 @@ Location::Location()
 	m_autoIndex 	= 0;
 	m_redirection = "";
 }
-
+Location::Location(Server server)
+{
+	m_index = server.getIndex();
+	m_root = server.getRoot();
+	m_path = "/";
+	m_autoIndex = server.getAutoIndex();
+	m_method = server.getMethod();
+}
 Location::Location(const Location &cp){*this = cp;}
 
 Location & Location::operator=(const Location &cp)

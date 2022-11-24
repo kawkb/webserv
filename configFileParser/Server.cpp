@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 08:29:57 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 08:51:40 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -141,6 +141,14 @@ void	Server::checkError(std::ifstream &myfile)
     {
         myfile.close();
 		exit_failure("\033[1;31mConfig File Error: "+ checkPath(m_root) +" \033[0m");
+    }
+    for(std::map<std::string, std::string>::iterator it = m_cgi.begin(); it != m_cgi.end(); it++)
+    {
+        if(checkPath(it->second) != "")
+        {
+            myfile.close();
+	    	exit_failure("\033[1;31mConfig File Error: "+ checkPath(m_root) +" \033[0m");
+        }   
     }
 }
 

@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/22 15:30:27 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/23 07:29:35 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 09:30:15 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,15 +33,14 @@
 #include <netinet/in.h>
 #include <sys/time.h>
 #include "utils/utils.hpp"
-#include "configFileParser/Location.hpp"
-#include "configFileParser/Server.hpp"
+#include "./configFileParser/Server.hpp"
+#include "./configFileParser/Location.hpp"
 #include "TcpListener/TcpListener.hpp"
 #include "TcpListener/Webserv.hpp"
 #include "Request/Request.hpp"
 #include "Response/Response.hpp"
 # define BUFFER_SIZE 1024
-// typedef std::vector<Servestdstd::vector<::vect>r<Server>ers;
-// typedef std::vector<TcpListener> std::vector<std::vector>TcpListener>;
+
 
 
 int		initiate_master_sockets(std::vector<Server> &server, std::vector<TcpListener> &tcpListener);

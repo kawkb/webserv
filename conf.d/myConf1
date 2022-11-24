@@ -22,5 +22,4 @@ server
 		autoindex on
 		allow_methods GET POST
 	}
-
 }

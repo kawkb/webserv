@@ -1,6 +1,7 @@
 NAME = webserv
 SRCS = TcpListener/TcpListener.cpp \
 		TcpListener/Sockets.cpp \
+		TcpListener/Webserv.cpp \
 		configFileParser/Location.cpp \
 		configFileParser/Server.cpp \
 		configFileParser/configParser.cpp \

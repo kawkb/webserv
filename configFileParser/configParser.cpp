@@ -6,22 +6,20 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/20 22:02:44 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 08:00:44 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 08:42:00 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../webserv.hpp"
 
 
-int     check_server(std::vector<Server> &server)
+int     order_servers(std::vector<Server> &server)
 {
 	for (std::vector<Server>::iterator i = server.begin(); i !=server.end();i++)
 	{
 		std::vector<Server>::iterator k = i + 1;
-		// check_server_errors(*i);
 		for (std::vector<Server>::iterator j = i + 1; j != server.end(); j++)
 		{
-			// check_server_errors(*j);
 			if (i->getPort() == j->getPort())
 			{
 				if (i->getName() == j->getName())
@@ -67,5 +65,5 @@ void     parse_config_file(char *av, std::vector<Server> &server)
 	}
 	else
 		exit_failure("Error: open config file");
-	check_server(server);
+	order_servers(server);
 }

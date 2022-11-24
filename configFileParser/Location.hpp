@@ -6,12 +6,13 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/09 19:05:05 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 06:18:49 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 09:25:50 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 #include "../webserv.hpp"
+
 std::vector<std::string>    tokenize(std::string line);
 
 class Location
@@ -26,6 +27,7 @@ class Location
 		int                         			m_autoIndex;
 	public:
 												Location();
+												Location(Server server);
 												Location(const Location &cp);
 												~Location();
 		std::vector<std::string>        		getMethod(void) const;

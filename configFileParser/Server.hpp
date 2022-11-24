@@ -6,13 +6,13 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/16 11:01:45 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 06:08:22 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 09:28:25 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 #include "../webserv.hpp"
-
+class Location;
 class Server
 {
 	private:
