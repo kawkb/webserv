@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/16 11:01:45 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/23 04:10:06 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 06:08:22 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,7 @@ class Server
 		std::string                         m_serverName;
 		std::string                         m_root;
 		std::string                         m_index;
-		std::string                         m_cgiPath;
-		std::string							m_cgiExtension;
+		std::map<std::string, std::string>	m_cgi;
 		std::vector<Location>               m_location;
 		std::map<std::string, std::string>  m_errorPage;
 		std::vector<std::string>            m_method;
@@ -30,8 +29,9 @@ class Server
 	public:
 											Server();
 											Server(const Server &cp);
+											Server(std::ifstream &myfile, size_t &lineCount);
 											~Server();
-		int                                 parse(std::ifstream &myfile, size_t &lineCount);
+		// getters:
 		std::string                         getName(void) const;
 		int                                 getPort(void) const;
 		std::vector<std::string>            getMethod(void) const;
@@ -43,7 +43,10 @@ class Server
 		int                                 getMaxBodySize(void) const;
 		std::vector<Location>               getLocation(void) const;
 		std::string  						getErrorPage(std::string errorcode) const;
+		
 		void                        		setMethod(std::string method);
+		// methods:
+		void								checkError(std::ifstream &myfile);
 		Server& 							operator=(const Server &cp);
 };
 

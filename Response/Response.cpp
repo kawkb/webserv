@@ -6,7 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/23 05:53:30 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 06:23:05 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -321,7 +321,6 @@ bool		Response::handleGetFile(off_t filesize)
 {
 	Server server = m_request.getServer();
 	std::string extension = m_filePath.substr(m_filePath.find_last_of(".") + 1);
-	std::cout << "extention : " << extension << std::endl;
 	if (extension == server.getCgiExtention())
 	{
 		return handleCgi();
@@ -349,16 +348,12 @@ bool		Response::handleGet()
 	std::string path = location.getPath();
 	std::string root = location.getRoot();
 	std::string uri = m_request.getUri();
-	std::cout << "path: " << path << std::endl;
-	std::cout << "root: " << root << std::endl;
-	std::cout << "uri: " << uri << std::endl;
 	m_filePath = root + uri.substr(path.size());
 	// parse request path
 	if (uri == path || uri == path + "/")
 		m_filePath = root + location.getIndex();
 	else
 		m_filePath = root + uri.substr(path.size() + 1);
-	std::cout << "file path: " << m_filePath << std::endl;
 	// resolve path
 	std::string absolute = getAbsolutePath(m_filePath);
 	if (!startsWith(absolute + "/", root))
@@ -366,7 +361,6 @@ bool		Response::handleGet()
 		m_statusCode = "403";
 		return false;
 	}
-	std::cout << "absolute: " << absolute << std::endl;
 	if (absolute != m_filePath)
 	{
 		const std::string host = m_request.getServer().getName() + ":" + toString(m_request.getServer().getPort());
@@ -523,13 +517,13 @@ std::string 		Response::peek(bool &done)
 
 int			Response::getSd()
 {
-	int sd = m_request.getSd();
-	return sd;
+	return m_sd;
 }
 
 Response::Response(const Request &request)
 {
 	m_statusCode = "200";
+	m_sd = request.getSd();
 	m_request = request;
 	m_cursor = 0;
 	m_bodySize = 0;
@@ -563,6 +557,7 @@ Response &Response::operator=(const Response &other)
 {
 	if (this != &other)
 	{
+		m_sd = other.m_sd;
 		m_statusCode = other.m_statusCode;
 		m_request = other.m_request;
 		m_headersMap = other.m_headersMap;

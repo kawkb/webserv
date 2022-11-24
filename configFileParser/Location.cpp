@@ -6,20 +6,20 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/09 19:04:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/23 02:47:17 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/24 08:17:00 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../webserv.hpp"
 
-int     Location::parse(std::ifstream &myfile, size_t &lineCount)
+void     Location::parse(std::ifstream &myfile, size_t &lineCount)
 {
 	std::string					line;
 	std::vector<std::string>	token;
 	bool		                isLocation = 0;
 	while (getline(myfile, line))
 	{
-        if ((line.empty() || line.find_first_not_of(" \t") == std::string::npos) && lineCount++)
+        if ((line.empty() || line.find_first_not_of(" \t") == std::string::npos || line.erase(0, line.find_first_not_of(" \t")).rfind("//", 0) == 0)&& lineCount++)
             continue;
         else
             token = tokenize(line);
@@ -34,8 +34,8 @@ int     Location::parse(std::ifstream &myfile, size_t &lineCount)
                     m_method.push_back(token[i]);
                 else
                 {
-					std::cerr << "\033[1;31mConfigfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"";
-                    return(1);
+                    myfile.close();
+                    exit_failure("Configfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"");
                 }
             }
 		}
@@ -58,17 +58,47 @@ int     Location::parse(std::ifstream &myfile, size_t &lineCount)
 		else if (token[0] == "autoindex" && size == 2 && lineCount++ && isLocation && m_autoIndex == 0)
 			m_autoIndex = token[1] == "on" ? 1 : 0;
 		else if (token[0] == "}" && size == 1 && isLocation && lineCount++)
-			return(0);
+        {
+            isLocation = 0;
+            checkError(myfile);
+            return;
+        }
 		else
 		{
-			std::cerr << "\033[1;31mConfigfile Error in Line  "+ std::to_string(lineCount)+ ": \""+line + "\"";
-			return(1);
+            myfile.close();
+            exit_failure("Configfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"");
 		}
 	}
-    std::cerr << "\033[1;31mConfigfile Error in Lineb "+ std::to_string(lineCount)+ ": \""+line + "\"";
-    return(1);
+	if (isLocation)
+	{
+		myfile.close();
+        exit_failure("Configfile Error: missing } in location block");
+	}
+	checkError(myfile);
 }
 
+void		Location::checkError(std::ifstream &myfile)
+{
+	if(!m_uploadPath.empty() && (!m_root.empty() || !m_index.empty() || !m_method.empty()))
+	{
+        myfile.close();
+		exit_failure("\033[1;31mConfig File Error: Upload Path is specified in location no other directives allowed.\033[0m");
+	}
+	if(!m_uploadPath.empty() && !checkPath(m_uploadPath).empty())
+	{
+        myfile.close();
+		exit_failure("\033[1;31mConfig File Error: "+ checkPath(m_root) +" \033[0m");
+	}
+	if(!m_uploadPath.empty())
+		m_method.push_back("POST");
+	if(m_method.empty() && m_uploadPath.empty())
+		m_method.push_back("GET");
+	if(!m_root.empty() && checkPath(m_root) != "")
+	{
+        myfile.close();
+		exit_failure("\033[1;31mConfig File Error: "+ checkPath(m_root) +" \033[0m");
+	}
+}
 // std::ostream& operator<<(std::ostream& out, Location location)
 // {
 // 	std::cout << std::endl << "==========Location============" << std::endl;

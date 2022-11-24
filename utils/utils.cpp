@@ -6,11 +6,7 @@
 /*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/20 20:48:34 by kdrissi-          #+#    #+#             */
-<<<<<<< HEAD
-/*   Updated: 2022/11/23 02:18:16 by moerradi         ###   ########.fr       */
-=======
-/*   Updated: 2022/11/23 04:09:52 by kdrissi-         ###   ########.fr       */
->>>>>>> d385155ee357d3976a141ad8fbba0e5081333440
+/*   Updated: 2022/11/24 04:22:26 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +17,22 @@ std::string toString(const int &value)
 	std::ostringstream oss;
 	oss << value;
 	return oss.str();
+}
+
+std::vector<std::string>    tokenize(std::string line)
+{
+    std::vector<std::string> tokens;
+    std::stringstream ss(line);
+    for(std::string line; ss >> line;)
+        tokens.push_back(line);
+    return(tokens);
+}
+
+void	exit_failure(std::string str)
+{
+	std::cout << "\033[1;31m" << str << "\033[0m" << std::endl;
+	perror(strerror(errno));
+	exit(EXIT_FAILURE);
 }
 
 std::string toString(const long long &value)

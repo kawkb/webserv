@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:33 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/22 08:56:06 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/23 05:59:12 by kdrissi-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@ class Response
 		int									m_cursor;
 		int									m_bodySize;
 		long								m_lastSent;
+		int									m_sd;
 
 	public:
 		std::string							getExtention();
