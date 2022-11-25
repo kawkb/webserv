@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/25 12:59:34 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/25 19:20:15 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -275,10 +275,12 @@ void    Request::fillChunked(void)
 void    Request::fillContentLength(size_t contentLength)
 {
 	fd_set writefds;
-	select(0, NULL, &writefds, NULL, NULL);
+	FD_ZERO(&writefds);
+	FD_SET(m_bodyfd, &writefds);
+	select(m_bodyfd + 1, NULL, &writefds, NULL, NULL);
     if (m_requestBuffer.size() >= contentLength)
     {
-		if (FD_ISSET(fileno(m_body), &writefds))
+		if (FD_ISSET(m_bodyfd, &writefds))
 		{
 			fwrite(m_requestBuffer.data(), sizeof(char), contentLength - m_bodyLength, m_body);
 			rewind(m_body);
