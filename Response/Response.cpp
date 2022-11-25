@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/25 19:26:06 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/25 23:02:00 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -142,7 +142,8 @@ std::string		Response::generateAutoIndex()
 		if (stat(filePath.c_str(), &fileStat) < 0)
 			return NULL;
 		std::string lastModified = ctime(&fileStat.st_mtime);
-		autoindexHtml += "<tr><td><a href=\"" + m_request.getUri() + "/" + *i + "\">" + *i + "</a></td><td>" + lastModified + "</td><td>" + toString(fileStat.st_size) + "</td></tr>\n";
+		std::string prepend = m_request.getUri() == "/" ? "" : m_request.getUri();
+		autoindexHtml += "<tr><td><a href=\"" + prepend + "/" + *i + "\">" + *i + "</a></td><td>" + lastModified + "</td><td>" + toString(fileStat.st_size) + "</td></tr>\n";
 	}
 	autoindexHtml += "</table>\n<hr>\n</body>\n</html>";
 	autoindexHtml += "<style>\nbody {\nfont-family: sans-serif;\n}\n\nh1 {\nfont-size: 1.5em;\n}\n\nhr {\nmargin: 1em 0;\n}\n\ntable {\nborder-collapse: collapse;\nwidth: 100%;\n}\n\ntd, th {\nborder: 1px solid #ccc;\npadding: 0.5em;\n}\n\nth {\nbackground: #eee;\n}\n\ntr:nth-child(even) {\nbackground: #f8f8f8;\n}\n</style>";
@@ -336,16 +337,18 @@ bool			Response::setFilePath()
 	}
 	else
 	{
-		if(path == "/")
-			m_filePath = uploadPath + uri.substr(path.size());
+		std::cout << "upload path : " << uploadPath << std::endl;
+		if (uri == path)
+			m_filePath = uploadPath;
 		else
 			m_filePath = uploadPath + uri.substr(path.size() + 1);
 		m_absolutePath = getAbsolutePath(m_filePath);
 		if (!startsWith(m_absolutePath + "/", uploadPath))
 		{
-			m_statusCode = "403";
+			m_statusCode = "400";
 			return false;
 		}
+		m_filePath = m_absolutePath;
 	}
 	std::cout << "file path: " << m_filePath << std::endl;
 	return true;
@@ -363,6 +366,8 @@ bool			Response::handleGet()
 	std::string path = location.getPath();
 	std::string uri = m_request.getUri();
 	// get request referer
+	Server server = m_request.getServer();
+	std::cout << "matched name " << server.getName() << std::endl;
 
 	if (m_absolutePath != m_filePath)
 	{
@@ -429,11 +434,12 @@ bool			Response::handlePost()
 	std::string uploadPath = m_request.getLocation().getUploadPath();
 	if (!uploadPath.empty())
 	{
-		if (m_filePath == uploadPath)
+		if (m_filePath == uploadPath || m_filePath + "/" == uploadPath)
 		{
 			m_statusCode = "403";
 			return false;
 		}
+
 		std::string filename = m_request.getFilePath();
 		int ren = rename(filename.c_str(), m_filePath.c_str());
 		if (ren == -1)
@@ -597,15 +603,19 @@ void			Response::setErrorPage()
 	}
 	else
 	{
-		m_file = fopen(errorPagePath.c_str(), "r");
-		m_resHeaders["Content-Type"] = getContentType(errorPagePath);
-		struct stat fileStat;
-		if (stat(errorPagePath.c_str(), &fileStat) != 0)
-		{
-			m_statusCode = "500";
-			return;
-		}
-		m_bodySize = fileStat.st_size;
+		// m_file = fopen(errorPagePath.c_str(), "r");
+		// m_resHeaders["Content-Type"] = getContentType(errorPagePath);
+		// struct stat fileStat;
+		// if (stat(errorPagePath.c_str(), &fileStat) != 0)
+		// {
+		// 	m_statusCode = "500";
+		// 	return;
+		// }
+		// m_bodySize = fileStat.st_size;
+		// buildHeaders();
+		//redirect to error page
+		m_statusCode = "301";
+		m_resHeaders["Location"] = errorPagePath;
 		buildHeaders();
 		m_done = true;
 	}
@@ -749,18 +759,3 @@ Response &Response::operator=(const Response &other)
 }
 
 Response::Response() {}
-
-std::ostream& operator<<(std::ostream& out, const Response& response)
-{
-	out << "Status_code" << response.m_statusCode << std::endl;
-	out << "content-length" << response.getHeader("Content-Lenght") << std::endl;
-	// out << response.m_resHeaders.size() << std::endl;
-	// for (std::map<std::string, std::string>::const_iterator it = response.m_resHeaders.begin(); it != response.m_resHeaders.end(); it++)
-	// {
-	// 	out << it->first << std::endl;
-	// 	out << it->second << std::endl;
-	// }
-	// out << response.m_bodySize << std::endl;
-	// out << response.m_buffer << std::endl;
-	return out;
-}

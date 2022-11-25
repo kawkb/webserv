@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   configParser.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/20 22:02:44 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 08:42:00 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/25 20:14:15 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,26 +15,13 @@
 
 int     order_servers(std::vector<Server> &server)
 {
-	for (std::vector<Server>::iterator i = server.begin(); i !=server.end();i++)
+
+	for (std::vector<Server>::iterator i = server.begin(); i != server.end(); i++)
 	{
-		std::vector<Server>::iterator k = i + 1;
 		for (std::vector<Server>::iterator j = i + 1; j != server.end(); j++)
 		{
-			if (i->getPort() == j->getPort())
-			{
-				if (i->getName() == j->getName())
-				{
-					std::cerr << "\033[1;31mERROR: duplicate server name. \033[0m"<< std::endl;
-					return(1);
-				}
-				else if (j != k)
-				{
-					server.insert(k, *j);
-					server.erase(j + 1);
-					k++;
-					i++;
-				}
-			}
+			if (i->getPort() == j->getPort() && i->getName() == j->getName())
+				return (1);
 		}
 	}
 	return(0);
@@ -65,5 +52,6 @@ void     parse_config_file(char *av, std::vector<Server> &server)
 	}
 	else
 		exit_failure("Error: open config file");
-	order_servers(server);
+	if (order_servers(server))
+		exit_failure("Error: duplicate server name");
 }

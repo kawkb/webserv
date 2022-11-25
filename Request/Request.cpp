@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/25 19:20:15 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/25 22:53:45 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,14 +109,19 @@ void Request::matchLocation(void)
 	std::vector<Location> locations = m_server.getLocation();
 	for (std::vector<Location>::iterator i = locations.begin(); i != locations.end(); i++)
 	{
-		std::string sub = m_uri.substr(0, i->getPath().size());
+		std::string sub;
+		std::string locationPath = i->getPath();
+		sub = m_uri.substr(0, locationPath.length());
 		if (i->getPath() == sub)
 		{
-			m_location = *i;
-			return;
+			std::string current_path = m_location.getPath();
+			if (locationPath.length() > current_path.length())
+				m_location = *i;
 		}
 	}
-    m_location = Location(m_server);
+	std::string locationPath = m_location.getPath();
+	if (locationPath.empty())
+    	m_location = Location(m_server);
 }
 
 bool Request::matchServer(const std::vector<Server> &servers)

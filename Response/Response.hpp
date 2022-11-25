@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:33 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/25 09:17:25 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/25 21:35:17 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,6 +70,4 @@ class Response
 											Response();
 											~Response();
 		Response							&operator=(const Response &rhs);
-		
-		friend std::ostream& operator<<(std::ostream& out, const Response& response);
 };

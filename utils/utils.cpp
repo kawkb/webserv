@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/20 20:48:34 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 08:39:21 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/25 20:10:35 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,6 @@ std::vector<std::string>    tokenize(std::string line)
 void	exit_failure(std::string str)
 {
 	std::cout << "\033[1;31m" << str << "\033[0m" << std::endl;
-	perror(strerror(errno));
 	exit(EXIT_FAILURE);
 }
 
