@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/23 07:23:56 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 23:25:41 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/25 01:32:13 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,13 +29,14 @@ class Webserv
         std::vector<Server>         m_servers;
         std::vector<TcpListener>    m_tcplisteners;
     public:
-        void                        initiateMasterSockets(void);
-        void	                    setMasterSockets(void);
-        void                        setFds();
-        void                        multiplex(void);
-        void                        acceptConnection(void);
-        void	                    handleResponse(void);
-        void		                handleRequest(void);
+        void                        		initiateMasterSockets(void);
+        void	                    		setMasterSockets(void);
+        void                        		setFds();
+        void                        		multiplex(void);
+        void                        		acceptConnection(void);
+        void	                    		handleResponse(void);
+        void		                		handleRequest(void);
+		std::vector<Request>::iterator		getRequest(int sd);
         
         void                        run(void);
                                     Webserv(void);

@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/23 07:27:18 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/25 00:40:05 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/25 03:15:17 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,12 +42,12 @@ void    Webserv::multiplex(void)
 {
     if ((select(m_maxSd + 1, &m_readSet, &m_writeSet, NULL, NULL) < 0))
 		exit_failure("select error");
-	std::cout << "select returned" << std::endl;
 }
 
 void    Webserv::acceptConnection(void)
 {
 	int		connection;
+	
 	for (std::vector<TcpListener>::iterator i = m_tcplisteners.begin(); i != m_tcplisteners.end(); ++i)
 	{
 		if (FD_ISSET(i->getMaster(), &m_readSet))
@@ -62,33 +62,50 @@ void    Webserv::acceptConnection(void)
 				fcntl(connection, F_SETFL, flags);
 				FD_SET(connection, &m_readSetBackup);
 				m_sds.push_back(connection);
-				m_requests.push_back(Request(connection));
 			}
 		}
 	}
+}
+std::vector<Request>::iterator		Webserv::getRequest(int sd)
+{
+	for (std::vector<Request>::iterator it = m_requests.begin(); it != m_requests.end(); ++it)
+	{
+		if(it->getSd() == sd)
+			return(it);
+	}
+	return(m_requests.end());
 }
 
 void		Webserv::handleRequest(void)
 {
 	char buf[4096];
-	std::vector<Request>::iterator it = m_requests.begin();
-
-	while(it != m_requests.end())
+	std::vector<int>::iterator i = m_sds.begin();
+	while (i != m_sds.end())
 	{
-		if(FD_ISSET(it->getSd(), &m_readSet))
+		if(FD_ISSET(*i, &m_readSet))
 		{
-			int rec = recv(it->getSd(), &buf, 4096, 0);
-			// if (rec == 0)
-			// {
-			// 	close(it->getSd());
-			// 	it = m_requests.erase(it);
-			// }
-			// if (rec == -1)
-			// 	exit_failure("recv error");
-			// else
-				it->parse(m_servers, buf, rec);
+			std::vector<Request>::iterator it = getRequest(*i);
+			if (it == m_requests.end())
+			{
+				m_requests.push_back(Request(*i));
+				it = m_requests.end() - 1;
+			}
+			int rec = recv(*i, &buf, 4096, 0); // check recv error
+			if (rec == 0)
+			{
+				close(*i);
+				FD_CLR(*i, &m_readSetBackup);
+				i = m_sds.erase(i);
+				m_requests.erase(it);
+			}
+			else
+			{
+				it->parse(m_servers, buf, rec);	
+				i++;
+			}
 		}
-		it++;
+		else
+			i++;
 	}
 }
 
@@ -127,11 +144,13 @@ void	Webserv::handleResponse(void)
 				erase:
 					fclose(i->getFile());
 					FD_CLR(i->getSd(), &m_writeSetBackup);
-					// if (i->getKeepAlive())
-					// 	FD_SET(i->getSd(), &m_readSetBackup);
-					// else
+					if (i->getKeepAlive())
+						FD_SET(i->getSd(), &m_readSetBackup);
+					else
+					{
 						close(i->getSd());
-					m_sds.erase(std::find(m_sds.begin(), m_sds.end(), i->getSd()));
+						m_sds.erase(std::find(m_sds.begin(), m_sds.end(), i->getSd()));
+					}
 					i = m_responses.erase(i);
 			}
 		}
@@ -143,6 +162,7 @@ void	Webserv::handleResponse(void)
 void    Webserv::run(void)
 {
     setFds();
+	multiplex();
 	multiplex();
 	acceptConnection();
 	handleRequest();

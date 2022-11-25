@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 18:15:41 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/25 03:07:06 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,15 +95,18 @@ std::ostream& operator<<(std::ostream& out, Request request)
 	    out << "  " << i->first << ":" << i->second << std::endl;
     std::FILE *body = request.getBody();
     out << "request body: " << std::endl;
-    char buffer[11];
-    while (!feof(body))
-    {
-        int t = fread(buffer, 1, 10, body);
-        buffer[t] = '\0';
-        std::cout << buffer;
-        write(fd, buffer, 10);
-    } 
-    fclose(body);
+	if (body)
+	{
+		char buffer[11];
+		while (!feof(body))
+		{
+			int t = fread(buffer, 1, 10, body);
+			buffer[t] = '\0';
+			std::cout << buffer;
+			write(fd, buffer, 10);
+		}
+		rewind(body);
+	}
 	return out;
 }
 
@@ -332,6 +335,6 @@ void    Request::parse(const std::vector<Server> &servers, const char *buf, int 
 		m_body = createTmpFile(m_filePath);
         fillBody();
 	}
-	else
+	else if (m_bodyStart && m_status == "")
 		m_status = "200";
 }
