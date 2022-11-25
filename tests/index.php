@@ -1,3 +1,5 @@
 <?php
-	echo "Hello World!";
+	//infinite loop
+	while(true) {
+	}
 ?>

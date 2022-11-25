@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/25 03:07:06 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/25 04:25:26 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -295,6 +295,10 @@ void    Request::fillBody(void)
     size_t contentLength = atoi(getHeader("Content-Length").c_str());
     if (getHeader("Transfer-Encoding") == "chunked")
         fillChunked();
+	else if (contentLength == 0)
+		m_status = "400";
+	else if (contentLength < 0)
+		m_status = "400";
     else if (m_bodyLength <= contentLength)
         fillContentLength(contentLength);
 	
@@ -328,11 +332,10 @@ void    Request::parse(const std::vector<Server> &servers, const char *buf, int 
             m_requestBuffer.erase(m_requestBuffer.begin(), found + 4);
         }
     }
-	std::cout << "request parsing blocks " << std::endl;
-	std::string conlen = getHeader("Content-Length");
-    if (m_method == "POST" && m_bodyStart && conlen != "" && conlen != "0" && m_status == "")
+    if (m_method == "POST" && m_bodyStart)
 	{
-		m_body = createTmpFile(m_filePath);
+		if (m_body == NULL)
+			m_body = createTmpFile(m_filePath);
         fillBody();
 	}
 	else if (m_bodyStart && m_status == "")

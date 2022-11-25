@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:39 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/24 21:22:06 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/25 06:11:27 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -186,8 +186,8 @@ bool	Response::handleCgi()
 	m_bodySize = ftell(tmpfi) - header_end - 4;
 	fseek(tmpfi, header_end + 4, SEEK_SET);
 	m_resHeaders.erase("Status");
-	if (m_resHeaders.find("Content-type") == m_resHeaders.end())
-		m_resHeaders["Content-Type"] = "text/html";
+	// if (m_resHeaders.find("Content-type") == m_resHeaders.end())
+	// 	m_resHeaders["Content-Type"] = "text/html";
 	FILE*	body = m_request.getBody();
 	if (body)
 		fclose(body);

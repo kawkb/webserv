@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 23:37:08 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/25 06:16:55 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ const Request &Response::getRequest()
 {
 	return (this->m_request);
 }
+
 std::string 	Response::getExtention()
 {
 	size_t pos = m_filePath.find_last_of(".");
@@ -230,7 +231,9 @@ void			Response::buildHeaders()
 		headers += "Connection: close\r\n";
 	// disable cache
 	// headers += "Cache-Control: no-cache, no-store, must-revalidate\r\n";
-	if (m_bodySize > 0)
+	if (m_bodySize < 0)
+		m_resHeaders.erase("Content-Type");
+	else
 		headers += "Content-Length: " + toString(m_bodySize) + "\r\n";
 	std::map<std::string, std::string>::iterator i;
 	for (i = m_resHeaders.begin(); i != m_resHeaders.end(); i++)
@@ -291,6 +294,7 @@ bool			Response::handleGetFile()
 		return false;
 	}
 	buildHeaders();
+	std::cout << "baraka" << std::endl;
 	return true;
 }
 
@@ -416,6 +420,7 @@ bool			Response::handlePost()
 		int ren = rename(filename.c_str(), m_filePath.c_str());
 		if (ren == -1)
 		{
+			std::cout << "rename failed" << std::endl;
 			m_statusCode = "500";
 			return false;
 		}
@@ -680,7 +685,7 @@ bool			Response::getKeepAlive()
 
 Response::Response(const Request &request)
 {
-	// std::cout << "Response constructor" << std::endl;
+	std::cout << "Response constructor" << std::endl;
 	m_statusCode = "200";
 	m_sd = request.getSd();
 	m_request = request;

@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/23 07:27:18 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/25 03:15:17 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/25 06:19:21 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,11 @@ void		Webserv::setMasterSockets(void)
 
 void    Webserv::multiplex(void)
 {
-    if ((select(m_maxSd + 1, &m_readSet, &m_writeSet, NULL, NULL) < 0))
+	// set timeout for select
+	struct timeval timeout;
+	timeout.tv_sec = 5;
+	timeout.tv_usec = 0;
+    if ((select(m_maxSd + 1, &m_readSet, &m_writeSet, NULL, &timeout) < 0))
 		exit_failure("select error");
 }
 
@@ -56,7 +60,6 @@ void    Webserv::acceptConnection(void)
 				exit_failure("Failed to accept connection. errno: ");
 			else
 			{
-				std::cout << "connection : " << connection << std::endl;
 				int flags = fcntl(connection, F_GETFL, 0);
 				flags |= O_NONBLOCK;
 				fcntl(connection, F_SETFL, flags);
@@ -88,20 +91,23 @@ void		Webserv::handleRequest(void)
 			if (it == m_requests.end())
 			{
 				m_requests.push_back(Request(*i));
-				it = m_requests.end() - 1;
-			}
-			int rec = recv(*i, &buf, 4096, 0); // check recv error
-			if (rec == 0)
-			{
-				close(*i);
-				FD_CLR(*i, &m_readSetBackup);
-				i = m_sds.erase(i);
-				m_requests.erase(it);
+				i++;
 			}
 			else
 			{
-				it->parse(m_servers, buf, rec);	
-				i++;
+				int rec = recv(*i, &buf, 4096, 0); // check recv error
+				if (rec == 0 || rec == -1)
+				{
+					close(*i);
+					FD_CLR(*i, &m_readSetBackup);
+					i = m_sds.erase(i);
+					m_requests.erase(it);
+				}
+				else
+				{
+					it->parse(m_servers, buf, rec);	
+					i++;
+				}
 			}
 		}
 		else
@@ -162,7 +168,6 @@ void	Webserv::handleResponse(void)
 void    Webserv::run(void)
 {
     setFds();
-	multiplex();
 	multiplex();
 	acceptConnection();
 	handleRequest();
