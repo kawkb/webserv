@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/25 23:02:00 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/25 23:13:08 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -315,7 +315,7 @@ bool			Response::setFilePath()
 	std::cout << "uri: " << uri << std::endl;
 	if (uploadPath.empty())
 	{
-		if (uri == path + "/")
+		if (uri == path + "/" || (uri == path && path == "/"))
 			m_filePath = root + location.getIndex();
 		else if (uri == path && path.find_last_of("/") == path.length() - 1)
 			m_filePath = root;
