@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:33 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/24 23:30:58 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/25 09:17:25 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,8 @@ class Response
 		
 
 	public:
+		std::string							getReqFilename(void);
+		int									getReqBodyFd(void);
 		bool								getKeepAlive();
 		FILE*								getFile(void);
 		bool								setFilePath();
@@ -55,6 +57,7 @@ class Response
 		bool								handlePost();
 		bool								handleDelete();
 		bool								handleCgi();
+		bool								handleCgiResponse(FILE *tmp);
 		void								setErrorPage();
 		std::string							getHeader(std::string key) const;
 		int									getSd();

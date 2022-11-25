@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/25 04:25:26 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/25 12:59:34 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,7 @@ Request::Request(int sd)
     m_status = "";
     m_chunckLen = 0;
     m_queryString = "";
+	m_bodyfd = -1;
 }
 
 Request::Request(const Request &cp)
@@ -57,6 +58,7 @@ Request&    Request::operator= (const Request &cp)
     m_queryString = cp.m_queryString;
     m_chunckLen = cp.m_chunckLen;
     m_filePath = cp.m_filePath;
+	m_bodyfd = cp.m_bodyfd;
     return (*this);
 }
 int                                 Request::getSd(void) const{return(m_sd);}
@@ -80,44 +82,13 @@ std::string            				Request::getHeader(std::string key)const
 	else
 		return (i->second);
 }
-
-std::ostream& operator<<(std::ostream& out, Request request)
-{
-	std::map<std::string, std::string> headers = request.getHeaders();
-    int fd = open("tmpfile", O_RDWR | O_APPEND | O_CREAT);
-    out << "=============Request==============" << std::endl;
-    out << "request sd: " << request.getSd() << std::endl;
-    out << "request method: " << request.getMethod()<< std::endl;
-    out << "request uri: " << request.getUri()<< std::endl;
-    out << "request version: " << request.getVersion()<< std::endl;
-    out << "request headers: " << std::endl;
-	for (std::map<std::string, std::string>::iterator i = headers.begin(); i != headers.end(); ++i)
-	    out << "  " << i->first << ":" << i->second << std::endl;
-    std::FILE *body = request.getBody();
-    out << "request body: " << std::endl;
-	if (body)
-	{
-		char buffer[11];
-		while (!feof(body))
-		{
-			int t = fread(buffer, 1, 10, body);
-			buffer[t] = '\0';
-			std::cout << buffer;
-			write(fd, buffer, 10);
-		}
-		rewind(body);
-	}
-	return out;
-}
+int									Request::getBodyfd(void) const {return(m_bodyfd);}
 
 bool Request::methodAllowed(void)
 {
-    std::vector<std::string> method = m_location.getMethod();
-	for (std::vector<std::string>::iterator i = method.begin(); i != method.end(); i++)
+    std::vector<std::string> allowedMethods = m_location.getMethod();
+	for (std::vector<std::string>::iterator i = allowedMethods.begin(); i != allowedMethods.end(); i++)
     {
-        // std::cout << "=============////// "<< m_location.getPath() << std::endl;
-        // std::cout << "============= "<< *i << std::endl;
-        // std::cout << "=============++ "<< m_method << std::endl;
 		if (*i == m_method)
 			return (true);
     }
@@ -127,6 +98,14 @@ bool Request::methodAllowed(void)
 
 void Request::matchLocation(void)
 {
+	// std::string referer = getHeader("Referer");
+	// std::string refererPath = "";
+	// if (referer != "")
+	// {
+	// 	refererPath = referer.substr(referer.find("://") + 3);
+	// 	refererPath = refererPath.substr(refererPath.find("/"));
+	// 	std::cout << "refererPath: " << refererPath << std::endl;
+	// }
 	std::vector<Location> locations = m_server.getLocation();
 	for (std::vector<Location>::iterator i = locations.begin(); i != locations.end(); i++)
 	{
@@ -177,6 +156,7 @@ bool Request::matchServer(const std::vector<Server> &servers)
 
 bool   Request::isWellFormed(void)
 {
+
 	if ((m_method != "GET" && m_method != "POST" && m_method != "DELETE"))
 		m_status = "501";
 	if (m_version != "HTTP/1.1")
@@ -236,51 +216,79 @@ void    Request::addHeader(std::string line)
 {
     size_t found = line.find(':');
     if(found != std::string::npos)
-        m_headers.insert(std::pair<std::string, std::string>(line.substr(0, found), line.substr(found + 2)));
+	{
+		std::string key = line.substr(0, found);
+		if (key.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-") != std::string::npos)
+		{
+			m_status = "400";
+			return;
+		}
+		std::string value = line.substr(found + 2);
+        m_headers.insert(std::pair<std::string, std::string>(key, value));
+	}
 }
 
 void    Request::fillChunked(void)
 {
-    std::vector<char> temp;
-    for(std::vector<char>::iterator i = m_requestBuffer.begin(); i != m_requestBuffer.end(); i++)
-    {
-        if (m_chunckLen > 0)
-        {
-            fwrite(&(*i), sizeof(char), 1, m_body);
-            m_chunckLen--;
-        }
-        else if(*i == '\r' && (i + 1) != m_requestBuffer.end() && *(i + 1) == '\n')
-        {
-            if (!temp.empty())
-            {
-                m_chunckLen = std::stoul(std::string(temp.begin(), temp.end()), nullptr, 16);
-                if (m_chunckLen == 0)
-                {
-                    m_status = "200";
-                    rewind(m_body);
-                    return;
-                }
-                temp.clear(); 
-            }
-            i++;
-        }
-        else
-            temp.push_back(*i);
-    } 
-    m_requestBuffer = temp;
+	try {
+		std::vector<char> temp;
+		for(std::vector<char>::iterator i = m_requestBuffer.begin(); i != m_requestBuffer.end(); i++)
+		{
+			if (m_chunckLen > 0)
+			{
+				fd_set set;
+				FD_ZERO(&set);
+				FD_SET(m_bodyfd, &set);
+				select(m_bodyfd + 1, &set, NULL, NULL, NULL);
+				if (FD_ISSET(m_bodyfd, &set))
+				{
+					fwrite(&(*i), sizeof(char), 1, m_body);
+					m_chunckLen--;
+				}
+			}
+			else if(*i == '\r' && (i + 1) != m_requestBuffer.end() && *(i + 1) == '\n')
+			{
+				if (!temp.empty())
+				{
+					m_chunckLen = std::stoul(std::string(temp.begin(), temp.end()), nullptr, 16);
+					if (m_chunckLen == 0)
+					{
+						m_status = "200";
+						rewind(m_body);
+						return;
+					}
+					temp.clear(); 
+				}
+				i++;
+			}
+			else
+				temp.push_back(*i);
+		} 
+		m_requestBuffer = temp;
+	}
+	catch(const std::exception& e)
+	{
+		m_status = "400";
+	}
 }
 
 void    Request::fillContentLength(size_t contentLength)
 {
+	fd_set writefds;
+	select(0, NULL, &writefds, NULL, NULL);
     if (m_requestBuffer.size() >= contentLength)
     {
-        fwrite(m_requestBuffer.data(), sizeof(char), contentLength - m_bodyLength, m_body);
-        rewind(m_body);
-        m_status = "200";
-        return;
+		if (FD_ISSET(fileno(m_body), &writefds))
+		{
+			fwrite(m_requestBuffer.data(), sizeof(char), contentLength - m_bodyLength, m_body);
+			rewind(m_body);
+			m_status = "200";
+			return;
+		}
     }
     m_bodyLength += m_requestBuffer.size();
-    fwrite(m_requestBuffer.data(), 1, m_requestBuffer.size(), m_body);
+	if (FD_ISSET(fileno(m_body), &writefds))
+    	fwrite(m_requestBuffer.data(), 1, m_requestBuffer.size(), m_body);
     m_requestBuffer.clear();
     if (m_bodyLength >= contentLength)
     {
@@ -335,7 +343,10 @@ void    Request::parse(const std::vector<Server> &servers, const char *buf, int 
     if (m_method == "POST" && m_bodyStart)
 	{
 		if (m_body == NULL)
+		{
 			m_body = createTmpFile(m_filePath);
+			m_bodyfd = fileno(m_body);
+		}
         fillBody();
 	}
 	else if (m_bodyStart && m_status == "")

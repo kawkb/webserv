@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 22:18:22 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/25 09:24:14 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -149,7 +149,6 @@ void	Server::checkError(std::ifstream &myfile)
     }
     for(std::map<std::string, std::string>::iterator it = m_cgi.begin(); it != m_cgi.end(); it++)
     {
-		std::cout << it->first << " --da-- " << it->second << std::endl;
 		struct stat buffer;
 		if (stat(it->second.c_str(), &buffer) != 0)
 		{

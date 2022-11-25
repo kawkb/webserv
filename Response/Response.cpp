@@ -6,20 +6,22 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/25 06:16:55 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/25 13:04:48 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../webserv.hpp"
 
-
-void	printFile(FILE *fp)
+int			Response::getReqBodyFd(void)
 {
-	char buf[1024];
-	while (fgets(buf, 1024, fp))
-	{
-		std::cout << buf;
-	}
+	return (m_request.getBodyfd());
+}
+
+std::string Response::getReqFilename(void)
+{
+	if (m_statusCode[0] == '2')
+		return ("");
+	return (m_request.getFilePath());
 }
 
 const Request &Response::getRequest()
@@ -140,7 +142,7 @@ std::string		Response::generateAutoIndex()
 		if (stat(filePath.c_str(), &fileStat) < 0)
 			return NULL;
 		std::string lastModified = ctime(&fileStat.st_mtime);
-		autoindexHtml += "<tr><td><a href=\"" + m_request.getUri() + *i + "\">" + *i + "</a></td><td>" + lastModified + "</td><td>" + toString(fileStat.st_size) + "</td></tr>\n";
+		autoindexHtml += "<tr><td><a href=\"" + m_request.getUri() + "/" + *i + "\">" + *i + "</a></td><td>" + lastModified + "</td><td>" + toString(fileStat.st_size) + "</td></tr>\n";
 	}
 	autoindexHtml += "</table>\n<hr>\n</body>\n</html>";
 	autoindexHtml += "<style>\nbody {\nfont-family: sans-serif;\n}\n\nh1 {\nfont-size: 1.5em;\n}\n\nhr {\nmargin: 1em 0;\n}\n\ntable {\nborder-collapse: collapse;\nwidth: 100%;\n}\n\ntd, th {\nborder: 1px solid #ccc;\npadding: 0.5em;\n}\n\nth {\nbackground: #eee;\n}\n\ntr:nth-child(even) {\nbackground: #f8f8f8;\n}\n</style>";
@@ -285,7 +287,9 @@ bool			Response::handleGetFile()
 
 	m_cgiPath = server.getCgiPath(extension);
 	if (m_cgiPath != "")
+	{
 		return handleCgi();
+	}
 	m_resHeaders["Content-Type"] = getContentType(m_filePath);
 	m_file = fopen(m_filePath.c_str(), "r");
 	if (!m_file)
@@ -307,8 +311,10 @@ bool			Response::setFilePath()
 	std::string root = location.getRoot();
 	if (uploadPath.empty())
 	{
-		if (uri == path || uri == path + "/")
+		if (uri == path + "/")
 			m_filePath = root + location.getIndex();
+		else if (uri == path)
+			m_filePath = root.substr(0, root.find_last_of("/"));
 		else
 		{
 			if(path == "/")
@@ -351,6 +357,7 @@ bool			Response::handleGet()
 	std::string root = location.getRoot();
 	std::string path = location.getPath();
 	std::string uri = m_request.getUri();
+	// get request referer
 
 	if (m_absolutePath != m_filePath)
 	{
@@ -389,8 +396,9 @@ bool			Response::handleGet()
 		{
 			m_resHeaders["Content-Type"] = "text/html";
 			m_statusCode = "200";
+			std::string tmp = generateAutoIndex();
 			buildHeaders();
-			m_buffer += generateAutoIndex();
+			m_buffer += tmp;
 			return true;
 		}
 		else
@@ -416,11 +424,15 @@ bool			Response::handlePost()
 	std::string uploadPath = m_request.getLocation().getUploadPath();
 	if (!uploadPath.empty())
 	{
+		if (m_filePath == uploadPath)
+		{
+			m_statusCode = "403";
+			return false;
+		}
 		std::string filename = m_request.getFilePath();
 		int ren = rename(filename.c_str(), m_filePath.c_str());
 		if (ren == -1)
 		{
-			std::cout << "rename failed" << std::endl;
 			m_statusCode = "500";
 			return false;
 		}
@@ -489,89 +501,67 @@ bool			Response::handlePost()
 
 bool			Response::handleDelete()
 {
-	// location path should never end with a slash except if it is literally /
-	// root path should always end with a slash
-	// Location location = m_request.getLocation();
-	// std::string path = location.getPath();
-	// std::string root = location.getRoot();
-	// std::string uri = m_request.getUri();
-	// std::cout << "path: " << path << std::endl;
-	// std::cout << "root: " << root << std::endl;
-	// std::cout << "uri: " << uri << std::endl;
-	// std::cout << "uri size: " << uri.substr(path.size()) << std::endl;
-	// // parse request path
-	// if (uri == path || uri == path + "/")
-	// 	m_filePath = root + location.getIndex();
-	// else
-	// {
-	// 	if(path == "/")
-	// 		m_filePath = root + uri.substr(path.size());
-	// 	else
-	// 		m_filePath = root + uri.substr(path.size() + 1);
-	// }
-	// std::cout << "file path: " << m_filePath << std::endl;
-	// // resolve path
-	// std::string absolute = getAbsolutePath(m_filePath);
-	// if (!startsWith(absolute + "/", root))
-	// {
-	// 	m_statusCode = "403";
-	// 	return false;
-	// }
-	// Location server = m_request.getLocation();
-	// struct stat fileStat;
-	// if (stat(m_filePath.c_str(), &fileStat) != 0)
-	// {
-	// 	if (errno == EACCES)
-	// 		m_statusCode = "403";
-	// 	else if (errno == ENOENT)
-	// 	{
-	// 		m_statusCode = "404";
-	// 	}
-	// 	else
-	// 		m_statusCode = "500";
-	// 	return false;
-	// }
-	// if (S_ISDIR(fileStat.st_mode))
-	// {
-	// 	if (m_filePath[m_filePath.size() - 1] != '/')
-	// 	{
-	// 		// conflict
-	// 		m_statusCode = "409";
-	// 		return false;
-	// 	}
-		
-	// 	if (getExtention() == location.())
-	// 	{
-	// 		m_statusCode = "403";
-	// 		return false;
-	// 	}
-	// 	else
-	// 	{
-	// 		m_statusCode = "403";
-	// 		return false;
-	// 	}
-	// }
-	// else if (S_ISREG(fileStat.st_mode))
-	// {
-		// Server server = m_request.getServer();
-		// std::string extension = m_filePath.substr(m_filePath.find_last_of(".") + 1);
-		// std::map<std::string, std::string> cgis = server.getCgi();
-		// for(std::map<std::string, std::string>::iterator it = cgis.begin(); it != cgis.end(); it++)
-		// {
-		// 	if (extension == it->first)
-		// 	{
-			// m_cgiPath = it->second;
-		// 		return handleCgi();
-		// 	}
-		// }
-		// m_statusCode = "403";
-		// return false;
-	// }
-	// else
-	// {
-	// 	m_statusCode = "403";
-	// 	return false;
-	// }
+	Location location = m_request.getLocation();
+	std::string root = location.getRoot();
+	if (m_filePath == root)
+	{
+		m_statusCode = "403";
+		return false;
+	}
+	struct stat fileStat;
+	if (stat(m_filePath.c_str(), &fileStat) != 0)
+	{
+		if (errno == EACCES)
+			m_statusCode = "403";
+		else if (errno == ENOENT)
+		{
+			m_statusCode = "404";
+		}
+		else
+			m_statusCode = "500";
+		return false;
+	}
+	if (S_ISDIR(fileStat.st_mode))
+	{
+		if (m_filePath[m_filePath.size() - 1] != '/')
+		{
+			// conflict
+			m_statusCode = "409";
+			return false;
+		}
+		else
+		{
+			if (remove_directory(m_filePath) == -1)
+			{
+				m_statusCode = "500";
+				return false;
+			}
+			m_statusCode = "204";
+			buildHeaders();
+			return true;
+		}
+	}
+	else if (S_ISREG(fileStat.st_mode))
+	{
+		Server server = m_request.getServer();
+		std::string extension = m_filePath.substr(m_filePath.find_last_of(".") + 1);
+		m_cgiPath = server.getCgiPath(extension);
+		if (!m_cgiPath.empty())
+			return handleCgi();
+		if (unlink(m_filePath.c_str()) == -1)
+		{
+			m_statusCode = "500";
+			return false;
+		}
+		m_statusCode = "204";
+		buildHeaders();
+		return true;
+	}
+	else
+	{
+		m_statusCode = "403";
+		return false;
+	}
 	return false;
 }
 
@@ -640,22 +630,33 @@ std::string		Response::peek(bool &done)
 		}
 		if (m_file)
 		{
+			fd_set readSet;
+			FD_ZERO(&readSet);
+			FD_SET(fileno(m_file), &readSet);
+			select(fileno(m_file) + 1, &readSet, NULL, NULL, NULL);
 			std::string ret;
-			size_t read = fread(m_smolBuffer,1, RES_BUFFER_SIZE, m_file);
-			if (ferror(m_file))
+			if (FD_ISSET(fileno(m_file), &readSet))
 			{
-				perror("fread");
+				size_t read = fread(m_smolBuffer,1, RES_BUFFER_SIZE, m_file);
+				if (ferror(m_file))
+				{
+					done = true;
+					return ("");
+				}
+				if (read > 0)
+				{
+					ret.assign(m_smolBuffer, read);
+					m_buffer = ret;
+				}
+				else
+					m_done = true;
+				return ret;
+			}
+			else
+			{
 				done = true;
 				return ("");
 			}
-			if (read > 0)
-			{
-				ret.assign(m_smolBuffer, read);
-				m_buffer = ret;
-			}
-			else
-				m_done = true;
-			return ret;
 		}
 		else
 			done = true;
@@ -708,8 +709,8 @@ Response::Response(const Request &request)
 		pass = handleGet();
 	else if (request.getMethod() == "POST")
 		pass = handlePost();
-	// else if (request.getMethod() == "DELETE")
-	// 	pass = handleDelete();
+	else if (request.getMethod() == "DELETE")
+		pass = handleDelete();
 	if (pass == false)
 		setErrorPage();
 }

@@ -1,5 +1,3 @@
 <?php
-	//infinite loop
-	while(true) {
-	}
+    echo 'Bonjour ' . htmlspecialchars($_POST["name"]) . '!';
 ?>

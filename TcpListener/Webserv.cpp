@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/23 07:27:18 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/25 06:19:21 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/25 09:15:27 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,6 +101,9 @@ void		Webserv::handleRequest(void)
 					close(*i);
 					FD_CLR(*i, &m_readSetBackup);
 					i = m_sds.erase(i);
+					std::string reqfilename = it->getFilePath();
+					if (!reqfilename.empty())
+						unlink(reqfilename.c_str());
 					m_requests.erase(it);
 				}
 				else
@@ -150,6 +153,12 @@ void	Webserv::handleResponse(void)
 				erase:
 					fclose(i->getFile());
 					FD_CLR(i->getSd(), &m_writeSetBackup);
+					int	reqBodyFd = i->getReqBodyFd();
+					if (reqBodyFd != -1)
+						close(reqBodyFd);
+					std::string reqFilename = i->getReqFilename();
+					if (!reqFilename.empty())
+						unlink(reqFilename.c_str());
 					if (i->getKeepAlive())
 						FD_SET(i->getSd(), &m_readSetBackup);
 					else

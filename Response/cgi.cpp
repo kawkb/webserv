@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:39 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/25 06:11:27 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/25 12:38:10 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,13 +128,22 @@ bool	Response::handleCgi()
 			return false;
 		}
 	}
-	std::cout << "well well" << std::endl;
 	rewind(tmpfi);
+	return handleCgiResponse(tmpfi);
+}
+
+bool	Response::handleCgiResponse(FILE *tmp)
+{
 	std::string cgi_response;
 	char buf[1024];
 	int ret = 0;
 	// use normal read
-	while ((ret = fread(buf,1 , 1024, tmpfi)) > 0)
+	// add select
+	fd_set readfds;
+	FD_ZERO(&readfds);
+	FD_SET(fileno(tmp), &readfds);
+	select(fileno(tmp) + 1, &readfds, NULL, NULL, NULL);
+	while ( FD_ISSET(fileno(tmp), &readfds)  && (ret = fread(buf,1 , 1024, tmp)) > 0)
 	{
 		cgi_response += std::string(buf, ret);
 		// stop reading if the response contains \r\n\r\n
@@ -148,18 +157,19 @@ bool	Response::handleCgi()
 	{
 		m_buffer = cgi_response;
 		m_statusCode = "200";
-		rewind(tmpfi);
-		m_file = tmpfi;
+		rewind(tmp);
+		m_file = tmp;
 		FILE*	body = m_request.getBody();
 		if (body)
 			fclose(body);
+		m_bodySize = m_buffer.size();
 		buildHeaders();
 		return true;
 	}
 	// rewind by what's lest after the header
-	fseek(tmpfi, header_end + 4, SEEK_SET);
-	// printFile(tmpfi);
-	m_file = tmpfi;
+	fseek(tmp, header_end + 4, SEEK_SET);
+	// printFile(tmp);
+	m_file = tmp;
 
 	std::cout << "header_end: " << header_end << std::endl;
 	std::string headers = cgi_response.substr(0, header_end);
@@ -182,9 +192,9 @@ bool	Response::handleCgi()
 	else
 		m_statusCode = "200";
 	//calculate content lenght
-	fseek(tmpfi, 0, SEEK_END);
-	m_bodySize = ftell(tmpfi) - header_end - 4;
-	fseek(tmpfi, header_end + 4, SEEK_SET);
+	fseek(tmp, 0, SEEK_END);
+	m_bodySize = ftell(tmp) - header_end - 4;
+	fseek(tmp, header_end + 4, SEEK_SET);
 	m_resHeaders.erase("Status");
 	// if (m_resHeaders.find("Content-type") == m_resHeaders.end())
 	// 	m_resHeaders["Content-Type"] = "text/html";

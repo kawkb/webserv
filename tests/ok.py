@@ -1,9 +1,21 @@
-import os
-import cgi
+import cgi, cgitb
 import sys
-form = cgi.FieldStorage()
-f_name=form["f_name"].value
-s_name=form["s_name"].value
-print(f_name)
-print(s_name)
-# print "Content-type: text/html
+from time import sleep
+
+# Create instance of FieldStorage 
+form = cgi.FieldStorage() 
+
+# Get data from fields
+first_name = form.getvalue('first_name')
+last_name  = form.getvalue('last_name')
+nick_name  = form.getvalue('nick_name')
+
+print ("<html>")
+print ("<head>")
+print ("<title>Hello - Second CGI Program</title>")
+print ("</head>")
+print ("<body>")
+print ("<h2>Hello %s %s %s</h2>" % (first_name, last_name, nick_name))
+print ("</body>")
+print ("</html>")
+print ("j")
