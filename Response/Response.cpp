@@ -6,25 +6,25 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/26 01:29:57 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 02:37:05 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../webserv.hpp"
 
-int			Response::getReqBodyFd(void)
+int				Response::getReqBodyFd(void)
 {
 	return (m_request.getBodyfd());
 }
 
-std::string Response::getReqFilename(void)
+std::string		Response::getReqFilename(void)
 {
 	if (m_statusCode[0] == '2')
 		return ("");
 	return (m_request.getFilePath());
 }
 
-const Request &Response::getRequest()
+const Request	&Response::getRequest()
 {
 	return (this->m_request);
 }
@@ -97,7 +97,7 @@ std::string		Response::getCodeString()
 	return "Unknown";
 }
 
-std::string		Response::generateAutoIndex()
+bool			Response::generateAutoIndex()
 {
 	std::vector<std::string> files;
 	std::vector<std::string> dirs;
@@ -120,18 +120,36 @@ std::string		Response::generateAutoIndex()
 	}
 	else
 	{
-		return NULL;
+		if (errno == ENOENT)
+		{
+			m_statusCode = "404";
+			return false;
+		}
+		else if (errno == EACCES)
+		{
+			m_statusCode = "403";
+			return false;
+		}
+		else
+		{
+			m_statusCode = "500";
+			return false;
+		}
 	}
 	std::sort(files.begin(), files.end());
 	std::sort(dirs.begin(), dirs.end());
 	autoindexHtml += "<!DOCTYPE html>\n<html>\n<head>\n<title>Index of " + m_filePath + "</title>\n</head>\n<body>\n<h1>Index of " + m_filePath + "</h1>\n<hr>\n<table>\n<tr><th>Name</th><th>Last Modified</th><th>Size</th></tr>\n";
-	autoindexHtml += "<tr><td><a href=\"../\">../</a></td><td></td><td></td></tr>\n";
+	std::string uri = m_request.getUri();
+	Location location = m_request.getLocation();
+	std::string path = location.getPath();
+	if (uri != "/" && uri != path + "/")
+		autoindexHtml += "<tr><td><a href=\"../\">../</a></td><td></td><td></td></tr>\n";
 	for (std::vector<std::string>::iterator i = dirs.begin(); i != dirs.end(); i++)
 	{
 		std::string folderpath = m_filePath + "/" + *i;
 		struct stat attrib;
 		if (stat(folderpath.c_str(), &attrib) < 0)
-			return NULL;
+			continue;
 		std::string lastModified = ctime(&attrib.st_mtime);
 		autoindexHtml += "<tr><td><a href=\"" + m_request.getUri() + *i + "/\">" + *i + "/</a></td><td>" + lastModified + "</td><td></td></tr>\n";
 	}
@@ -140,16 +158,19 @@ std::string		Response::generateAutoIndex()
 		std::string filePath = m_filePath + "/" + *i;
 		struct stat fileStat;
 		if (stat(filePath.c_str(), &fileStat) < 0)
-			return NULL;
+			continue;
 		std::string lastModified = ctime(&fileStat.st_mtime);
 		std::string prepend = m_request.getUri() == "/" ? "" : m_request.getUri();
-		autoindexHtml += "<tr><td><a href=\"" + prepend + "/" + *i + "\">" + *i + "</a></td><td>" + lastModified + "</td><td>" + toString(fileStat.st_size) + "</td></tr>\n";
+		autoindexHtml += "<tr><td><a href=\"" + prepend + *i + "\">" + *i + "</a></td><td>" + lastModified + "</td><td>" + toString(fileStat.st_size) + "</td></tr>\n";
 	}
 	autoindexHtml += "</table>\n<hr>\n</body>\n</html>";
 	autoindexHtml += "<style>\nbody {\nfont-family: sans-serif;\n}\n\nh1 {\nfont-size: 1.5em;\n}\n\nhr {\nmargin: 1em 0;\n}\n\ntable {\nborder-collapse: collapse;\nwidth: 100%;\n}\n\ntd, th {\nborder: 1px solid #ccc;\npadding: 0.5em;\n}\n\nth {\nbackground: #eee;\n}\n\ntr:nth-child(even) {\nbackground: #f8f8f8;\n}\n</style>";
 	m_bodySize = autoindexHtml.size();
-
-	return autoindexHtml;
+	m_statusCode = "200";
+	m_resHeaders["Content-Type"] = "text/html";
+	buildHeaders();
+	m_buffer += autoindexHtml;
+	return true;
 }
 
 std::string		getContentType(std::string filename)
@@ -237,44 +258,16 @@ void			Response::buildHeaders()
 	if (m_bodySize < 0)
 		m_resHeaders.erase("Content-Type");
 	else
+	{
+		if (m_resHeaders.find("Content-Type") == m_resHeaders.end())
+			m_resHeaders["Content-Type"] = getContentType(m_filePath);
 		headers += "Content-Length: " + toString(m_bodySize) + "\r\n";
+	}
 	std::map<std::string, std::string>::iterator i;
 	for (i = m_resHeaders.begin(); i != m_resHeaders.end(); i++)
 		headers += i->first + ": " + i->second + "\r\n";
 	headers += "\r\n";
 	m_buffer = headers;
-}
-
-int				remove_directory(const std::string path)
-{
-	DIR *d = opendir(path.c_str());
-	int r = -1;
-	if (d)
-	{
-		struct dirent *p;
-		r = 0;
-		while (!r && (p = readdir(d)))
-		{
-			int r2 = -1;
-			std::string filename(p->d_name);
-			if (filename == "." || filename == "..")
-				continue;
-			const std::string filepath = path + "/" + filename;
-			struct stat statbuf;
-			if (!stat(filepath.c_str(), &statbuf))
-			{
-				if (S_ISDIR(statbuf.st_mode))
-					r2 = remove_directory(filepath);
-				else
-					r2 = unlink(filepath.c_str());
-			}
-			r = r2;
-		}
-		closedir(d);
-	}
-	if (!r)
-	  r = rmdir(path.c_str());
-	return r;
 }
 
 bool			Response::handleGetFile()
@@ -396,14 +389,7 @@ bool			Response::handleGet()
 			return true;
 		}
 		else if (location.getAutoIndex())
-		{
-			m_resHeaders["Content-Type"] = "text/html";
-			m_statusCode = "200";
-			std::string tmp = generateAutoIndex();
-			buildHeaders();
-			m_buffer += tmp;
-			return true;
-		}
+			return generateAutoIndex();
 		else
 		{
 			m_statusCode = "403";

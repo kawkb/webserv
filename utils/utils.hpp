@@ -14,3 +14,4 @@ FILE        				*createTmpFile(std::string &path);
 std::string 				resolvePath(std::string path);
 std::string					checkPath(std::string path);
 std::vector<std::string>	split(std::string str, std::string sep);
+int							remove_directory(const std::string path);

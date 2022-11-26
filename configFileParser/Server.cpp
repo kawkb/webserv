@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/26 01:41:12 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 01:58:47 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,8 +97,6 @@ Server::Server(std::ifstream &myfile, size_t &lineCount)
             Location    holder;
             holder.setPath(token[1]);
             holder.parse(myfile, lineCount);
-            if (holder.getRoot().empty())
-                holder.setRoot(m_root);
             m_location.push_back(holder);
         }
         else if(token[0] == "}" && size == 1 && isServer && lineCount++)
@@ -223,28 +221,3 @@ Server & Server::operator=(const Server &cp)
 }
 
 Server::~Server(){}
-// std::ostream& operator<<(std::ostream& out, Server server)
-// {
-//     out << "=============Server==============" << std::endl;
-//     std::vector<std::string> method = server.getMethod();
-//     std::vector<Location> location = server.getLocation();
-//     // std::map<std::string, std::string>  errorPage = server.getErrorPage();
-//     std::map<std::string, std::string >::iterator itr;
-// 	out << "Server port: " << server.getPort() << std::endl;
-//     out << "Server name: " << server.getName() << std::endl;
-//     out << "server method: ";
-// 	for (long unsigned int i = 0; i < method.size(); i++)
-// 	    out << method[i] << " ";
-//     out << std::endl;
-// 	out << "server root:" << server.getRoot() << std::endl;
-// 	out << "server index:" << server.getIndex() << std::endl;
-// 	out << "server autoIndex:" << server.getAutoIndex() << std::endl;
-//     out << "server bodysize: " << server.getMaxBodySize() << std::endl;
-//     // for( itr = errorPage.begin(); itr != errorPage.end();++itr)
-//     //     out << "server error page: " << itr->first << " " << itr->second << std::endl;
-//     // for (long unsigned int i = 0; i < location.size(); i++)
-//     // {
-//     //     out << location[i];
-//     // }
-// 	return out;
-// }

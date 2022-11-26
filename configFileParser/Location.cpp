@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/09 19:04:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/26 01:40:13 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 02:01:44 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,6 +79,11 @@ void     Location::parse(std::ifstream &myfile, size_t &lineCount)
 
 void		Location::checkError(std::ifstream &myfile)
 {
+	if(m_root == "" && m_uploadPath.empty())
+    {
+        myfile.close();
+		exit_failure("Config File Error: Missing root.");
+    }
 	if(!m_uploadPath.empty() && (!m_root.empty() || !m_index.empty() || !m_method.empty()))
 	{
         myfile.close();

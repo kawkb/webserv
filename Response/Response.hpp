@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:33 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/25 21:35:17 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 02:25:55 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,7 @@ class Response
 		const Request 						&getRequest();
 		std::string							getExtention();
 		std::string							getCodeString();
-		std::string							generateAutoIndex();
+		bool								generateAutoIndex();
 		bool								handleGetFile();
 		bool								handleGet();
 		bool								handlePost();

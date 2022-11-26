@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/20 20:48:34 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/26 01:37:41 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 02:07:01 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -185,4 +185,36 @@ std::string	checkPath(std::string path)
 	else
 		exit_failure("stat error");
 	return("");
+}
+
+int				remove_directory(const std::string path)
+{
+	DIR *d = opendir(path.c_str());
+	int r = -1;
+	if (d)
+	{
+		struct dirent *p;
+		r = 0;
+		while (!r && (p = readdir(d)))
+		{
+			int r2 = -1;
+			std::string filename(p->d_name);
+			if (filename == "." || filename == "..")
+				continue;
+			const std::string filepath = path + "/" + filename;
+			struct stat statbuf;
+			if (!stat(filepath.c_str(), &statbuf))
+			{
+				if (S_ISDIR(statbuf.st_mode))
+					r2 = remove_directory(filepath);
+				else
+					r2 = unlink(filepath.c_str());
+			}
+			r = r2;
+		}
+		closedir(d);
+	}
+	if (!r)
+	  r = rmdir(path.c_str());
+	return r;
 }
