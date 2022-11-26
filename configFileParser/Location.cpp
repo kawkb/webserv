@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/09 19:04:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/26 02:01:44 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 02:55:48 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@ void     Location::parse(std::ifstream &myfile, size_t &lineCount)
 			isLocation = 1;
 		else if (token[0] == "allow_methods" && size <= 4 && lineCount++ && isLocation && m_method.empty())
 		{
+			m_gotMethod = 1;
             for( int i = 1; i < size; i++)
             {  
                 if (token[i] == "GET" || token[i] == "POST" || token[i] == "DELETE" )
@@ -96,8 +97,6 @@ void		Location::checkError(std::ifstream &myfile)
 	}
 	if(!m_uploadPath.empty())
 		m_method.push_back("POST");
-	if(m_method.empty() && m_uploadPath.empty())
-		m_method.push_back("GET");
 	if(!m_root.empty() && checkPath(m_root) != "")
 	{
         myfile.close();
@@ -112,6 +111,7 @@ std::string     			Location::getPath(void) const{return(m_path);}
 int							Location::getAutoIndex(void) const{return(m_autoIndex);}
 std::string 				Location::getUploadPath(void) const{return(m_uploadPath);}
 std::vector<std::string>	Location::getMethod(void) const{return(m_method);}
+bool						Location::getGotMethod(void) const{return(m_gotMethod);}
 std::string     			Location::getRoot(void) const{return(m_root);}
 std::string     			Location::getIndex(void) const{return(m_index);}
 void                        Location::setMethod(std::string method){m_method.push_back(method);}
@@ -124,6 +124,7 @@ Location::Location()
 	m_uploadPath 	= "";
 	m_autoIndex 	= 0;
 	m_redirection = "";
+	m_gotMethod = 0;
 }
 Location::Location(Server server)
 {
@@ -144,6 +145,7 @@ Location & Location::operator=(const Location &cp)
 	m_redirection 	= cp.getRedirection();
     m_autoIndex 	= cp.getAutoIndex();
 	m_uploadPath 	= cp.getUploadPath();
+	m_gotMethod 	= cp.getGotMethod();
 	return (*this);
 }
 

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Location.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: zmeribaa <zmeribaa@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/09 19:05:05 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 12:11:26 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/26 02:29:07 by zmeribaa         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@ class Location
 		std::string   							m_redirection;
 		std::string                         	m_uploadPath; 
 		int                         			m_autoIndex;
+		bool									m_gotMethod;
 	public:
 												Location();
 												Location(Server server);
@@ -35,13 +36,14 @@ class Location
 		std::string                     		getIndex(void) const;
 		std::string                     		getPath(void) const;
 		int										getAutoIndex(void) const;
+		bool									getGotMethod(void) const;
 		std::string							 	getRedirection(void) const;
 		std::string                         	getUploadPath(void) const;
 		void									setPath(std::string path);
 		void                        			setMethod(std::string method);
 		void        							setRoot(std::string root);
 		//methods
-		void										parse(std::ifstream &myfile, size_t &lineCount);
+		void									parse(std::ifstream &myfile, size_t &lineCount);
 		void									checkError(std::ifstream &myfile);
 		Location& 								operator=(const Location &cp);
 };
