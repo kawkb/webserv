@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/20 20:48:34 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/25 20:10:35 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 01:37:41 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -174,7 +174,7 @@ std::string	checkPath(std::string path)
 {
 	struct stat s;
 	if(resolvePath(path) == "")
-		return("Wrong path: " + path);
+		return("Directory does not Exist: " + path);
 	if(stat(path.c_str(),&s) == 0)
 	{
 		if( s.st_mode & S_IFDIR)

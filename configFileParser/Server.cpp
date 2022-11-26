@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/26 01:28:42 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 01:41:12 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,24 +127,24 @@ void	Server::checkError(std::ifstream &myfile)
 	if (m_port < 0 || m_port > 65536)
     {
         myfile.close();
-		exit_failure("\033[1;31mConfig File Error: Port out of range. \033[0m");
+		exit_failure("mConfig File Error: Port out of range.");
     }
 	if(m_serverName == "")
     {
         myfile.close();
-		exit_failure("\033[1;31mConfig File Error: Missing server name. \033[0m");
+		exit_failure("Config File Error: Missing server name.");
     }
     if(m_root == "")
     {
         myfile.close();
-		exit_failure("\033[1;31mConfig File Error: Missing root. \033[0m");
+		exit_failure("Config File Error: Missing root.");
     }
 	if(m_method.empty())
 		m_method.push_back("GET");
 	if(checkPath(m_root) != "")
     {
         myfile.close();
-		exit_failure("\033[1;31mConfig File Error: "+ checkPath(m_root) +" \033[0m");
+		exit_failure("Config File Error: "+ checkPath(m_root));
     }
     for(std::map<std::string, std::string>::iterator it = m_cgi.begin(); it != m_cgi.end(); it++)
     {
@@ -154,17 +154,17 @@ void	Server::checkError(std::ifstream &myfile)
 			if (errno == ENOENT)
 			{
 				myfile.close();
-				exit_failure("\033[1;31mConfig File Error: "+ it->second +" does not exist \033[0m");
+				exit_failure("Config File Error: "+ it->second +" does not exist");
 			}
 			else if (errno == EACCES)
 			{
 				myfile.close();
-				exit_failure("\033[1;31mConfig File Error: "+ it->second +" is not accessible \033[0m");
+				exit_failure("Config File Error: "+ it->second +" is not accessible");
 			}
 			else
 			{
 				myfile.close();
-				exit_failure("\033[1;31mConfig File Error: "+ it->second +" is not a file \033[0m");
+				exit_failure("Config File Error: "+ it->second +" is not a file");
 			}
 		}
     }

@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/09 19:04:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/26 01:28:38 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 01:40:13 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,12 +82,12 @@ void		Location::checkError(std::ifstream &myfile)
 	if(!m_uploadPath.empty() && (!m_root.empty() || !m_index.empty() || !m_method.empty()))
 	{
         myfile.close();
-		exit_failure("\033[1;31mConfig File Error: Upload Path is specified in location no other directives allowed.\033[0m");
+		exit_failure("Config File Error: Upload Path is specified in location no other directives allowed.");
 	}
 	if(!m_uploadPath.empty() && !checkPath(m_uploadPath).empty())
 	{
         myfile.close();
-		exit_failure("\033[1;31mConfig File Error: "+ checkPath(m_uploadPath) +" \033[0m");
+		exit_failure("Config File Error: "+ checkPath(m_uploadPath));
 	}
 	if(!m_uploadPath.empty())
 		m_method.push_back("POST");
@@ -96,7 +96,7 @@ void		Location::checkError(std::ifstream &myfile)
 	if(!m_root.empty() && checkPath(m_root) != "")
 	{
         myfile.close();
-		exit_failure("\033[1;31mConfig File Error: "+ checkPath(m_root) +" \033[0m");
+		exit_failure("Config File Error: "+ checkPath(m_root));
 	}
 }
 
