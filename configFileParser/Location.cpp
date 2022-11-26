@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/09 19:04:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/26 03:57:20 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 04:35:29 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -140,6 +140,7 @@ Location::Location(Server server)
 	m_autoIndex = server.getAutoIndex();
 	m_method = server.getMethod();
 }
+
 Location::Location(const Location &cp){*this = cp;}
 
 Location & Location::operator=(const Location &cp)

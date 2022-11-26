@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:33 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/26 02:25:55 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 05:32:49 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,7 @@ class Response
 		
 
 	public:
+		int									getPort(void);
 		std::string							getReqFilename(void);
 		int									getReqBodyFd(void);
 		bool								getKeepAlive();

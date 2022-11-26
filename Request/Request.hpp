@@ -23,12 +23,13 @@ class Request
 		std::string							m_queryString;
 		std::string							m_filePath;
 		int									m_bodyfd;
+		int									m_originport;
 
 	public:
 		// Class methods:
 		void								parse(const std::vector<Server> &servers, const char *buf, int bufSize);
 		bool								fillReqLine(std::string line);
-		void								addHeader(std::string line);
+		bool								addHeader(std::string line);
 		void								fillBody(void);
 		bool								isWellFormed(void);
 		void								checkErrors(const std::vector<Server> &servers);
@@ -39,6 +40,7 @@ class Request
 		void    							fillContentLength(size_t contentLength);
 		// Class attributes getters :
 		std::FILE							*getBody(void) const;
+		int									getPort(void) const;
 		int									getSd(void) const;
 		std::map<std::string, std::string>	getHeaders(void) const;
 		std::string							getMethod(void) const;
@@ -58,7 +60,7 @@ class Request
 		// Class Constructors/destructor :
 											Request(void);
 											Request(const Request &cp);
-											Request(int sd);
+											Request(int sd, int originport);
 											~Request(void);
 };
 

@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/23 07:27:18 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/26 04:27:38 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 05:34:59 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,8 @@ void    Webserv::acceptConnection(void)
 				flags |= O_NONBLOCK;
 				fcntl(connection, F_SETFL, flags);
 				FD_SET(connection, &m_readSetBackup);
-				m_sds.push_back(connection);
+				std::pair<int, int> pair(connection, i->getPort());
+				m_sds.push_back(pair);
 			}
 		}
 	}
@@ -79,24 +80,24 @@ std::vector<Request>::iterator		Webserv::getRequest(int sd)
 void		Webserv::handleRequest(void)
 {
 	char buf[4096];
-	std::vector<int>::iterator i = m_sds.begin();
+	std::vector<std::pair<int, int> >::iterator i = m_sds.begin();
 	while (i != m_sds.end())
 	{
-		if(FD_ISSET(*i, &m_readSet))
+		if(FD_ISSET((*i).first, &m_readSet))
 		{
-			std::vector<Request>::iterator it = getRequest(*i);
+			std::vector<Request>::iterator it = getRequest((*i).first);
 			if (it == m_requests.end())
 			{
-				m_requests.push_back(Request(*i));
+				m_requests.push_back(Request((*i).first, (*i).second));
 				i++;
 			}
 			else
 			{
-				int rec = recv(*i, &buf, 4096, 0); // check recv error
+				int rec = recv((*i).first, &buf, 4096, 0); // check recv error
 				if (rec == 0 || rec == -1)
 				{
-					close(*i);
-					FD_CLR(*i, &m_readSetBackup);
+					close((*i).first);
+					FD_CLR((*i).first, &m_readSetBackup);
 					i = m_sds.erase(i);
 					std::string reqfilename = it->getFilePath();
 					if (!reqfilename.empty())
@@ -161,7 +162,7 @@ void	Webserv::handleResponse(void)
 					else
 					{
 						close(i->getSd());
-						m_sds.erase(std::find(m_sds.begin(), m_sds.end(), i->getSd()));
+						m_sds.erase(std::find(m_sds.begin(), m_sds.end(), std::pair<int, int>(i->getSd(), i->getPort())));
 					}
 					i = m_responses.erase(i);
 			}
@@ -188,10 +189,10 @@ void	Webserv::setFds()
 	m_readSet = m_readSetBackup;
 	m_writeSet = m_writeSetBackup;
 	m_maxSd = m_maxMasterSd;
-	for(std::vector<int>::iterator i = m_sds.begin(); i != m_sds.end(); ++i)
+	for(std::vector<std::pair<int, int> >::iterator i = m_sds.begin(); i != m_sds.end(); ++i)
 	{
-		if (*i > m_maxSd)
-			m_maxSd = *i;
+		if ((*i).first > m_maxSd)
+			m_maxSd = (*i).first;
 	}
 }
 

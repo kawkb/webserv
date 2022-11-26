@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/26 01:29:01 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 05:45:33 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,8 +18,9 @@ Request::~Request(){
 
 }
 
-Request::Request(int sd)
+Request::Request(int sd, int originport)
 {
+	m_originport = originport;
     m_filePath = "";
     m_body = NULL;
     m_sd = sd;
@@ -59,7 +60,12 @@ Request&    Request::operator= (const Request &cp)
     m_chunckLen = cp.m_chunckLen;
     m_filePath = cp.m_filePath;
 	m_bodyfd = cp.m_bodyfd;
+	m_originport = cp.m_originport;
     return (*this);
+}
+int									Request::getPort(void) const
+{
+	return (m_originport);
 }
 int                                 Request::getSd(void) const{return(m_sd);}
 std::string                         Request::getUri(void) const{return(m_uri);}
@@ -125,6 +131,24 @@ bool Request::matchServer(const std::vector<Server> &servers)
 	{
 		serverName = host.substr(0, pos);
 		port = host.substr(pos + 1);
+	}
+	else
+	{
+		if (m_originport != 80)
+		{
+			m_status = "400";
+			return (false);
+		}
+		else if (m_originport == 80)
+		{
+			serverName = host;
+			port = "80";
+		}
+	}
+	if (port != toString(m_originport))
+	{
+		m_status = "400";
+		return (false);
 	}
 	bool first = false;
 	for (std::vector<Server>::const_iterator i = servers.begin(); i != servers.end(); i++)
@@ -210,7 +234,7 @@ bool    Request::fillReqLine(std::string line)
     }
 }
 
-void    Request::addHeader(std::string line)
+bool    Request::addHeader(std::string line)
 {
     size_t found = line.find(':');
     if(found != std::string::npos)
@@ -219,10 +243,22 @@ void    Request::addHeader(std::string line)
 		if (key.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-") != std::string::npos)
 		{
 			m_status = "400";
-			return;
+			return false;
 		}
 		std::string value = line.substr(found + 2);
-        m_headers.insert(std::pair<std::string, std::string>(key, value));
+		if (m_headers.find(key) != m_headers.end())
+		{
+			m_status = "400";
+			return false;
+		}
+		else
+        	m_headers.insert(std::pair<std::string, std::string>(key, value));
+		return (true);
+	}
+	else
+	{
+		m_status = "400";
+		return false;
 	}
 }
 
@@ -331,8 +367,8 @@ void    Request::parse(const std::vector<Server> &servers, const char *buf, int 
                     std::string line = std::string(m_requestBuffer.begin() + cursor, i);
                     if (m_firstLine)
                         fillReqLine(line);
-                    else
-                        addHeader(line);
+                    else if (!addHeader(line))
+                        return ;
                     cursor += line.size() + 2;
                 }
             }

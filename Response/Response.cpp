@@ -6,11 +6,17 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/26 04:29:18 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 05:33:38 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../webserv.hpp"
+
+int				Response::getPort()
+{
+	Request req = this->getRequest();
+	return (req.getPort());
+}
 
 int				Response::getReqBodyFd(void)
 {
