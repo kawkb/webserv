@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/25 22:53:45 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/25 23:29:37 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -151,7 +151,9 @@ bool Request::matchServer(const std::vector<Server> &servers)
 			}
 		}
 	}
-	if (atoi(getHeader("Content_length").c_str()) > m_server.getMaxBodySize())
+	long long conlen = atoll(m_headers["Content-Length"].c_str());
+	std::cout << "conlen: " << conlen << std::endl;
+	if (conlen > m_server.getMaxBodySize())
 	{
 		m_status = "413";
 		return (false);

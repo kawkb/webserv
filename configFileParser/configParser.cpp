@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/20 22:02:44 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/25 20:14:15 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/25 23:19:24 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ void     parse_config_file(char *av, std::vector<Server> &server)
 	{
 		while (getline(myfile,line))
 		{
-			if (((line.empty() || line.find_first_not_of(" \t") == std::string::npos) || line.erase(0, line.find_first_not_of(" \t")).rfind("//", 0) == 0) && lineCount++)
+			if (((line.empty() || line.find_first_not_of(" \t") == std::string::npos) || line.erase(0, line.find_first_not_of(" \t")).rfind("#", 0) == 0) && lineCount++)
             	continue;
 			else if (line == "server" && lineCount++)
 				server.push_back(Server(myfile, lineCount));

@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/25 09:24:14 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/25 23:30:01 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@ Server::Server(std::ifstream &myfile, size_t &lineCount)
     m_maxBodySize = 1000;
     while (getline(myfile, line))
     {
-        if ((line.empty() || line.find_first_not_of(" \t") == std::string::npos || line.erase(0, line.find_first_not_of(" \t")).rfind("//", 0) == 0) && lineCount++)
+        if ((line.empty() || line.find_first_not_of(" \t") == std::string::npos || line.erase(0, line.find_first_not_of(" \t")).rfind("#", 0) == 0) && lineCount++)
             continue;
         else
             token = tokenize(line);
@@ -86,7 +86,7 @@ Server::Server(std::ifstream &myfile, size_t &lineCount)
         else if (token[0] == "max_body_size" && size == 2 && lineCount++ && isServer && m_maxBodySize == 1000)
         {
             if (token[1].find_first_not_of("0123456789") == std::string::npos)
-                m_maxBodySize = atoi(token[1].c_str());
+                m_maxBodySize = atoll(token[1].c_str());
             else
             {
                 myfile.close();
@@ -190,7 +190,7 @@ std::string						 	Server::getCgiPath(std::string extention) const
 
 int                                 Server::getPort(void) const{return(m_port);}
 int                                 Server::getAutoIndex(void) const{return(m_autoIndex);}
-int                                 Server::getMaxBodySize(void) const{return(m_maxBodySize);}
+long long                           Server::getMaxBodySize(void) const{return(m_maxBodySize);}
 void                                Server::setMethod(std::string method){m_method.push_back(method);}
 std::string                         Server::getName(void) const{return(m_serverName);}
 std::string                         Server::getRoot(void) const{return(m_root);}

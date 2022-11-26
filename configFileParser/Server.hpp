@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/16 11:01:45 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 20:58:36 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/25 23:26:08 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ class Server
 		std::vector<Location>               m_location;
 		std::map<std::string, std::string>  m_errorPage;
 		std::vector<std::string>            m_method;
-		int                                 m_maxBodySize;
+		long long                           m_maxBodySize;
 	public:
 											Server();
 											Server(const Server &cp);
@@ -40,7 +40,7 @@ class Server
 		int                                 getAutoIndex(void) const;
 		std::string						 	getCgiPath(std::string extention) const;
 
-		int                                 getMaxBodySize(void) const;
+		long long                           getMaxBodySize(void) const;
 		std::vector<Location>               getLocation(void) const;
 		std::string  						getErrorPage(std::string errorcode) const;
 		std::map<std::string, std::string>  getCgi(void) const;
