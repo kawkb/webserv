@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: zmeribaa <zmeribaa@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/26 01:41:12 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 02:35:39 by zmeribaa         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,11 +94,15 @@ Server::Server(std::ifstream &myfile, size_t &lineCount)
         }
         else if (token[0] == "location" && size == 2 && lineCount++ && isServer)
         {
+			if(m_method.empty())
+				m_method.push_back("GET");
             Location    holder;
             holder.setPath(token[1]);
             holder.parse(myfile, lineCount);
-            if (holder.getRoot().empty())
-                holder.setRoot(m_root);
+			std::vector<std::string> methods = holder.getMethod();
+			if (methods.empty() && holder.getGotMethod() == 0)
+				for(std::vector<std::string>::iterator it = m_method.begin(); it != m_method.end(); it++)
+					holder.setMethod(*it);
             m_location.push_back(holder);
         }
         else if(token[0] == "}" && size == 1 && isServer && lineCount++)
@@ -134,13 +138,13 @@ void	Server::checkError(std::ifstream &myfile)
         myfile.close();
 		exit_failure("Config File Error: Missing server name.");
     }
+	if(m_method.empty())
+		m_method.push_back("GET");
     if(m_root == "")
     {
         myfile.close();
 		exit_failure("Config File Error: Missing root.");
     }
-	if(m_method.empty())
-		m_method.push_back("GET");
 	if(checkPath(m_root) != "")
     {
         myfile.close();
