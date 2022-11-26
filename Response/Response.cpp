@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/25 23:13:08 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 01:29:57 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -281,7 +281,6 @@ bool			Response::handleGetFile()
 {
 	Server server = m_request.getServer();
 	std::string extension = m_filePath.substr(m_filePath.find_last_of(".") + 1);
-	std::cout << "extension: " << extension << std::endl;
 	// print all cgis
 	std::map<std::string, std::string> cgis = server.getCgi();
 	std::map<std::string, std::string>::iterator cgi;
@@ -299,7 +298,6 @@ bool			Response::handleGetFile()
 		return false;
 	}
 	buildHeaders();
-	std::cout << "baraka" << std::endl;
 	return true;
 }
 
@@ -310,9 +308,7 @@ bool			Response::setFilePath()
 	std::string path = location.getPath();
 	std::string uri = m_request.getUri();
 	std::string root = location.getRoot();
-	std::cout << "root: " << root << std::endl;
-	std::cout << "path: " << path << std::endl;
-	std::cout << "uri: " << uri << std::endl;
+
 	if (uploadPath.empty())
 	{
 		if (uri == path + "/" || (uri == path && path == "/"))
@@ -337,7 +333,6 @@ bool			Response::setFilePath()
 	}
 	else
 	{
-		std::cout << "upload path : " << uploadPath << std::endl;
 		if (uri == path)
 			m_filePath = uploadPath;
 		else
@@ -350,7 +345,6 @@ bool			Response::setFilePath()
 		}
 		m_filePath = m_absolutePath;
 	}
-	std::cout << "file path: " << m_filePath << std::endl;
 	return true;
 }
 
@@ -367,7 +361,6 @@ bool			Response::handleGet()
 	std::string uri = m_request.getUri();
 	// get request referer
 	Server server = m_request.getServer();
-	std::cout << "matched name " << server.getName() << std::endl;
 
 	if (m_absolutePath != m_filePath)
 	{
@@ -628,11 +621,9 @@ void			Response::setLastSent(long sent)
 
 std::string		Response::peek(bool &done)
 {
-	// std::cout << "l/ast sent: " << m_lastSent << std::endl;
 	m_cursor += m_lastSent;
 	m_lastSent = 0;
-	// std::cout << "cursor: " << m_cursor << std::endl;
-	// std::cout << "buffer size: " << m_buffer.size() << std::endl;
+
 	if (m_cursor >= (int)m_buffer.size())
 	{
 		// flush buffer
@@ -678,11 +669,7 @@ std::string		Response::peek(bool &done)
 		return ("");
 	}
 	else
-	{
-		// std::cout << "cursor: " << m_cursor << std::endl;
-		// std::cout << "...................." << std::endl;
 		return m_buffer.substr(m_cursor, m_buffer.size() - m_cursor);
-	}
 }
 
 int				Response::getSd()
@@ -701,7 +688,6 @@ bool			Response::getKeepAlive()
 
 Response::Response(const Request &request)
 {
-	std::cout << "Response constructor" << std::endl;
 	m_statusCode = "200";
 	m_sd = request.getSd();
 	m_request = request;
@@ -714,10 +700,7 @@ Response::Response(const Request &request)
 	bool pass = true;
 
 	if ((m_statusCode = request.getError()) != "200")
-	{
-		std::cout << "error comming from request handler : " << m_statusCode << std::endl;
 		pass = false;
-	}
 	else if (!setFilePath())
 		pass = false;
 	else if (request.getMethod() == "GET")

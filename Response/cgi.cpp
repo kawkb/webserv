@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/16 16:45:39 by moerradi          #+#    #+#             */
-/*   Updated: 2022/11/25 12:38:10 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 01:29:05 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,8 +74,6 @@ bool	Response::handleCgi()
 		if (S_ISDIR(st.st_mode))
 			exit(69);
         const char *argv[] = {m_cgiPath.c_str(), m_filePath.c_str(), NULL};
-		std::cout << "argv[0] = " << argv[0] << std::endl;
-		std::cout << "argv[1] = " << argv[1] << std::endl;
 		if (dup2(fileno(tmpfi), STDOUT_FILENO) == -1)
 			exit (1);
 		if (m_request.getMethod() == "POST")
@@ -171,7 +169,6 @@ bool	Response::handleCgiResponse(FILE *tmp)
 	// printFile(tmp);
 	m_file = tmp;
 
-	std::cout << "header_end: " << header_end << std::endl;
 	std::string headers = cgi_response.substr(0, header_end);
 	std::vector<std::string> headerlines = split(headers, "\r\n");
 	for (std::vector<std::string>::iterator i = headerlines.begin(); i != headerlines.end(); ++i)

@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/09 19:04:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/25 23:18:27 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 01:28:38 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,22 +99,6 @@ void		Location::checkError(std::ifstream &myfile)
 		exit_failure("\033[1;31mConfig File Error: "+ checkPath(m_root) +" \033[0m");
 	}
 }
-// std::ostream& operator<<(std::ostream& out, Location location)
-// {
-// 	std::cout << std::endl << "==========Location============" << std::endl;
-// 	std::vector<std::string> method = location.getMethod();
-// 	out << "location path: "<< location.getPath() << std::endl;
-// 	out << "location index: " << location.getIndex() << std::endl;
-// 	out << "location uploadpath: " << location.getUploadPath() << std::endl;
-// 	out << "location root: " << location.getRoot() << std::endl;
-// 	out << "location redirection: " << location.getRedirection() <<std::endl;
-// 	out << "location autoindex: " << location.getAutoIndex() << std::endl;
-// 	for (long unsigned int i = 0; i < method.size(); i++)
-// 	{
-// 		out << "Method:" << " " <<method[i] << " ";
-// 	}
-// 	return out;
-// }
 
 void        				Location::setPath(std::string path){m_path = path;}
 void        				Location::setRoot(std::string root){m_root = root;}

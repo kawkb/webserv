@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/25 23:30:01 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 01:28:42 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,7 +81,6 @@ Server::Server(std::ifstream &myfile, size_t &lineCount)
         else if (token[0] == "cgi" && size == 3 && lineCount++ && isServer)
 		{
 			m_cgi[token[1]] = token[2];
-			// std::cout << token[1] << " " << token[2] << std::endl;
 		}
         else if (token[0] == "max_body_size" && size == 2 && lineCount++ && isServer && m_maxBodySize == 1000)
         {

@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/26 01:05:43 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/25 23:29:37 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 01:29:01 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,14 +98,6 @@ bool Request::methodAllowed(void)
 
 void Request::matchLocation(void)
 {
-	// std::string referer = getHeader("Referer");
-	// std::string refererPath = "";
-	// if (referer != "")
-	// {
-	// 	refererPath = referer.substr(referer.find("://") + 3);
-	// 	refererPath = refererPath.substr(refererPath.find("/"));
-	// 	std::cout << "refererPath: " << refererPath << std::endl;
-	// }
 	std::vector<Location> locations = m_server.getLocation();
 	for (std::vector<Location>::iterator i = locations.begin(); i != locations.end(); i++)
 	{
@@ -152,7 +144,6 @@ bool Request::matchServer(const std::vector<Server> &servers)
 		}
 	}
 	long long conlen = atoll(m_headers["Content-Length"].c_str());
-	std::cout << "conlen: " << conlen << std::endl;
 	if (conlen > m_server.getMaxBodySize())
 	{
 		m_status = "413";
