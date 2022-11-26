@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: zmeribaa <zmeribaa@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/26 05:33:38 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 07:24:42 by zmeribaa         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -332,8 +332,8 @@ bool			Response::setFilePath()
 	}
 	else
 	{
-		if (uri == path)
-			m_filePath = uploadPath;
+		if (path == "/")
+			m_filePath = uploadPath + uri.substr(path.size());
 		else
 			m_filePath = uploadPath + uri.substr(path.size() + 1);
 		m_absolutePath = getAbsolutePath(m_filePath);
