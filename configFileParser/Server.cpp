@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/26 03:39:28 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 06:14:49 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ Server::Server(std::ifstream &myfile, size_t &lineCount)
             m_errorPage.insert(std::pair<std::string, std::string>(token[1], token[2]));
         else if (token[0] == "listen" && size == 2 && lineCount++ && isServer && m_port == -1)
         {
-            if(token[1].find_first_not_of("012346789") != std::string::npos)
+            if(token[1].find_first_not_of("0123456789") != std::string::npos)
             {
                 myfile.close();
                 exit_failure("Configfile Error in Line "+ std::to_string(lineCount)+ ": \""+line + "\"");
