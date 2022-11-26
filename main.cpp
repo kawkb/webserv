@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/16 15:14:24 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/24 08:38:24 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/26 01:24:19 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ int     main(int ac, char **av)
 	std::vector<Server>			servers;
 	parse_config_file(av[1], servers);
 	Webserv webserv(servers);
-	while (TRUE)
+	while (true)
 		webserv.run();
 	return(0);
 }

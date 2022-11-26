@@ -3,19 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   TcpListener.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kdrissi- <kdrissi-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/22 15:27:06 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/20 20:48:03 by kdrissi-         ###   ########.fr       */
+/*   Updated: 2022/11/26 01:24:06 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 #include "../webserv.hpp"
 
-#define TRUE   1 
-#define FALSE  0
-#define MAX_CLIENT 1024
+
 
 class TcpListener
 {

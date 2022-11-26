@@ -10,13 +10,21 @@ SRCS = TcpListener/TcpListener.cpp \
 		Response/cgi.cpp \
 		utils/utils.cpp
 
+INCLUDES= TcpListener/TcpListener.hpp \
+		TcpListener/Webserv.hpp \
+		configFileParser/Location.hpp \
+		configFileParser/Server.hpp \
+		Request/Request.hpp \
+		Response/Response.hpp \
+		utils/utils.hpp
+
 OBJS = $(SRCS:.cpp=.o)
 
 FLAGS = -Wall -Wextra -Werror  -std=c++98 -fsanitize=address  -g3
 
 all: $(NAME)
 
-$(NAME): $(OBJS)
+$(NAME): $(OBJS) $(INCLUDES)
 	c++ $(FLAGS) $(OBJS) -o $(NAME)
 
 %.o: %.cpp
