@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/09 19:04:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/26 02:55:48 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 03:57:20 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@ void     Location::parse(std::ifstream &myfile, size_t &lineCount)
             if(*m_uploadPath.rbegin() != '/')
 		        m_uploadPath.append("/");
 		}
-		else if (token[0] == "autoindex" && size == 2 && lineCount++ && isLocation && m_autoIndex == 0)
+		else if (token[0] == "autoindex" && size == 2 && lineCount++ && isLocation && m_autoIndex == -1)
 			m_autoIndex = token[1] == "on" ? 1 : 0;
 		else if (token[0] == "}" && size == 1 && isLocation && lineCount++)
         {
@@ -80,15 +80,20 @@ void     Location::parse(std::ifstream &myfile, size_t &lineCount)
 
 void		Location::checkError(std::ifstream &myfile)
 {
-	if(m_root == "" && m_uploadPath.empty())
+	if(m_root == "" && m_uploadPath.empty() && m_redirection.empty())
     {
         myfile.close();
 		exit_failure("Config File Error: Missing root.");
     }
-	if(!m_uploadPath.empty() && (!m_root.empty() || !m_index.empty() || !m_method.empty()))
+	if(!m_uploadPath.empty() && (!m_root.empty() || !m_index.empty() || !m_method.empty() || m_autoIndex != -1 || !m_redirection.empty()))
 	{
         myfile.close();
 		exit_failure("Config File Error: Upload Path is specified in location no other directives allowed.");
+	}
+	if(!m_redirection.empty() && (!m_root.empty() || !m_index.empty() || !m_method.empty() || !m_uploadPath.empty() || m_autoIndex != -1))
+	{
+        myfile.close();
+		exit_failure("Config File Error: redirection is specified in location no other directives allowed.");
 	}
 	if(!m_uploadPath.empty() && !checkPath(m_uploadPath).empty())
 	{
@@ -115,6 +120,7 @@ bool						Location::getGotMethod(void) const{return(m_gotMethod);}
 std::string     			Location::getRoot(void) const{return(m_root);}
 std::string     			Location::getIndex(void) const{return(m_index);}
 void                        Location::setMethod(std::string method){m_method.push_back(method);}
+void						Location::setAutoIndex(int autoIndex){m_autoIndex = autoIndex;}
 
 Location::Location()
 {
@@ -122,7 +128,7 @@ Location::Location()
 	m_root 			= "";
 	m_path			= "";
 	m_uploadPath 	= "";
-	m_autoIndex 	= 0;
+	m_autoIndex 	= -1;
 	m_redirection = "";
 	m_gotMethod = 0;
 }
@@ -146,6 +152,7 @@ Location & Location::operator=(const Location &cp)
     m_autoIndex 	= cp.getAutoIndex();
 	m_uploadPath 	= cp.getUploadPath();
 	m_gotMethod 	= cp.getGotMethod();
+	
 	return (*this);
 }
 

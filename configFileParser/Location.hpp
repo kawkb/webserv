@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Location.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: zmeribaa <zmeribaa@student.42.fr>          +#+  +:+       +#+        */
+/*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/09 19:05:05 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/26 02:29:07 by zmeribaa         ###   ########.fr       */
+/*   Updated: 2022/11/26 03:37:18 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ class Location
 		void									setPath(std::string path);
 		void                        			setMethod(std::string method);
 		void        							setRoot(std::string root);
+		void									setAutoIndex(int autoIndex);	
 		//methods
 		void									parse(std::ifstream &myfile, size_t &lineCount);
 		void									checkError(std::ifstream &myfile);

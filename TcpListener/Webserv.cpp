@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/23 07:27:18 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/25 09:15:27 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 04:27:38 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,17 +14,14 @@
 
 void		Webserv::initiateMasterSockets(void)
 {
+	std::vector<int> masterPorts;
 	for(std::vector<Server>::iterator i = m_servers.begin(); i != m_servers.end();i++)
 	{
-		TcpListener holder(i->getPort());
-		for(std::vector<Server>::iterator j = i + 1; j != m_servers.end(); ++j)
+		if (std::find(masterPorts.begin(), masterPorts.end(), i->getPort()) == masterPorts.end())
 		{
-			if (j->getPort() == holder.getPort())
-				i++;
-			else
-				break;
+			masterPorts.push_back(i->getPort());
+			m_tcplisteners.push_back(TcpListener(i->getPort()));
 		}
-		m_tcplisteners.push_back(holder);
 	}
 }
 
@@ -143,7 +140,7 @@ void	Webserv::handleResponse(void)
 			if (!done)
 			{
 				ssize_t sent = send(i->getSd(), to_send.c_str(), to_send.size(), 0);
-				if (sent < 0)
+				if (sent <= 0)
 					goto erase;
 				i->setLastSent(sent);
 				++i;

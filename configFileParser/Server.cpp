@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 20:50:28 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/26 02:54:42 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 03:39:28 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,6 +103,8 @@ Server::Server(std::ifstream &myfile, size_t &lineCount)
 			if (methods.empty() && holder.getGotMethod() == 0)
 				for(std::vector<std::string>::iterator it = m_method.begin(); it != m_method.end(); it++)
 					holder.setMethod(*it);
+			if(holder.getAutoIndex() == -1)
+				holder.setAutoIndex(m_autoIndex);
             m_location.push_back(holder);
         }
         else if(token[0] == "}" && size == 1 && isServer && lineCount++)

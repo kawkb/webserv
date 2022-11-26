@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/06 18:46:57 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/26 02:37:05 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 04:29:18 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -349,6 +349,14 @@ FILE*			Response::getFile(void)
 bool			Response::handleGet()
 {
 	Location location = m_request.getLocation();
+	std::string redirection = location.getRedirection();
+	if (redirection.size() > 0)
+	{
+		m_statusCode = "301";
+		m_resHeaders["Location"] = location.getRedirection();
+		buildHeaders();
+		return true;
+	}
 	std::string root = location.getRoot();
 	std::string path = location.getPath();
 	std::string uri = m_request.getUri();
@@ -410,7 +418,16 @@ bool			Response::handleGet()
 
 bool			Response::handlePost()
 {
-	std::string uploadPath = m_request.getLocation().getUploadPath();
+	Location location = m_request.getLocation();
+	std::string redirection = location.getRedirection();
+	if (redirection.size() > 0)
+	{
+		m_statusCode = "301";
+		m_resHeaders["Location"] = location.getRedirection();
+		buildHeaders();
+		return true;
+	}
+	std::string uploadPath = location.getUploadPath();
 	if (!uploadPath.empty())
 	{
 		if (m_filePath == uploadPath || m_filePath + "/" == uploadPath)
@@ -492,6 +509,12 @@ bool			Response::handlePost()
 bool			Response::handleDelete()
 {
 	Location location = m_request.getLocation();
+	std::string redirection = location.getRedirection();
+	if (redirection.size() > 0)
+	{
+		m_statusCode = "405";
+		return false;
+	}
 	std::string root = location.getRoot();
 	if (m_filePath == root)
 	{

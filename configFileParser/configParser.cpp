@@ -6,7 +6,7 @@
 /*   By: moerradi <moerradi@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/20 22:02:44 by kdrissi-          #+#    #+#             */
-/*   Updated: 2022/11/25 23:19:24 by moerradi         ###   ########.fr       */
+/*   Updated: 2022/11/26 04:22:17 by moerradi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,6 @@
 
 int     order_servers(std::vector<Server> &server)
 {
-
 	for (std::vector<Server>::iterator i = server.begin(); i != server.end(); i++)
 	{
 		for (std::vector<Server>::iterator j = i + 1; j != server.end(); j++)
